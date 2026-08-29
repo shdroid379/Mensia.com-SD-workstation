@@ -92,9 +92,9 @@
         .dive-btn-large { background: var(--text-main); color: var(--bg-color); font-size: 1.5rem; font-weight: 600; padding: 18px 60px; border-radius: 40px; border: 2px solid var(--card-border); cursor: pointer; box-shadow: 0 15px 35px rgba(56, 189, 248, 0.4); transition: all 0.3s; display: flex; align-items: center; gap: 15px; }
         .dive-btn-large:hover { transform: translateY(-5px) scale(1.02); box-shadow: 0 20px 45px rgba(52, 211, 153, 0.5); }
 
-        .info-section { padding: 120px 5%; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 10; background: transparent; flex-shrink: 0; }
+        .info-section { padding: 120px 5%; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 10; background: transparent; flex-shrink: 0; width: 100%; }
         .section-title { font-size: 3.5rem; font-weight: 800; margin-bottom: 60px; color: var(--text-main); text-align: center; background: var(--metallic-dark); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; width: 100%; max-width: 1200px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; width: 100%; max-width: 1200px; }
         
         .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 40px; backdrop-filter: blur(12px); box-shadow: var(--shadow); transition: transform 0.3s, border-color 0.3s; }
         .card:hover { transform: translateY(-10px); border-color: var(--accent-blue); }
@@ -103,17 +103,17 @@
         .card p { color: var(--text-muted); line-height: 1.7; font-size: 1.1rem;}
 
         .split-section { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 60px; max-width: 1300px; margin: 0 auto; width: 100%; }
-        .split-text { flex: 1; min-width: 350px; }
+        .split-text { flex: 1; min-width: 300px; }
         .split-text h2 { font-size: 3.5rem; font-weight: 800; margin-bottom: 20px; line-height: 1.1; }
         .split-text p { font-size: 1.2rem; color: var(--text-muted); line-height: 1.8; margin-bottom: 25px; }
-        .split-image { flex: 1; min-width: 350px; position: relative; }
+        .split-image { flex: 1; min-width: 300px; position: relative; }
         .split-image img { width: 100%; border-radius: 24px; box-shadow: var(--shadow); border: 4px solid var(--card-border); object-fit: cover; }
 
         /* --- PLANS PAGE --- */
-        .plans-view { flex-direction: column; align-items: center; padding: 60px 5%; }
-        .plans-header { text-align: center; margin-bottom: 60px; padding-top: 20px; }
+        .plans-view { flex-direction: column; align-items: center; padding: 60px 5%; width: 100%; }
+        .plans-header { text-align: center; margin-bottom: 60px; padding-top: 20px; width: 100%; }
         .coming-soon-badge { display: inline-block; background: var(--accent-blue); color: #fff; padding: 8px 20px; border-radius: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-size: 0.9rem; animation: pulse 2s infinite; }
-        .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; width: 100%; max-width: 1300px; }
+        .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px; width: 100%; max-width: 1300px; }
         .plan-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 40px; backdrop-filter: blur(12px); box-shadow: var(--shadow); position: relative; overflow: hidden; transition: 0.3s; }
         .plan-card:hover { transform: translateY(-10px); border-color: var(--accent-blue); }
         .plan-card h3 { font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 10px; }
@@ -125,8 +125,8 @@
         .disclaimer-text { max-width: 800px; text-align: center; margin-top: 60px; font-size: 1.2rem; color: var(--text-muted); line-height: 1.6; font-weight: 600; padding-bottom: 50px; }
         
         /* --- PLAYBOOK INTERACTIVE DECK --- */
-        .playbook-view { flex-direction: column; align-items: center; padding: 70px 5% 80px 5%; overflow-y: auto; }
-        .playbook-header { text-align: center; margin-bottom: 40px; padding-top: 30px; }
+        .playbook-view { flex-direction: column; align-items: center; padding: 70px 5% 80px 5%; width: 100%; }
+        .playbook-header { text-align: center; margin-bottom: 40px; padding-top: 30px; width: 100%; }
 
         .interactive-deck {
             width: 100%; max-width: 1100px; min-height: 520px;
@@ -160,10 +160,10 @@
         .deck-stage {
             flex-grow: 1; padding: 40px; display: flex;
             align-items: center; justify-content: space-between;
-            gap: 40px; position: relative;
+            gap: 40px; position: relative; width: 100%;
         }
 
-        .deck-info { flex: 1.2; min-width: 300px; }
+        .deck-info { flex: 1.2; min-width: 280px; }
         .mode-tag {
             display: inline-block; padding: 6px 14px; border-radius: 20px;
             font-size: 0.8rem; font-weight: 800; text-transform: uppercase;
@@ -178,7 +178,7 @@
         .metric-lbl { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; }
 
         .deck-sandbox {
-            flex: 1; min-width: 320px; height: 320px;
+            flex: 1; min-width: 300px; height: 320px;
             background: rgba(0,0,0,0.03); border: 2px dashed var(--card-border);
             border-radius: 20px; position: relative; overflow: hidden;
             display: flex; align-items: center; justify-content: center;
@@ -294,8 +294,8 @@
         }
 
         /* --- APP VIEW --- */
-        .app-view { flex-direction: row; background: transparent; padding-top: 75px; }
-        .sidebar { width: 300px; background: var(--sidebar-bg); border-right: 1px solid var(--card-border); display: flex; flex-direction: column; padding: 20px; z-index: 30; height: calc(100vh - 75px); }
+        .app-view { flex-direction: row; background: transparent; padding-top: 75px; width: 100vw; height: calc(100vh - 75px); }
+        .sidebar { width: 300px; background: var(--sidebar-bg); border-right: 1px solid var(--card-border); display: flex; flex-direction: column; padding: 20px; z-index: 30; height: 100%; flex-shrink: 0; }
         .new-chat-btn { background: var(--metallic-light); border: 1px solid var(--card-border); color: var(--text-main); padding: 14px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 10px; }
         .new-chat-btn:hover { border-color: var(--accent-blue); }
         .history-title { font-size: 13px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin: 30px 0 10px 5px; }
@@ -308,15 +308,15 @@
         .history-item:hover .delete-chat-icon { opacity: 1; }
         .delete-chat-icon:hover { color: #ff003c; }
 
-        .chat-container { flex-grow: 1; display: flex; flex-direction: column; position: relative; height: calc(100vh - 75px); }
-        .chat-view { flex-grow: 1; overflow-y: auto; padding: 40px 10% 130px 10%; scroll-behavior: smooth; position: relative; }
+        .chat-container { flex-grow: 1; display: flex; flex-direction: column; position: relative; height: 100%; min-width: 0; }
+        .chat-view { flex-grow: 1; overflow-y: auto; padding: 40px 10% 130px 10%; scroll-behavior: smooth; position: relative; width: 100%; }
         
         .welcome-prompt { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 2.5rem; font-weight: 800; text-align: center; color: var(--text-muted); letter-spacing: -0.5px; opacity: 0.85; pointer-events: none; width: 90%; max-width: 600px; background: linear-gradient(135deg, var(--text-main) 30%, var(--accent-blue) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 
-        .message-row { display: flex; flex-direction: column; margin-bottom: 30px; }
+        .message-row { display: flex; flex-direction: column; margin-bottom: 30px; width: 100%; }
         .message-row.user { align-items: flex-end; }
         .message-row.ai { align-items: flex-start; }
-        .bubble { max-width: 80%; padding: 20px 24px; border-radius: 20px; font-size: 16px; line-height: 1.6; box-shadow: var(--shadow); }
+        .bubble { max-width: 80%; padding: 20px 24px; border-radius: 20px; font-size: 16px; line-height: 1.6; box-shadow: var(--shadow); word-break: break-word; }
         .bubble.user { background: var(--text-main); color: var(--bg-color); border-bottom-right-radius: 4px; }
         .bubble.ai { background: var(--bubble-ai-bg); border: 1px solid var(--card-border); border-bottom-left-radius: 4px; color: var(--text-main); backdrop-filter: blur(10px); }
         .bubble.ai p { margin-bottom: 12px; }
@@ -330,19 +330,65 @@
         .copy-bubble-btn:hover { color: var(--accent-blue); }
 
         .input-wrapper { position: absolute; bottom: 0; left: 0; width: 100%; padding: 20px 10%; background: linear-gradient(to top, var(--bg-color) 60%, transparent); z-index: 50; }
-        .input-container { background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 15px 20px; display: flex; flex-direction: column; box-shadow: var(--shadow); }
-        textarea { background: transparent; border: none; color: var(--text-main); font-size: 16px; resize: none; outline: none; max-height: 150px; min-height: 24px; padding: 5px 0; }
+        .input-container { background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 15px 20px; display: flex; flex-direction: column; box-shadow: var(--shadow); width: 100%; }
+        textarea { background: transparent; border: none; color: var(--text-main); font-size: 16px; resize: none; outline: none; max-height: 150px; min-height: 24px; padding: 5px 0; width: 100%; }
         textarea::placeholder { color: var(--text-muted); }
-        .input-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .input-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 10px; }
         select { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--card-border); padding: 10px 15px; border-radius: 12px; outline: none; font-size: 14px; cursor: pointer; font-weight: 600; }
         
-        .send-btn, .stop-btn { background: var(--text-main); color: var(--bg-color); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .send-btn, .stop-btn { background: var(--text-main); color: var(--bg-color); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
         .send-btn:hover { background: var(--accent-blue); color: white; transform: scale(1.05); }
         .stop-btn { background: #ff003c; color: white; display: none; }
         .stop-btn:hover { background: #cc0030; transform: scale(1.05); }
         
         .loader { display: none; font-size: 14px; font-weight: 600; color: var(--accent-blue); animation: pulse 1.5s infinite; }
-        footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid var(--card-border); background: transparent; }
+        footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid var(--card-border); background: transparent; width: 100%; }
+
+        /* --- RESPONSIVE MEDIA QUERIES FOR UNMATCHED VIEWPORTS --- */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 3.2rem !important;
+            }
+            .hero-subtitle {
+                font-size: 1.1rem !important;
+            }
+            .section-title {
+                font-size: 2.5rem !important;
+            }
+            .app-view {
+                flex-direction: column !important;
+                height: calc(100vh - 75px) !important;
+            }
+            .sidebar {
+                width: 100% !important;
+                height: 140px !important;
+                border-right: none !important;
+                border-bottom: 1px solid var(--card-border);
+                padding: 10px 15px !important;
+            }
+            .history-title {
+                margin: 10px 0 5px 0 !important;
+            }
+            .chat-container {
+                height: calc(100vh - 75px - 140px) !important;
+            }
+            .chat-view {
+                padding: 20px 5% 110px 5% !important;
+            }
+            .input-wrapper {
+                padding: 10px 5% !important;
+            }
+            .deck-stage {
+                flex-direction: column !important;
+                padding: 20px !important;
+                gap: 20px !important;
+            }
+            .deck-sandbox {
+                width: 100% !important;
+                min-width: unset !important;
+                height: 260px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -458,7 +504,7 @@
                 </ul>
             </div>
             <!-- Ultra -->
-            <div class="plan-card" style="border-top: 4px solid var(--accent-green); transform: scale(1.05); box-shadow: 0 20px 50px rgba(52, 211, 153, 0.15);">
+            <div class="plan-card" style="border-top: 4px solid var(--accent-green); box-shadow: 0 20px 50px rgba(52, 211, 153, 0.15);">
                 <h3>Ultra</h3>
                 <div class="price">$30 / Month</div>
                 <ul>
@@ -1166,7 +1212,6 @@
             bubble.className = "bubble " + sender;
             row.appendChild(bubble);
             
-            // Add copy button after AI answers
             if (sender === 'ai') {
                 const copyBtn = document.createElement("button");
                 copyBtn.className = "copy-bubble-btn";
@@ -1221,7 +1266,6 @@
 
             if (!question) return;
 
-            // Enforce Rate Limits
             if (!checkAndIncrementLimit(mode)) {
                 renderBubble(question, "user");
                 renderBubble(`**Limit Reached:** You have exhausted your daily limit for **${mode}** mode on the Free Tier. Please check the Plans page.`, "ai", true);
