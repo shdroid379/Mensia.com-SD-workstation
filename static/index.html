@@ -35,13 +35,14 @@
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
-        body { background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; position: relative; }
+        html { overflow-x: hidden; width: 100%; }
+        body { background-color: var(--bg-color); color: var(--text-main); height: 100vh; height: 100dvh; overflow: hidden; overflow-x: hidden; position: relative; width: 100%; max-width: 100vw; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
 
         /* --- GLOBAL BLUR --- */
-        .global-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; background: var(--bg-color); overflow: hidden; }
+        .global-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; z-index: 0; background: var(--bg-color); overflow: hidden; }
         .blur-orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.55; transform: translateZ(0); }
         body.dark-mode .blur-orb { opacity: 0.35; filter: blur(100px); }
         .blur-1 { width: 600px; height: 600px; background: #38bdf8; top: -10%; left: -10%; animation: float 15s infinite ease-in-out alternate; }
@@ -61,8 +62,12 @@
         .nav-links a:hover, .nav-links a.active { color: var(--text-main); }
         
         .nav-actions { display: flex; align-items: center; gap: 15px; }
-        .theme-toggle-btn { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 42px; height: 42px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow); transition: transform 0.2s, background-color 0.3s; }
+        .theme-toggle-btn { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 42px; height: 42px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow); transition: transform 0.2s, background-color 0.3s; flex-shrink: 0; }
         .theme-toggle-btn:hover { transform: scale(1.08); border-color: var(--accent-blue); }
+
+        /* --- MOBILE NAV TOGGLE (hidden on desktop) --- */
+        .nav-hamburger { display: none; background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 42px; height: 42px; border-radius: 12px; cursor: pointer; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow); flex-shrink: 0; }
+        .nav-mobile-panel { display: none; }
 
         /* --- VIEW CONTAINERS --- */
         .view-container { display: none; height: 100vh; width: 100vw; padding-top: 90px; overflow-y: auto; position: relative; z-index: 10; opacity: 0; transition: opacity 0.4s ease; }
@@ -344,40 +349,78 @@
         .loader { display: none; font-size: 14px; font-weight: 600; color: var(--accent-blue); animation: pulse 1.5s infinite; }
         footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid var(--card-border); background: transparent; width: 100%; }
 
-        /* --- RESPONSIVE MEDIA QUERIES FOR UNMATCHED VIEWPORTS --- */
+        /* --- RESPONSIVE: FLUID TYPE ACROSS ALL VIEWPORTS --- */
+        .hero-title { font-size: clamp(2.4rem, 8vw, 7.5rem); }
+        .hero-subtitle { font-size: clamp(1rem, 2.4vw, 1.6rem); }
+        .section-title { font-size: clamp(1.8rem, 5vw, 3.5rem); }
+        .split-text h2 { font-size: clamp(2rem, 5vw, 3.5rem); }
+        .mode-title { font-size: clamp(1.6rem, 4vw, 2.8rem); }
+        .dive-btn-large { font-size: clamp(1.1rem, 2.5vw, 1.5rem); padding: 16px clamp(30px, 6vw, 60px); }
+
+        /* --- TABLET/SMALL-WINDOW (<=880px): collapse nav into hamburger, tame hero balls --- */
+        @media (max-width: 880px) {
+            .nav-links { display: none; }
+            .nav-hamburger { display: flex; }
+            .nav-mobile-panel {
+                position: fixed; top: 71px; left: 0; width: 100%; z-index: 999;
+                background: var(--sidebar-bg); backdrop-filter: blur(24px);
+                border-bottom: 1px solid var(--glass-border);
+                flex-direction: column; padding: 10px 6%;
+                max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+            }
+            .nav-mobile-panel.open { display: flex; max-height: 300px; }
+            .nav-mobile-panel a {
+                color: var(--text-muted); text-decoration: none; font-weight: 600;
+                font-size: 1.1rem; padding: 14px 5px; border-bottom: 1px solid var(--card-border);
+                cursor: pointer;
+            }
+            .nav-mobile-panel a:last-child { border-bottom: none; }
+            .nav-mobile-panel a:hover, .nav-mobile-panel a.active { color: var(--text-main); }
+
+            .solid-1 { width: 90px; height: 90px; }
+            .solid-2 { width: 65px; height: 65px; }
+            .solid-3 { width: 110px; height: 110px; }
+
+            .split-section { gap: 35px; }
+            .info-section { padding: 70px 6%; }
+        }
+
+        /* --- PHONES / SMALL TABLETS (<=768px) --- */
         @media (max-width: 768px) {
-            .hero-title {
-                font-size: 3.2rem !important;
-            }
-            .hero-subtitle {
-                font-size: 1.1rem !important;
-            }
-            .section-title {
-                font-size: 2.5rem !important;
-            }
+            .global-navbar { padding: 12px 5%; }
+            .logo-text { font-size: 22px; }
+            .logo-icon { width: 34px; height: 34px; font-size: 16px; }
+
             .app-view {
                 flex-direction: column !important;
-                height: calc(100vh - 75px) !important;
+                height: calc(100vh - 71px) !important;
+                height: calc(100dvh - 71px) !important;
             }
             .sidebar {
                 width: 100% !important;
-                height: 140px !important;
+                height: 120px !important;
                 border-right: none !important;
                 border-bottom: 1px solid var(--card-border);
                 padding: 10px 15px !important;
             }
             .history-title {
-                margin: 10px 0 5px 0 !important;
+                margin: 8px 0 5px 0 !important;
             }
             .chat-container {
-                height: calc(100vh - 75px - 140px) !important;
+                height: calc(100vh - 71px - 120px) !important;
+                height: calc(100dvh - 71px - 120px) !important;
             }
             .chat-view {
-                padding: 20px 5% 110px 5% !important;
+                padding: 20px 4% 120px 4% !important;
             }
+            .bubble { max-width: 92% !important; padding: 14px 18px !important; font-size: 15px !important; }
+            .welcome-prompt { font-size: 1.6rem !important; }
             .input-wrapper {
-                padding: 10px 5% !important;
+                padding: 10px 4% !important;
             }
+            .input-controls { gap: 8px !important; }
+            select { font-size: 13px !important; padding: 8px 10px !important; }
+
             .deck-stage {
                 flex-direction: column !important;
                 padding: 20px !important;
@@ -388,6 +431,24 @@
                 min-width: unset !important;
                 height: 260px !important;
             }
+            .deck-nav-bar { padding: 14px 15px; }
+            .deck-tab { padding: 10px 16px; font-size: 0.85rem; }
+
+            .split-image { order: -1; }
+            .grid-3 { gap: 20px; }
+            .card { padding: 28px; }
+
+            .plan-card { padding: 28px; }
+        }
+
+        /* --- VERY SMALL PHONES (<=420px) --- */
+        @media (max-width: 420px) {
+            .global-navbar { padding: 10px 4%; }
+            .logo-text { font-size: 19px; }
+            .hero-section { padding-inline: 12px; }
+            .hero-subtitle { margin-bottom: 30px; }
+            .dive-btn-large { width: 100%; justify-content: center; }
+            .bubble { max-width: 96% !important; }
         }
     </style>
 </head>
@@ -414,8 +475,17 @@
             <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
                 <i class="fa-solid fa-moon" id="theme-icon-nav"></i>
             </button>
+            <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileNav()" title="Menu">
+                <i class="fa-solid fa-bars" id="nav-hamburger-icon"></i>
+            </button>
         </div>
     </nav>
+    <div class="nav-mobile-panel" id="nav-mobile-panel">
+        <a onclick="showView('home')">Home</a>
+        <a onclick="showView('app')">Launch App</a>
+        <a onclick="showView('plans')">Plans</a>
+        <a onclick="showView('playbook')">The Playbook</a>
+    </div>
 
     <!-- HOME PAGE VIEW -->
     <div class="view-container home-view active" id="home-view">
@@ -612,19 +682,36 @@
         // ----------------------------------------------------
         function showView(viewId) {
             document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+            document.querySelectorAll('.nav-links a, .nav-mobile-panel a').forEach(a => a.classList.remove('active'));
             
             document.getElementById(viewId + '-view').classList.add('active');
             const navLink = document.getElementById('nav-' + viewId);
             if (navLink) navLink.classList.add('active');
             
+            closeMobileNav();
+
             if(viewId === 'app') {
                 renderSidebar();
                 updateWelcomePrompt();
-                document.getElementById('question').focus();
+                // Avoid auto-focusing the textarea on touch devices - it pops the keyboard
+                // and can trigger the same viewport-shrink effect on some mobile browsers.
+                if (window.matchMedia('(pointer: fine)').matches) {
+                    document.getElementById('question').focus();
+                }
             } else if(viewId === 'playbook') {
                 switchPlaybookMode('casual');
             }
+        }
+
+        function toggleMobileNav() {
+            const panel = document.getElementById('nav-mobile-panel');
+            const icon = document.getElementById('nav-hamburger-icon');
+            const isOpen = panel.classList.toggle('open');
+            icon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+        }
+        function closeMobileNav() {
+            document.getElementById('nav-mobile-panel').classList.remove('open');
+            document.getElementById('nav-hamburger-icon').className = 'fa-solid fa-bars';
         }
 
         // ----------------------------------------------------
@@ -776,8 +863,12 @@
                     const target = document.createElement('div');
                     target.className = 'verify-target';
                     target.innerHTML = '<i class="fa-solid fa-check"></i>';
-                    target.style.left = Math.random() * 220 + 20 + 'px';
-                    target.style.top = Math.random() * 140 + 20 + 'px';
+                    // Bounds read live from the zone so the target always lands inside it,
+                    // regardless of how narrow the sandbox is on a given screen.
+                    const zoneW = zone.clientWidth || 260;
+                    const zoneH = zone.clientHeight || 220;
+                    target.style.left = Math.random() * Math.max(zoneW - 62, 10) + 10 + 'px';
+                    target.style.top = Math.random() * Math.max(zoneH - 62, 10) + 10 + 'px';
                     
                     target.onclick = () => {
                         score++;
@@ -834,10 +925,14 @@
             let scannedScore = 0;
             let spawnIntervalTime = 1800;
             let speedMultiplier = 0.8;
+            // Arena bounds are read live from the sandbox element, so the game
+            // still lines up correctly at the smaller sandbox height used on mobile.
+            const arenaW = arenaEl.clientWidth || 320;
+            const arenaH = arenaEl.clientHeight || 320;
             const radarCenters = [
                 {x: 25 + 45, y: 20 + 45, radius: 45},
-                {x: 320 - 25 - 45, y: 20 + 45, radius: 45},
-                {x: 160, y: 320 - 20 - 45, radius: 45}
+                {x: arenaW - 25 - 45, y: 20 + 45, radius: 45},
+                {x: arenaW / 2, y: arenaH - 20 - 45, radius: 45}
             ];
             const redThieves = [];
 
@@ -847,8 +942,8 @@
                 let x, y, safe = false;
                 let attempts = 0;
                 while (!safe && attempts < 20) {
-                    x = Math.random() * 260 + 30;
-                    y = Math.random() * 220 + 50;
+                    x = Math.random() * (arenaW - 60) + 30;
+                    y = Math.random() * (arenaH - 70) + 50;
                     safe = true;
                     for (let rc of radarCenters) {
                         if (Math.hypot(x - rc.x, y - rc.y) < rc.radius + 25) {
@@ -928,8 +1023,8 @@
                     if (!t.active) return;
                     t.x += t.vx; 
                     t.y += t.vy;
-                    if(t.x < 10 || t.x > 310) t.vx *= -1;
-                    if(t.y < 10 || t.y > 310) t.vy *= -1;
+                    if(t.x < 10 || t.x > arenaW - 10) t.vx *= -1;
+                    if(t.y < 10 || t.y > arenaH - 10) t.vy *= -1;
                     t.el.style.left = t.x + 'px';
                     t.el.style.top = t.y + 'px';
 
@@ -1016,10 +1111,21 @@
         // PHYSICS ENGINE
         // ----------------------------------------------------
         const arena = document.getElementById('hero-arena');
+        // Radius is read from the actual rendered element size (set in CSS), so the
+        // collision math always matches what's on screen at any breakpoint.
+        function ballRadius(el, fallback) {
+            const r = el ? el.getBoundingClientRect().width / 2 : 0;
+            return r > 0 ? r : fallback;
+        }
+        const el1 = document.getElementById('ball1');
+        const el2 = document.getElementById('ball2');
+        const el3 = document.getElementById('ball3');
+        const arenaW = arena ? arena.clientWidth : window.innerWidth;
+        const arenaH = arena ? arena.clientHeight : window.innerHeight;
         const balls = [
-            { id: 'ball1', el: document.getElementById('ball1'), radius: 70, x: window.innerWidth * 0.2, y: window.innerHeight * 0.3, vx: 1.5, vy: 1.2 },
-            { id: 'ball2', el: document.getElementById('ball2'), radius: 50, x: window.innerWidth * 0.8, y: window.innerHeight * 0.7, vx: -1.2, vy: -1.5 },
-            { id: 'ball3', el: document.getElementById('ball3'), radius: 85, x: window.innerWidth * 0.5, y: window.innerHeight * 0.5, vx: -1.0, vy: 1.8 }
+            { id: 'ball1', el: el1, radius: ballRadius(el1, 70), x: arenaW * 0.2, y: arenaH * 0.3, vx: 1.2, vy: 1.0 },
+            { id: 'ball2', el: el2, radius: ballRadius(el2, 50), x: arenaW * 0.8, y: arenaH * 0.7, vx: -1.0, vy: -1.2 },
+            { id: 'ball3', el: el3, radius: ballRadius(el3, 85), x: arenaW * 0.5, y: arenaH * 0.5, vx: -0.8, vy: 1.4 }
         ];
         function physicsLoop() {
             if (!arena) return;
