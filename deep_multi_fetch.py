@@ -9,7 +9,7 @@ async def combined_research(prompt):
     
     results = await asyncio.gather(
         asyncio.to_thread(search_up.exa_search),
-        asyncio.to_thread(search_up.tavily_search),
+        asyncio.to_thread(search_up.tavily_deep_research),
         asyncio.to_thread(search_up.linkup_search),
         return_exceptions=True
     )
