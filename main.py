@@ -10,6 +10,11 @@ import deep_multi_fetch
 
 app = FastAPI()
 
+
+@app.get("/health")
+def health_check():
+    return {"status": "alive"}
+
 histories: dict[str, list[list[str]]] = {}
 
 class Question(BaseModel):
@@ -70,7 +75,3 @@ async def deep_research(q: Question):
     return {"answer": answer}
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
-
-@app.get("/health")
-def health_check():
-    return {"status": "alive"}
