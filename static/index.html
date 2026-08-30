@@ -82,7 +82,7 @@
         .theme-toggle-btn { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 42px; height: 42px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow); transition: transform 0.2s, background-color 0.3s; flex-shrink: 0; }
         .theme-toggle-btn:hover { transform: scale(1.08); border-color: var(--accent-blue); }
 
-        /* --- MOBILE NAV TOGGLE (hidden on desktop) --- */
+        /* --- MOBILE NAV TOGGLE --- */
         .nav-hamburger { display: none; background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 42px; height: 42px; border-radius: 12px; cursor: pointer; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow); flex-shrink: 0; }
         .nav-mobile-panel { display: none; }
 
@@ -226,7 +226,7 @@
             100% { width: 120px; height: 120px; opacity: 0; }
         }
 
-        /* SEARCH STANDARD GAME (Target Catcher) */
+        /* SEARCH STANDARD GAME */
         .search-game { width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         .verify-target {
             position: absolute; width: 42px; height: 42px; border-radius: 50%;
@@ -236,7 +236,7 @@
         }
         @keyframes target-pop { to { transform: scale(1); } }
 
-        /* DEEP RESEARCH MULTI-RADAR CCTV ARENA */
+        /* DEEP RESEARCH MULTI-RADAR */
         .deep-arena { width: 100%; height: 100%; position: relative; overflow: hidden; }
         .mini-radar {
             position: absolute; width: 90px; height: 90px; border-radius: 50%;
@@ -262,7 +262,7 @@
             opacity: 0; pointer-events: none;
         }
 
-        /* --- HORROR SIMULATION FOR INTENSE DIVE --- */
+        /* --- HORROR SIMULATION --- */
         .horror-chamber {
             width: 100%; height: 100%; display: flex; flex-direction: column;
             align-items: center; justify-content: center; text-align: center;
@@ -349,29 +349,142 @@
         .bubble.ai p { margin-bottom: 12px; }
         .bubble.ai h1, .bubble.ai h2, .bubble.ai h3 { margin: 20px 0 10px 0; font-weight: 800; }
         .bubble.ai ul, .bubble.ai ol { margin-left: 20px; margin-bottom: 12px; }
-        .bubble.ai a { 
-        color: var(--accent-blue); 
-        text-decoration: none; 
-        font-weight: 800; 
-        background: rgba(56, 189, 248, 0.15); 
-        padding: 2px 7px; 
-        border-radius: 6px; 
-        font-size: 0.85em; 
-        margin: 0 3px; 
-        transition: all 0.2s ease; 
-    }
-    .bubble.ai a:hover { 
-        background: var(--accent-blue); 
-        color: white; 
-        transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
-    }
+        
+        /* CITATION BADGES */
+        .citation-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue) !important;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 6px;
+            font-size: 0.78em;
+            font-weight: 800;
+            padding: 1px 6px;
+            margin: 0 3px;
+            text-decoration: none !important;
+            vertical-align: super;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .citation-badge:hover {
+            background: var(--accent-blue);
+            color: white !important;
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(56, 189, 248, 0.4);
+        }
+
+        /* TOGGLEABLE SOURCES DRAWER */
+        .sources-drawer {
+            margin-top: 18px;
+            border-top: 1px solid var(--card-border);
+            padding-top: 12px;
+            width: 100%;
+        }
+        .sources-toggle-btn {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        body.dark-mode .sources-toggle-btn {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .sources-toggle-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+        .sources-toggle-btn .toggle-icon {
+            font-size: 0.75rem;
+            transition: transform 0.3s ease;
+        }
+        .sources-drawer.open .toggle-icon {
+            transform: rotate(180deg);
+        }
+        .sources-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sources-drawer.open .sources-panel {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 12px;
+        }
+        .sources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 10px;
+            padding-bottom: 4px;
+        }
+        .source-item-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+        }
+        .source-item-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        .source-num {
+            width: 24px;
+            height: 24px;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--accent-blue);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .source-info {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        .source-domain {
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .source-url {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .source-ext-icon {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
         /* KaTeX tweaks inside bubbles */
         .bubble .katex-display { margin: 12px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
         .bubble .katex { font-size: 1.05em; }
-
-        .cursor::after { content: '|'; animation: blink 1s step-end infinite; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
         .copy-bubble-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; margin-top: 6px; display: flex; align-items: center; gap: 5px; transition: color 0.2s; padding: 2px 6px; }
         .copy-bubble-btn:hover { color: var(--accent-blue); }
@@ -407,7 +520,7 @@
         .loader { display: none; font-size: 14px; font-weight: 600; color: var(--accent-blue); animation: pulse 1.5s infinite; }
         footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid var(--card-border); background: transparent; width: 100%; }
 
-        /* --- RESPONSIVE: FLUID TYPE ACROSS ALL VIEWPORTS --- */
+        /* --- RESPONSIVE MEDIA QUERIES --- */
         .hero-title { font-size: clamp(2.4rem, 8vw, 7.5rem); }
         .hero-subtitle { font-size: clamp(1rem, 2.4vw, 1.6rem); }
         .section-title { font-size: clamp(1.8rem, 5vw, 3.5rem); }
@@ -415,7 +528,6 @@
         .mode-title { font-size: clamp(1.6rem, 4vw, 2.8rem); }
         .dive-btn-large { font-size: clamp(1.1rem, 2.5vw, 1.5rem); padding: 16px clamp(30px, 6vw, 60px); }
 
-        /* --- TABLET/SMALL-WINDOW (<=880px): collapse nav into hamburger --- */
         @media (max-width: 880px) {
             .nav-links { display: none; }
             .nav-hamburger { display: flex; }
@@ -443,7 +555,6 @@
             .info-section { padding: 70px 6%; }
         }
 
-        /* --- PHONES / TABLETS (<=768px): FULL MOBILE APP OVERHAUL --- */
         @media (max-width: 768px) {
             .global-navbar { padding: 12px 5%; }
             .logo-text { font-size: 22px; }
@@ -456,10 +567,8 @@
                 padding-top: 71px !important;
             }
 
-            /* Hide Desktop Sidebar */
             .sidebar { display: none !important; }
 
-            /* Mobile Chat Sub-Header */
             .mobile-chat-subnav {
                 display: flex !important;
                 justify-content: space-between;
@@ -487,7 +596,6 @@
                 box-shadow: var(--shadow);
             }
 
-            /* Mobile History Slide-Down Overlay */
             .history-overlay {
                 display: flex !important;
                 position: fixed;
@@ -557,33 +665,17 @@
                 opacity: 1 !important;
             }
 
-            .chat-container {
-                height: 100% !important;
-            }
-            .chat-view {
-                padding: 20px 4% 120px 4% !important;
-            }
+            .chat-container { height: 100% !important; }
+            .chat-view { padding: 20px 4% 120px 4% !important; }
             .bubble { max-width: 92% !important; padding: 14px 18px !important; font-size: 15px !important; }
             .welcome-prompt { font-size: 1.6rem !important; }
-            .input-wrapper {
-                padding: 10px 4% !important;
-            }
+            .input-wrapper { padding: 10px 4% !important; }
             .input-controls { gap: 8px !important; }
             select { font-size: 14px !important; padding: 8px 10px !important; }
-            
-            /* Strict iOS Textarea Zoom Fix */
             textarea { font-size: 16px !important; }
 
-            .deck-stage {
-                flex-direction: column !important;
-                padding: 20px !important;
-                gap: 20px !important;
-            }
-            .deck-sandbox {
-                width: 100% !important;
-                min-width: unset !important;
-                height: 260px !important;
-            }
+            .deck-stage { flex-direction: column !important; padding: 20px !important; gap: 20px !important; }
+            .deck-sandbox { width: 100% !important; min-width: unset !important; height: 260px !important; }
             .deck-nav-bar { padding: 14px 15px; }
             .deck-tab { padding: 10px 16px; font-size: 0.85rem; }
 
@@ -593,7 +685,6 @@
             .plan-card { padding: 28px; }
         }
 
-        /* --- VERY SMALL PHONES (<=420px) --- */
         @media (max-width: 420px) {
             .global-navbar { padding: 10px 4%; }
             .logo-text { font-size: 19px; }
@@ -1419,7 +1510,7 @@
             const chatView = document.getElementById("chat-view");
             chatView.innerHTML = '<div class="welcome-prompt" id="welcome-prompt">What do you wanna brain today?</div>';
             savedChats[id].messages.forEach(msg => {
-                renderBubble(msg.text, msg.sender, true); 
+                renderBubble(msg.text, msg.sender, true, null, msg.sources || []); 
             });
             updateWelcomePrompt();
         }
@@ -1443,12 +1534,12 @@
             }
         }
 
-        function saveMessage(text, sender) {
+        function saveMessage(text, sender, sources = []) {
             if (!savedChats[sessionId]) {
                 savedChats[sessionId] = { title: "New Chat", messages: [] };
             }
             const chat = savedChats[sessionId];
-            chat.messages.push({ text: text, sender: sender });
+            chat.messages.push({ text: text, sender: sender, sources: sources });
             if (sender === 'user' && chat.messages.length === 1) {
                 chat.title = text.length > 28 ? text.substring(0, 28) + '...' : text;
             }
@@ -1465,10 +1556,8 @@
 
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                console.warn("Speech recognition not supported in this browser.");
-                return null;
-            }
+            if (!SpeechRecognition) return null;
+            
             const rec = new SpeechRecognition();
             rec.continuous = false;
             rec.interimResults = true;
@@ -1601,7 +1690,60 @@
             }
         }
 
-        function renderBubble(text, sender, skipTypewriter = false, onComplete = null) {
+        function toggleSourcesDrawer(btn) {
+            const drawer = btn.closest('.sources-drawer');
+            if (drawer) drawer.classList.toggle('open');
+        }
+
+        function processMarkdownAndCitations(rawText, sources = []) {
+            let parsed = marked.parse(rawText);
+            
+            if (sources && sources.length > 0) {
+                const sourceMap = {};
+                sources.forEach(s => { sourceMap[s.id] = s.url; });
+                
+                parsed = parsed.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, nums) => {
+                    const indices = nums.split(',').map(n => n.trim());
+                    const badges = indices.map(id => {
+                        const url = sourceMap[id];
+                        if (url) {
+                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="citation-badge" title="${url}">${id}</a>`;
+                        }
+                        return `[${id}]`;
+                    }).join('');
+                    return badges;
+                });
+            }
+            return parsed;
+        }
+
+        function createSourcesDrawerHtml(sources = []) {
+            if (!sources || sources.length === 0) return '';
+            return `
+                <div class="sources-drawer">
+                    <button class="sources-toggle-btn" onclick="toggleSourcesDrawer(this)">
+                        <i class="fa-solid fa-layer-group"></i> <span>Sources (${sources.length})</span>
+                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
+                    </button>
+                    <div class="sources-panel">
+                        <div class="sources-grid">
+                            ${sources.map(s => `
+                                <a href="${s.url}" target="_blank" rel="noopener noreferrer" class="source-item-card">
+                                    <span class="source-num">${s.id}</span>
+                                    <div class="source-info">
+                                        <div class="source-domain">${s.domain || 'Web Source'}</div>
+                                        <div class="source-url">${s.url}</div>
+                                    </div>
+                                    <i class="fa-solid fa-arrow-up-right-from-square source-ext-icon"></i>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBubble(text, sender, skipTypewriter = false, onComplete = null, sources = []) {
             const chatView = document.getElementById("chat-view");
             const prompt = document.getElementById("welcome-prompt");
             if (prompt) prompt.style.display = "none";
@@ -1628,39 +1770,47 @@
 
             chatView.appendChild(row);
 
-            if (sender === 'user' || skipTypewriter) {
-                bubble.innerHTML = sender === 'ai' ? marked.parse(text) : text;
-                if (sender === 'ai') renderMath(bubble);
-                chatView.scrollTop = chatView.scrollHeight;
+            if (sender === 'user') {
+                bubble.innerText = text;
+                // Only auto-scroll when the user sends their prompt
+                chatView.scrollTop = chatView.scrollHeight; 
                 if (onComplete) onComplete(text);
             } else {
-                bubble.classList.add('cursor');
-                let i = 0;
-                let chunkSize = 3;
-                stopTypingFlag = false;
+                // Parse full text instantly so math and markdown do not break
+                const fullHtml = processMarkdownAndCitations(text, sources) + createSourcesDrawerHtml(sources);
+                bubble.innerHTML = fullHtml;
+                renderMath(bubble);
 
-                function typeTick() {
-                    if (stopTypingFlag) {
-                        bubble.classList.remove('cursor');
-                        let partialText = text.substring(0, i) + " [Stopped]";
-                        bubble.innerHTML = marked.parse(partialText);
-                        renderMath(bubble);
-                        if (onComplete) onComplete(partialText);
-                        return;
-                    }
-                    if (i < text.length) {
-                        i += chunkSize;
-                        bubble.innerHTML = marked.parse(text.substring(0, i)); 
-                        chatView.scrollTop = chatView.scrollHeight;
-                        setTimeout(typeTick, 15);
-                    } else {
-                        bubble.classList.remove('cursor');
-                        bubble.innerHTML = marked.parse(text);
-                        renderMath(bubble);
+                if (skipTypewriter) {
+                    if (onComplete) onComplete(text);
+                } else {
+                    stopTypingFlag = false;
+                    
+                    // Smooth, staggered block-by-block fade in (replaces the jumpy character typewriter)
+                    const children = Array.from(bubble.children);
+                    children.forEach(child => {
+                        child.style.opacity = '0';
+                        child.style.transform = 'translateY(8px)';
+                        child.style.transition = 'opacity 0.25s ease-out, transform 0.25s ease-out';
+                    });
+
+                    children.forEach((child, index) => {
+                        setTimeout(() => {
+                            if (!stopTypingFlag) {
+                                child.style.opacity = '1';
+                                child.style.transform = 'translateY(0)';
+                            } else {
+                                child.style.opacity = '1';
+                                child.style.transform = 'translateY(0)';
+                            }
+                        }, index * 45); // Drop in a chunk every 45ms. Fast and smooth.
+                    });
+
+                    // Wait for the animation to finish before firing onComplete
+                    setTimeout(() => {
                         if (onComplete) onComplete(text);
-                    }
+                    }, children.length * 45 + 250);
                 }
-                typeTick();
             }
         }
 
@@ -1701,11 +1851,12 @@
                 const data = await res.json();
                 
                 if (data.answer) {
+                    const sources = data.sources || [];
                     renderBubble(data.answer, "ai", false, (finalText) => {
-                        saveMessage(finalText, "ai");
+                        saveMessage(finalText, "ai", sources);
                         toggleInputState(false);
                         abortController = null;
-                    });
+                    }, sources);
                 } else {
                     renderBubble("Error: The server returned an empty response.", "ai", true, (txt) => {
                         saveMessage(txt, "ai");
