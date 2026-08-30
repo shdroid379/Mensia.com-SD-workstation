@@ -19,6 +19,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- KaTeX Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
     
     <style>
         :root {
@@ -345,6 +350,11 @@
         .bubble.ai h1, .bubble.ai h2, .bubble.ai h3 { margin: 20px 0 10px 0; font-weight: 800; }
         .bubble.ai ul, .bubble.ai ol { margin-left: 20px; margin-bottom: 12px; }
         .bubble.ai a { color: var(--accent-blue); text-decoration: none; font-weight: 600; }
+        
+        /* KaTeX tweaks inside bubbles */
+        .bubble .katex-display { margin: 12px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+        .bubble .katex { font-size: 1.05em; }
+
         .cursor::after { content: '|'; animation: blink 1s step-end infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
@@ -358,8 +368,24 @@
         .input-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 10px; }
         select { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--card-border); padding: 10px 15px; border-radius: 12px; outline: none; font-size: 14px; cursor: pointer; font-weight: 600; }
         
-        .send-btn, .stop-btn { background: var(--text-main); color: var(--bg-color); border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; }
+        /* Action buttons: Send, Mic, Stop */
+        .send-btn, .stop-btn, .mic-btn { border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; font-size: 1rem; }
+        .send-btn { background: var(--text-main); color: var(--bg-color); }
         .send-btn:hover { background: var(--accent-blue); color: white; transform: scale(1.05); }
+        
+        .mic-btn { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); }
+        .mic-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); transform: scale(1.05); }
+        .mic-btn.recording {
+            background: #ff003c;
+            color: white;
+            border-color: #ff003c;
+            animation: mic-pulse 1.3s infinite ease-in-out;
+        }
+        @keyframes mic-pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 60, 0.4); }
+            50% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(255, 0, 60, 0); }
+        }
+
         .stop-btn { background: #ff003c; color: white; display: none; }
         .stop-btn:hover { background: #cc0030; transform: scale(1.05); }
         
@@ -615,7 +641,6 @@
             </div>
         </section>
 
-        <!-- HOMEPAGE CONTENT -->
         <section class="info-section">
             <div class="split-section">
                 <div class="split-image">
@@ -743,9 +768,7 @@
                     </div>
                 </div>
 
-                <div class="deck-sandbox" id="deck-sandbox">
-                    <!-- Sandbox dynamically loaded via JS -->
-                </div>
+                <div class="deck-sandbox" id="deck-sandbox"></div>
             </div>
         </div>
     </div>
@@ -753,7 +776,7 @@
     <!-- MAIN APP VIEW -->
     <div class="view-container app-view" id="app-view">
         
-        <!-- DESKTOP SIDEBAR (Untouched on Desktop, Hidden on Mobile) -->
+        <!-- DESKTOP SIDEBAR -->
         <aside class="sidebar">
             <button class="new-chat-btn" onclick="newConversation()"><i class="fa-solid fa-pen-to-square"></i> New Chat</button>
             <div class="history-title" style="margin-top: 25px;">Chat History</div>
@@ -791,10 +814,11 @@
                             <option value="search">Search (Standard)</option>
                             <option value="deep research">Deep Research (Max Truth)</option>
                         </select>
-                        <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
                             <div class="loader" id="loader">Auditing...</div>
-                            <button class="send-btn" id="send-btn" onclick="ask()"><i class="fa-solid fa-arrow-up"></i></button>
-                            <button class="stop-btn" id="stop-btn" onclick="stopGeneration()"><i class="fa-solid fa-stop"></i></button>
+                            <button class="mic-btn" id="mic-btn" onclick="toggleVoiceInput()" title="Voice to Text"><i class="fa-solid fa-microphone"></i></button>
+                            <button class="send-btn" id="send-btn" onclick="ask()" title="Send"><i class="fa-solid fa-arrow-up"></i></button>
+                            <button class="stop-btn" id="stop-btn" onclick="stopGeneration()" title="Stop"><i class="fa-solid fa-stop"></i></button>
                         </div>
                     </div>
                 </div>
@@ -1323,7 +1347,6 @@
                 const chat = savedChats[id];
                 if (chat.messages.length === 0 && id !== sessionId) return;
                 
-                // Helper to create chat item node
                 function createItem() {
                     const li = document.createElement("li");
                     li.className = "history-item" + (id === sessionId ? " active" : "");
@@ -1418,7 +1441,80 @@
             renderSidebar();
             updateWelcomePrompt();
         }
-// ----------------------------------------------------
+
+        // ----------------------------------------------------
+        // VOICE INPUT (WEB SPEECH API)
+        // ----------------------------------------------------
+        let recognition = null;
+        let isRecording = false;
+
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.warn("Speech recognition not supported in this browser.");
+                return null;
+            }
+            const rec = new SpeechRecognition();
+            rec.continuous = false;
+            rec.interimResults = true;
+            rec.lang = 'en-US';
+
+            rec.onstart = () => {
+                isRecording = true;
+                const micBtn = document.getElementById("mic-btn");
+                if (micBtn) micBtn.classList.add("recording");
+            };
+
+            rec.onresult = (event) => {
+                const transcript = Array.from(event.results)
+                    .map(result => result[0].transcript)
+                    .join('');
+                const q = document.getElementById("question");
+                if (q) {
+                    q.value = transcript;
+                    autoResize(q);
+                }
+            };
+
+            rec.onerror = (event) => {
+                console.error("Speech Recognition Error:", event.error);
+                stopVoiceInput();
+            };
+
+            rec.onend = () => {
+                stopVoiceInput();
+            };
+
+            return rec;
+        }
+
+        function toggleVoiceInput() {
+            if (!recognition) {
+                recognition = initSpeechRecognition();
+            }
+            if (!recognition) {
+                alert("Speech recognition is not supported in your current browser. Please try Chrome, Edge, or Safari.");
+                return;
+            }
+
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch (err) {
+                    console.error("Failed to start speech recognition:", err);
+                }
+            }
+        }
+
+        function stopVoiceInput() {
+            isRecording = false;
+            const micBtn = document.getElementById("mic-btn");
+            if (micBtn) micBtn.classList.remove("recording");
+        }
+
+        // ----------------------------------------------------
         // UI HELPERS, COPY BUTTON & ADAPTIVE LOADER
         // ----------------------------------------------------
         let loadingInterval = null;
@@ -1435,17 +1531,17 @@
         function toggleInputState(isGenerating, mode = "casual") {
             const sendBtn = document.getElementById("send-btn");
             const stopBtn = document.getElementById("stop-btn");
+            const micBtn = document.getElementById("mic-btn");
             const loader = document.getElementById("loader");
             
             if (isGenerating) {
                 sendBtn.style.display = "none";
+                if (micBtn) micBtn.style.display = "none";
                 stopBtn.style.display = "flex";
                 loader.style.display = "block";
 
-                // Clear any leftover interval
                 if (loadingInterval) clearInterval(loadingInterval);
 
-                // Set adaptive text based on mode
                 if (mode === "casual") {
                     loader.innerText = "Formulating...";
                 } else {
@@ -1458,10 +1554,11 @@
                     loadingInterval = setInterval(() => {
                         i = Math.min(i + 1, stages.length - 1);
                         loader.innerText = stages[i];
-                    }, 4000); // Changes text every 4 seconds
+                    }, 4000);
                 }
             } else {
                 sendBtn.style.display = "flex";
+                if (micBtn) micBtn.style.display = "flex";
                 stopBtn.style.display = "none";
                 loader.style.display = "none";
                 if (loadingInterval) {
@@ -1475,6 +1572,18 @@
             if (abortController) abortController.abort(); 
             stopTypingFlag = true; 
             toggleInputState(false);
+        }
+
+        function renderMath(element) {
+            if (window.renderMathInElement && element) {
+                renderMathInElement(element, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                    ],
+                    throwOnError: false
+                });
+            }
         }
 
         function renderBubble(text, sender, skipTypewriter = false, onComplete = null) {
@@ -1506,6 +1615,7 @@
 
             if (sender === 'user' || skipTypewriter) {
                 bubble.innerHTML = sender === 'ai' ? marked.parse(text) : text;
+                if (sender === 'ai') renderMath(bubble);
                 chatView.scrollTop = chatView.scrollHeight;
                 if (onComplete) onComplete(text);
             } else {
@@ -1519,6 +1629,7 @@
                         bubble.classList.remove('cursor');
                         let partialText = text.substring(0, i) + " [Stopped]";
                         bubble.innerHTML = marked.parse(partialText);
+                        renderMath(bubble);
                         if (onComplete) onComplete(partialText);
                         return;
                     }
@@ -1529,6 +1640,8 @@
                         setTimeout(typeTick, 15);
                     } else {
                         bubble.classList.remove('cursor');
+                        bubble.innerHTML = marked.parse(text);
+                        renderMath(bubble);
                         if (onComplete) onComplete(text);
                     }
                 }
@@ -1557,7 +1670,6 @@
             questionBox.value = "";
             questionBox.style.height = 'auto'; 
             
-            // Pass the mode to the UI toggle so it knows which loading text to use
             toggleInputState(true, mode);
             abortController = new AbortController();
 
