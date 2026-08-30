@@ -349,8 +349,23 @@
         .bubble.ai p { margin-bottom: 12px; }
         .bubble.ai h1, .bubble.ai h2, .bubble.ai h3 { margin: 20px 0 10px 0; font-weight: 800; }
         .bubble.ai ul, .bubble.ai ol { margin-left: 20px; margin-bottom: 12px; }
-        .bubble.ai a { color: var(--accent-blue); text-decoration: none; font-weight: 600; }
-        
+        .bubble.ai a { 
+        color: var(--accent-blue); 
+        text-decoration: none; 
+        font-weight: 800; 
+        background: rgba(56, 189, 248, 0.15); 
+        padding: 2px 7px; 
+        border-radius: 6px; 
+        font-size: 0.85em; 
+        margin: 0 3px; 
+        transition: all 0.2s ease; 
+    }
+    .bubble.ai a:hover { 
+        background: var(--accent-blue); 
+        color: white; 
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
+    }
         /* KaTeX tweaks inside bubbles */
         .bubble .katex-display { margin: 12px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
         .bubble .katex { font-size: 1.05em; }
