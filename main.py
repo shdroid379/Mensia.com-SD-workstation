@@ -70,3 +70,7 @@ async def deep_research(q: Question):
     return {"answer": answer}
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
+
+@app.get("/health")
+def health_check():
+    return {"status": "alive"}
