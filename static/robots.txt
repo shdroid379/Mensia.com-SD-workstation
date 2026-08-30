@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /health
+Disallow: /ask
+Disallow: /deep-research
+
+Sitemap: https://mensia-ai.onrender.com/sitemap.xml
