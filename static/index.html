@@ -7,7 +7,6 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-01CT2BRQDE');
     </script>
 
@@ -106,6 +105,7 @@
         body.dark-mode .hero-title::before, body.dark-mode .hero-title::after { content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; -webkit-text-fill-color: #ffffff; pointer-events: none; opacity: 0.9; }
         body.dark-mode .hero-title::before { left: 4px; text-shadow: -3px 0 #ff003c; animation: horror-glitch-1 2s infinite step-end alternate-reverse; }
         body.dark-mode .hero-title::after { left: -4px; text-shadow: 3px 0 #00ffff; animation: horror-glitch-2 2.5s infinite step-end alternate-reverse; }
+        
         @keyframes main-flicker { 0%, 9%, 11%, 19%, 21%, 69%, 71%, 100% { opacity: 1; transform: skew(0deg); } 10% { opacity: 0.1; transform: skew(-10deg); } 20% { opacity: 0.5; transform: skew(5deg); } 70% { opacity: 0; transform: skew(0deg); } }
         @keyframes horror-glitch-1 { 0% { clip-path: inset(20% 0 80% 0); transform: translate(4px, 1px) skew(2deg); } 10% { clip-path: inset(85% 0 5% 0); transform: translate(-4px, -2px) skew(-3deg); } 20% { clip-path: inset(10% 0 60% 0); transform: translate(5px, 2px) skew(4deg); } 30% { clip-path: inset(40% 0 20% 0); transform: translate(-3px, -1px) skew(-2deg); } 40% { clip-path: inset(70% 0 15% 0); transform: translate(4px, 1px) skew(1deg); } 50% { clip-path: inset(5% 0 90% 0); transform: translate(-5px, -2px) skew(-4deg); } 60% { clip-path: inset(55% 0 25% 0); transform: translate(3px, 2px) skew(3deg); } 70% { clip-path: inset(30% 0 40% 0); transform: translate(-4px, -1px) skew(-1deg); } 80% { clip-path: inset(90% 0 5% 0); transform: translate(5px, 1px) skew(2deg); } 90% { clip-path: inset(15% 0 75% 0); transform: translate(-3px, -2px) skew(-3deg); } 100% { clip-path: inset(50% 0 30% 0); transform: translate(4px, 2px) skew(1deg); } }
         @keyframes horror-glitch-2 { 0% { clip-path: inset(10% 0 60% 0); transform: translate(-4px, 1px) skew(-2deg); } 15% { clip-path: inset(75% 0 15% 0); transform: translate(4px, -2px) skew(3deg); } 30% { clip-path: inset(25% 0 50% 0); transform: translate(-5px, 2px) skew(-4deg); } 45% { clip-path: inset(90% 0 5% 0); transform: translate(3px, -1px) skew(2deg); } 60% { clip-path: inset(5% 0 85% 0); transform: translate(-4px, 1px) skew(-1deg); } 75% { clip-path: inset(60% 0 20% 0); transform: translate(5px, -2px) skew(4deg); } 90% { clip-path: inset(35% 0 45% 0); transform: translate(-3px, 2px) skew(-3deg); } 100% { clip-path: inset(80% 0 10% 0); transform: translate(4px, -1px) skew(1deg); } }
@@ -482,6 +482,18 @@
             flex-shrink: 0;
         }
 
+        /* Smooth transition for AI text chunks */
+        .smooth-chunk {
+            opacity: 0;
+            transform: translateY(3px);
+            transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+            display: inline-block;
+        }
+        .smooth-chunk.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         /* KaTeX tweaks inside bubbles */
         .bubble .katex-display { margin: 12px 0; overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
         .bubble .katex { font-size: 1.05em; }
@@ -496,6 +508,8 @@
         .input-controls { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; flex-wrap: wrap; gap: 10px; }
         select { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--card-border); padding: 10px 15px; border-radius: 12px; outline: none; font-size: 14px; cursor: pointer; font-weight: 600; }
         
+        select option:disabled { color: #ef4444; font-weight: bold; }
+
         /* Action buttons: Send, Mic, Stop */
         .send-btn, .stop-btn, .mic-btn { border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; font-size: 1rem; }
         .send-btn { background: var(--text-main); color: var(--bg-color); }
@@ -764,18 +778,42 @@
         <section class="info-section">
             <h2 class="section-title">Who is it for?</h2>
             <div class="grid-3">
-                <div class="card"><i class="fa-solid fa-user-tie"></i><h3>Executives</h3><p>Make data-driven decisions based on real-time market synthesis, not outdated pre-trained weights.</p></div>
-                <div class="card"><i class="fa-solid fa-microscope"></i><h3>Researchers</h3><p>Cut through hours of manual tab-switching. Let the Deep Research pipeline pull, parse, and cite exact claims instantly.</p></div>
-                <div class="card"><i class="fa-solid fa-code"></i><h3>Engineers</h3><p>Debug faster with an AI that actively fact-checks documentation online before guessing a syntax solution.</p></div>
+                <div class="card">
+                    <i class="fa-solid fa-user-tie"></i>
+                    <h3>Executives</h3>
+                    <p>Make data-driven decisions based on real-time market synthesis, not outdated pre-trained weights.</p>
+                </div>
+                <div class="card">
+                    <i class="fa-solid fa-microscope"></i>
+                    <h3>Researchers</h3>
+                    <p>Cut through hours of manual tab-switching. Let the Deep Research pipeline pull, parse, and cite exact claims instantly.</p>
+                </div>
+                <div class="card">
+                    <i class="fa-solid fa-code"></i>
+                    <h3>Engineers</h3>
+                    <p>Debug faster with an AI that actively fact-checks documentation online before guessing a syntax solution.</p>
+                </div>
             </div>
         </section>
 
         <section class="info-section" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--card-border);">
             <h2 class="section-title">Future Features</h2>
             <div class="grid-3">
-                <div class="card"><i class="fa-solid fa-file-pdf"></i><h3>Document Ingestion <span style="font-size:12px; color:var(--accent-blue);">(Coming Soon)</span></h3><p>Upload 1000-page enterprise PDFs and complex codebases. Mensia will parse, index, and reason across your private data.</p></div>
-                <div class="card"><i class="fa-solid fa-brain"></i><h3>Persistent Memory <span style="font-size:12px; color:var(--accent-green);">(In Dev)</span></h3><p>Mensia will learn your workflow, remembering past architectures and research constraints across entirely different sessions.</p></div>
-                <div class="card"><i class="fa-solid fa-crown"></i><h3>Mensia Pro Tier <span style="font-size:12px; color:var(--accent-blue);">(Late 2026)</span></h3><p>Dedicated compute clusters, priority routing for Deep Research, and API access for power users.</p></div>
+                <div class="card">
+                    <i class="fa-solid fa-file-pdf"></i>
+                    <h3>Document Ingestion <span style="font-size:12px; color:var(--accent-blue);">(Coming Soon)</span></h3>
+                    <p>Upload 1000-page enterprise PDFs and complex codebases. Mensia will parse, index, and reason across your private data.</p>
+                </div>
+                <div class="card">
+                    <i class="fa-solid fa-brain"></i>
+                    <h3>Persistent Memory <span style="font-size:12px; color:var(--accent-green);">(In Dev)</span></h3>
+                    <p>Mensia will learn your workflow, remembering past architectures and research constraints across entirely different sessions.</p>
+                </div>
+                <div class="card">
+                    <i class="fa-solid fa-crown"></i>
+                    <h3>Mensia Pro Tier <span style="font-size:12px; color:var(--accent-blue);">(Late 2026)</span></h3>
+                    <p>Dedicated compute clusters, priority routing for Deep Research, and API access for power users.</p>
+                </div>
             </div>
         </section>
         
@@ -842,7 +880,7 @@
         </p>
     </div>
 
-    <!-- THE PLAYBOOK (LIVE INTERACTIVE ARENA) -->
+    <!-- THE PLAYBOOK -->
     <div class="view-container playbook-view" id="playbook-view">
         <div class="playbook-header">
             <h1 class="section-title" style="margin-bottom: 15px;">The Playbook</h1>
@@ -934,6 +972,47 @@
 
     <script>
         // ----------------------------------------------------
+        // LIMIT SYNCING (FRONTEND <-> BACKEND)
+        // ----------------------------------------------------
+        async function syncLimits() {
+            try {
+                const res = await fetch('/limits');
+                if (!res.ok) return;
+                const limits = await res.json();
+                
+                const modeSelect = document.getElementById('mode');
+                const options = modeSelect.options;
+                
+                for (let opt of options) {
+                    const modeVal = opt.value;
+                    if (limits[modeVal]) {
+                        opt.disabled = true;
+                        if (!opt.innerText.includes("(Limit Reached)")) {
+                            const baseText = opt.innerText.split('(')[0].trim();
+                            opt.innerText = baseText + " (Limit Reached)";
+                        }
+                    }
+                }
+                
+                // Auto-switch away from exhausted modes
+                if (modeSelect.options[modeSelect.selectedIndex].disabled) {
+                    for(let opt of options) {
+                        if(!opt.disabled) {
+                            modeSelect.value = opt.value;
+                            break;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error("Could not sync limits:", e);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            syncLimits();
+        });
+
+        // ----------------------------------------------------
         // VIEW NAVIGATION
         // ----------------------------------------------------
         function showView(viewId) {
@@ -1007,34 +1086,10 @@
         let thiefSpawnTimer = null;
 
         const PLAYBOOK_MODES = {
-            casual: {
-                tag: "Latency Optimized",
-                title: "Casual Mode",
-                desc: "Bypasses all external web pipelines to deliver pure, immediate conversational response. Tap nodes inside the arena to fire synapse pulses across the neural web.",
-                audit: "Passive",
-                auditColor: "var(--accent-green)"
-            },
-            search: {
-                tag: "Verified Live Grounding",
-                title: "Search (Standard)",
-                desc: "Queries real-time indexes and invokes the secondary cognitive auditor to eliminate hallucinations. Click the verified source targets as they pop up to lock down data accuracy.",
-                audit: "Strict 1-Pass",
-                auditColor: "var(--accent-blue)"
-            },
-            deep: {
-                tag: "Max Truth Extraction",
-                title: "Deep Research",
-                desc: "Fires concurrent queries across multiple independent search topologies. Click rogue anomaly blips to purge them before they reach the CCTV radar intercept zones. Purge 24 blips without reaching 10 scans to win!",
-                audit: "Recursive MoE",
-                auditColor: "#8b5cf6"
-            },
-            intense: {
-                tag: "CLASSIFIED PROTOCOL",
-                title: "Spoiler: Intense Dive",
-                desc: "A strictly uninhibited, unhedged adversarial analysis mode designed to tear apart corporate and geopolitical disinformation with zero sugarcoating. Under dark mode, structural containment fails.",
-                audit: "RUTHLESS",
-                auditColor: "#ff003c"
-            }
+            casual: { tag: "Latency Optimized", title: "Casual Mode", desc: "Bypasses all external web pipelines to deliver pure, immediate conversational response. Tap nodes inside the arena to fire synapse pulses across the neural web.", audit: "Passive", auditColor: "var(--accent-green)" },
+            search: { tag: "Verified Live Grounding", title: "Search (Standard)", desc: "Queries real-time indexes and invokes the secondary cognitive auditor to eliminate hallucinations. Click the verified source targets as they pop up to lock down data accuracy.", audit: "Strict 1-Pass", auditColor: "var(--accent-blue)" },
+            deep: { tag: "Max Truth Extraction", title: "Deep Research", desc: "Fires concurrent queries across multiple independent search topologies. Click rogue anomaly blips to purge them before they reach the CCTV radar intercept zones. Purge 24 blips without reaching 10 scans to win!", audit: "Recursive MoE", auditColor: "#8b5cf6" },
+            intense: { tag: "CLASSIFIED PROTOCOL", title: "Spoiler: Intense Dive", desc: "A strictly uninhibited, unhedged adversarial analysis mode designed to tear apart corporate and geopolitical disinformation with zero sugarcoating. Under dark mode, structural containment fails.", audit: "RUTHLESS", auditColor: "#ff003c" }
         };
 
         function switchPlaybookMode(modeKey) {
@@ -1044,7 +1099,6 @@
             if (thiefSpawnTimer) { clearInterval(thiefSpawnTimer); thiefSpawnTimer = null; }
 
             const data = PLAYBOOK_MODES[modeKey];
-            
             const tabs = document.querySelectorAll('.deck-tab');
             tabs.forEach(t => t.classList.remove('active'));
             const clickedIndex = ['casual', 'search', 'deep', 'intense'].indexOf(modeKey);
@@ -1092,11 +1146,10 @@
                         document.getElementById('synapse-count').innerText = count;
                         node.style.transform = "translate(-50%, -50%) scale(2)";
                         node.style.background = "#34d399";
-                        setTimeout(() => {
-                            node.style.transform = "translate(-50%, -50%) scale(1)";
-                            node.style.background = "var(--accent-blue)";
+                        setTimeout(() => { 
+                            node.style.transform = "translate(-50%, -50%) scale(1)"; 
+                            node.style.background = "var(--accent-blue)"; 
                         }, 200);
-
                         const wave = document.createElement('div');
                         wave.className = 'synapse-wave';
                         wave.style.left = node.style.left;
@@ -1115,7 +1168,6 @@
                 `;
                 const zone = document.getElementById('target-zone');
                 let score = 0;
-
                 function spawnTarget() {
                     if (activePlaybookMode !== 'search') return;
                     zone.innerHTML = "";
@@ -1126,18 +1178,16 @@
                     const zoneH = zone.clientHeight || 220;
                     target.style.left = Math.random() * Math.max(zoneW - 62, 10) + 10 + 'px';
                     target.style.top = Math.random() * Math.max(zoneH - 62, 10) + 10 + 'px';
-                    
-                    target.onclick = () => {
-                        score++;
-                        document.getElementById('search-score').innerText = score;
-                        target.remove();
-                        spawnTarget();
+                    target.onclick = () => { 
+                        score++; 
+                        document.getElementById('search-score').innerText = score; 
+                        target.remove(); 
+                        spawnTarget(); 
                     };
                     zone.appendChild(target);
                 }
                 spawnTarget();
                 searchGameInterval = setInterval(spawnTarget, 1600);
-
             } else if (activePlaybookMode === 'deep') {
                 initDeepResearchGame();
             } else if (activePlaybookMode === 'intense') {
@@ -1176,42 +1226,40 @@
                     <div class="mini-radar" style="bottom: 20px; left: 50%; transform: translateX(-50%);"><div class="mini-sweep" style="animation-delay: 1.4s;"></div></div>
                 </div>
             `;
-
             const arenaEl = document.getElementById('deep-arena');
-            let deepScore = 0;
-            let scannedScore = 0;
-            let spawnIntervalTime = 1800;
+            let deepScore = 0; 
+            let scannedScore = 0; 
+            let spawnIntervalTime = 1800; 
             let speedMultiplier = 0.8;
-            const arenaW = arenaEl.clientWidth || 320;
+            
+            const arenaW = arenaEl.clientWidth || 320; 
             const arenaH = arenaEl.clientHeight || 320;
             const radarCenters = [
-                {x: 25 + 45, y: 20 + 45, radius: 45},
-                {x: arenaW - 25 - 45, y: 20 + 45, radius: 45},
+                {x: 25 + 45, y: 20 + 45, radius: 45}, 
+                {x: arenaW - 25 - 45, y: 20 + 45, radius: 45}, 
                 {x: arenaW / 2, y: arenaH - 20 - 45, radius: 45}
             ];
             const redThieves = [];
 
             function spawnThief() {
                 if (activePlaybookMode !== 'deep') return;
-                
-                let x, y, safe = false;
+                let x, y, safe = false; 
                 let attempts = 0;
                 while (!safe && attempts < 20) {
-                    x = Math.random() * (arenaW - 60) + 30;
-                    y = Math.random() * (arenaH - 70) + 50;
+                    x = Math.random() * (arenaW - 60) + 30; 
+                    y = Math.random() * (arenaH - 70) + 50; 
                     safe = true;
-                    for (let rc of radarCenters) {
-                        if (Math.hypot(x - rc.x, y - rc.y) < rc.radius + 25) {
-                            safe = false;
-                            break;
-                        }
+                    for (let rc of radarCenters) { 
+                        if (Math.hypot(x - rc.x, y - rc.y) < rc.radius + 25) { 
+                            safe = false; 
+                            break; 
+                        } 
                     }
                     attempts++;
                 }
-
-                const thief = document.createElement('div');
-                thief.className = 'red-thief';
-                thief.style.left = x + 'px';
+                const thief = document.createElement('div'); 
+                thief.className = 'red-thief'; 
+                thief.style.left = x + 'px'; 
                 thief.style.top = y + 'px';
                 
                 const obj = { 
@@ -1224,50 +1272,34 @@
                 };
                 
                 thief.onclick = (e) => {
-                    e.stopPropagation();
-                    if (!obj.active) return;
-                    obj.active = false;
+                    e.stopPropagation(); 
+                    if (!obj.active) return; 
+                    obj.active = false; 
                     deepScore++;
-                    
-                    const purgedEl = document.getElementById('deep-purged');
+                    const purgedEl = document.getElementById('deep-purged'); 
                     if (purgedEl) purgedEl.innerText = deepScore;
-
-                    if (deepScore % 5 === 0) {
-                        speedMultiplier += 0.3;
-                        if (spawnIntervalTime > 600) spawnIntervalTime -= 250;
-                        resetSpawnTimer();
+                    if (deepScore % 5 === 0) { 
+                        speedMultiplier += 0.3; 
+                        if (spawnIntervalTime > 600) spawnIntervalTime -= 250; 
+                        resetSpawnTimer(); 
                     }
-
-                    if (deepScore >= 24) {
-                        endDeepGame(true);
-                        return;
-                    }
-
-                    thief.classList.add('poof');
+                    if (deepScore >= 24) { endDeepGame(true); return; }
+                    thief.classList.add('poof'); 
                     setTimeout(() => thief.remove(), 200);
                 };
-
-                arenaEl.appendChild(thief);
+                
+                arenaEl.appendChild(thief); 
                 redThieves.push(obj);
-
-                setTimeout(() => {
-                    if (obj.active) {
-                        obj.active = false;
-                        thief.remove();
-                    }
+                setTimeout(() => { 
+                    if (obj.active) { obj.active = false; thief.remove(); } 
                 }, 7000);
             }
 
             function resetSpawnTimer() {
                 if (thiefSpawnTimer) clearInterval(thiefSpawnTimer);
                 thiefSpawnTimer = setInterval(() => {
-                    if (activePlaybookMode !== 'deep') {
-                        clearInterval(thiefSpawnTimer);
-                        return;
-                    }
-                    if (redThieves.filter(t => t.active).length < 6) {
-                        spawnThief();
-                    }
+                    if (activePlaybookMode !== 'deep') { clearInterval(thiefSpawnTimer); return; }
+                    if (redThieves.filter(t => t.active).length < 6) { spawnThief(); }
                 }, spawnIntervalTime);
             }
             resetSpawnTimer();
@@ -1278,25 +1310,20 @@
                     if (!t.active) return;
                     t.x += t.vx; 
                     t.y += t.vy;
-                    if(t.x < 10 || t.x > arenaW - 10) t.vx *= -1;
+                    if(t.x < 10 || t.x > arenaW - 10) t.vx *= -1; 
                     if(t.y < 10 || t.y > arenaH - 10) t.vy *= -1;
-                    t.el.style.left = t.x + 'px';
+                    t.el.style.left = t.x + 'px'; 
                     t.el.style.top = t.y + 'px';
-
                     for(let rc of radarCenters) {
                         let dist = Math.hypot(t.x - rc.x, t.y - rc.y);
                         if(dist < rc.radius) {
-                            t.active = false;
-                            t.el.classList.add('poof');
+                            t.active = false; 
+                            t.el.classList.add('poof'); 
                             setTimeout(() => t.el.remove(), 200);
-
-                            scannedScore++;
-                            const scannedEl = document.getElementById('deep-scanned');
+                            scannedScore++; 
+                            const scannedEl = document.getElementById('deep-scanned'); 
                             if (scannedEl) scannedEl.innerText = scannedScore;
-
-                            if (scannedScore >= 10) {
-                                endDeepGame(false);
-                            }
+                            if (scannedScore >= 10) { endDeepGame(false); }
                             break;
                         }
                     }
@@ -1307,10 +1334,8 @@
         function endDeepGame(isWin) {
             if (thievesInterval) { clearInterval(thievesInterval); thievesInterval = null; }
             if (thiefSpawnTimer) { clearInterval(thiefSpawnTimer); thiefSpawnTimer = null; }
-
             const sandbox = document.getElementById('deck-sandbox');
             if (!sandbox) return;
-
             sandbox.innerHTML = `
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:20px;">
                     <h3 style="font-size:2rem; font-weight:800; color:${isWin ? 'var(--accent-green)' : '#ff003c'}; margin-bottom:10px;">
@@ -1319,7 +1344,9 @@
                     <p style="font-size:0.95rem; color:var(--text-muted); margin-bottom:20px;">
                         ${isWin ? 'You successfully purged 24 anomalies!' : '10 blips scanned! Both meters reset.'}
                     </p>
-                    <button onclick="switchPlaybookMode('deep')" style="padding:10px 24px; background:var(--text-main); color:var(--bg-color); border:none; border-radius:14px; font-weight:700; cursor:pointer;">RESTART GRID</button>
+                    <button onclick="switchPlaybookMode('deep')" style="padding:10px 24px; background:var(--text-main); color:var(--bg-color); border:none; border-radius:14px; font-weight:700; cursor:pointer;">
+                        RESTART GRID
+                    </button>
                 </div>
             `;
         }
@@ -1327,90 +1354,94 @@
         function triggerJumpscare() {
             const sandbox = document.getElementById('deck-sandbox');
             for(let i=0; i<4; i++) {
-                const eye = document.createElement('div');
-                eye.className = 'ghost-eye';
-                eye.style.left = Math.random() * 70 + 15 + "%";
-                eye.style.top = Math.random() * 70 + 15 + "%";
+                const eye = document.createElement('div'); 
+                eye.className = 'ghost-eye'; 
+                eye.style.left = Math.random() * 70 + 15 + "%"; 
+                eye.style.top = Math.random() * 70 + 15 + "%"; 
                 eye.style.opacity = '1';
-                sandbox.appendChild(eye);
+                sandbox.appendChild(eye); 
                 setTimeout(() => eye.remove(), 600);
             }
-        }
-
-        // ----------------------------------------------------
-        // RATE LIMIT MANAGER
-        // ----------------------------------------------------
-        const LIMITS = {
-            "casual": 350,
-            "search": 25,
-            "deep research": 2
-        };
-
-        function checkAndIncrementLimit(modeStr) {
-            const mode = modeStr.toLowerCase();
-            const today = new Date().toISOString().split('T')[0];
-            let usage = JSON.parse(localStorage.getItem("mensia_usage")) || {};
-            
-            if (usage.date !== today) {
-                usage = { date: today, casual: 0, search: 0, "deep research": 0 };
-            }
-            if (usage[mode] >= LIMITS[mode]) {
-                return false; 
-            }
-            usage[mode]++;
-            localStorage.setItem("mensia_usage", JSON.stringify(usage));
-            return true;
         }
 
         // ----------------------------------------------------
         // PHYSICS ENGINE
         // ----------------------------------------------------
         const arena = document.getElementById('hero-arena');
-        function ballRadius(el, fallback) {
-            const r = el ? el.getBoundingClientRect().width / 2 : 0;
-            return r > 0 ? r : fallback;
+        
+        function ballRadius(el, fallback) { 
+            const r = el ? el.getBoundingClientRect().width / 2 : 0; 
+            return r > 0 ? r : fallback; 
         }
-        const el1 = document.getElementById('ball1');
-        const el2 = document.getElementById('ball2');
+        
+        const el1 = document.getElementById('ball1'); 
+        const el2 = document.getElementById('ball2'); 
         const el3 = document.getElementById('ball3');
-        const arenaW = arena ? arena.clientWidth : window.innerWidth;
+        
+        const arenaW = arena ? arena.clientWidth : window.innerWidth; 
         const arenaH = arena ? arena.clientHeight : window.innerHeight;
+        
         const balls = [
             { id: 'ball1', el: el1, radius: ballRadius(el1, 70), x: arenaW * 0.2, y: arenaH * 0.3, vx: 1.2, vy: 1.0 },
             { id: 'ball2', el: el2, radius: ballRadius(el2, 50), x: arenaW * 0.8, y: arenaH * 0.7, vx: -1.0, vy: -1.2 },
             { id: 'ball3', el: el3, radius: ballRadius(el3, 85), x: arenaW * 0.5, y: arenaH * 0.5, vx: -0.8, vy: 1.4 }
         ];
+        
         function physicsLoop() {
             if (!arena) return;
-            const width = arena.clientWidth; const height = arena.clientHeight;
+            const width = arena.clientWidth; 
+            const height = arena.clientHeight;
+            
             for (let b of balls) {
-                b.x += b.vx; b.y += b.vy;
+                b.x += b.vx; 
+                b.y += b.vy;
                 if (b.x - b.radius < 0) { b.x = b.radius; b.vx *= -1; }
                 if (b.x + b.radius > width) { b.x = width - b.radius; b.vx *= -1; }
                 if (b.y - b.radius < 0) { b.y = b.radius; b.vy *= -1; }
                 if (b.y + b.radius > height) { b.y = height - b.radius; b.vy *= -1; }
             }
+            
             for (let i = 0; i < balls.length; i++) {
                 for (let j = i + 1; j < balls.length; j++) {
-                    let b1 = balls[i]; let b2 = balls[j];
-                    let dx = b2.x - b1.x; let dy = b2.y - b1.y;
-                    let distance = Math.hypot(dx, dy); let minDist = b1.radius + b2.radius;
+                    let b1 = balls[i]; 
+                    let b2 = balls[j]; 
+                    let dx = b2.x - b1.x; 
+                    let dy = b2.y - b1.y;
+                    let distance = Math.hypot(dx, dy); 
+                    let minDist = b1.radius + b2.radius;
+                    
                     if (distance < minDist) {
-                        let angle = Math.atan2(dy, dx); let sin = Math.sin(angle); let cos = Math.cos(angle);
-                        let vx1 = b1.vx * cos + b1.vy * sin; let vy1 = b1.vy * cos - b1.vx * sin;
-                        let vx2 = b2.vx * cos + b2.vy * sin; let vy2 = b2.vy * cos - b2.vx * sin;
-                        let m1 = b1.radius * b1.radius; let m2 = b2.radius * b2.radius;
-                        let vx1Final = ((m1 - m2) * vx1 + 2 * m2 * vx2) / (m1 + m2);
+                        let angle = Math.atan2(dy, dx); 
+                        let sin = Math.sin(angle); 
+                        let cos = Math.cos(angle);
+                        
+                        let vx1 = b1.vx * cos + b1.vy * sin; 
+                        let vy1 = b1.vy * cos - b1.vx * sin;
+                        let vx2 = b2.vx * cos + b2.vy * sin; 
+                        let vy2 = b2.vy * cos - b2.vx * sin;
+                        
+                        let m1 = b1.radius * b1.radius; 
+                        let m2 = b2.radius * b2.radius;
+                        
+                        let vx1Final = ((m1 - m2) * vx1 + 2 * m2 * vx2) / (m1 + m2); 
                         let vx2Final = ((m2 - m1) * vx2 + 2 * m1 * vx1) / (m1 + m2);
-                        b1.vx = vx1Final * cos - vy1 * sin; b1.vy = vy1 * cos + vx1Final * sin;
-                        b2.vx = vx2Final * cos - vy2 * sin; b2.vy = vy2 * cos + vx2Final * sin;
+                        
+                        b1.vx = vx1Final * cos - vy1 * sin; 
+                        b1.vy = vy1 * cos + vx1Final * sin;
+                        b2.vx = vx2Final * cos - vy2 * sin; 
+                        b2.vy = vy2 * cos + vx2Final * sin;
+                        
                         let overlap = (minDist - distance) / 2;
-                        b1.x -= overlap * Math.cos(angle); b1.y -= overlap * Math.sin(angle);
-                        b2.x += overlap * Math.cos(angle); b2.y += overlap * Math.sin(angle);
+                        b1.x -= overlap * Math.cos(angle); 
+                        b1.y -= overlap * Math.sin(angle);
+                        b2.x += overlap * Math.cos(angle); 
+                        b2.y += overlap * Math.sin(angle);
                     }
                 }
             }
-            for (let b of balls) { b.el.style.transform = `translate(${b.x - b.radius}px, ${b.y - b.radius}px) translateZ(0)`; }
+            for (let b of balls) { 
+                b.el.style.transform = `translate(${b.x - b.radius}px, ${b.y - b.radius}px) translateZ(0)`; 
+            }
             requestAnimationFrame(physicsLoop);
         }
         physicsLoop();
@@ -1570,9 +1601,7 @@
             };
 
             rec.onresult = (event) => {
-                const transcript = Array.from(event.results)
-                    .map(result => result[0].transcript)
-                    .join('');
+                const transcript = Array.from(event.results).map(result => result[0].transcript).join('');
                 const q = document.getElementById("question");
                 if (q) {
                     q.value = transcript;
@@ -1585,31 +1614,14 @@
                 stopVoiceInput();
             };
 
-            rec.onend = () => {
-                stopVoiceInput();
-            };
-
+            rec.onend = () => { stopVoiceInput(); };
             return rec;
         }
 
         function toggleVoiceInput() {
-            if (!recognition) {
-                recognition = initSpeechRecognition();
-            }
-            if (!recognition) {
-                alert("Speech recognition is not supported in your current browser. Please try Chrome, Edge, or Safari.");
-                return;
-            }
-
-            if (isRecording) {
-                recognition.stop();
-            } else {
-                try {
-                    recognition.start();
-                } catch (err) {
-                    console.error("Failed to start speech recognition:", err);
-                }
-            }
+            if (!recognition) { recognition = initSpeechRecognition(); }
+            if (!recognition) { alert("Speech recognition is not supported in your browser."); return; }
+            if (isRecording) { recognition.stop(); } else { try { recognition.start(); } catch (err) { console.error("Failed to start speech recognition:", err); } }
         }
 
         function stopVoiceInput() {
@@ -1697,11 +1709,9 @@
 
         function processMarkdownAndCitations(rawText, sources = []) {
             let parsed = marked.parse(rawText);
-            
             if (sources && sources.length > 0) {
                 const sourceMap = {};
                 sources.forEach(s => { sourceMap[s.id] = s.url; });
-                
                 parsed = parsed.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, nums) => {
                     const indices = nums.split(',').map(n => n.trim());
                     const badges = indices.map(id => {
@@ -1772,11 +1782,10 @@
 
             if (sender === 'user') {
                 bubble.innerText = text;
-                // Only auto-scroll when the user sends their prompt
+                // Auto-scroll ONLY when user sends a message so they don't lose their place
                 chatView.scrollTop = chatView.scrollHeight; 
                 if (onComplete) onComplete(text);
             } else {
-                // Parse full text instantly so math and markdown do not break
                 const fullHtml = processMarkdownAndCitations(text, sources) + createSourcesDrawerHtml(sources);
                 bubble.innerHTML = fullHtml;
                 renderMath(bubble);
@@ -1785,9 +1794,9 @@
                     if (onComplete) onComplete(text);
                 } else {
                     stopTypingFlag = false;
-                    
-                    // Smooth, staggered block-by-block fade in (replaces the jumpy character typewriter)
                     const children = Array.from(bubble.children);
+                    
+                    // Smooth, staggered block-by-block fade in (no layout thrashing or auto-scroll drag)
                     children.forEach(child => {
                         child.style.opacity = '0';
                         child.style.transform = 'translateY(8px)';
@@ -1803,10 +1812,9 @@
                                 child.style.opacity = '1';
                                 child.style.transform = 'translateY(0)';
                             }
-                        }, index * 45); // Drop in a chunk every 45ms. Fast and smooth.
+                        }, index * 45); 
                     });
 
-                    // Wait for the animation to finish before firing onComplete
                     setTimeout(() => {
                         if (onComplete) onComplete(text);
                     }, children.length * 45 + 250);
@@ -1817,16 +1825,18 @@
         async function ask() {
             const questionBox = document.getElementById("question");
             const question = questionBox.value.trim();
-            const mode = document.getElementById("mode").value;
+            const modeSelect = document.getElementById("mode");
+            const mode = modeSelect.value;
 
             if (!question) return;
 
-            if (!checkAndIncrementLimit(mode)) {
-                renderBubble(question, "user");
-                renderBubble(`**Limit Reached:** You have exhausted your daily limit for **${mode}** mode on the Free Tier. Please check the Plans page.`, "ai", true);
-                questionBox.value = "";
-                questionBox.style.height = 'auto';
-                return;
+            // Instantly block the frontend if the limits fetched from backend show it's disabled
+            if (modeSelect.options[modeSelect.selectedIndex].disabled) {
+                 renderBubble(question, "user");
+                 renderBubble(`**Limit Reached:** Your IP has exhausted the daily limit for **${mode}** mode.`, "ai", true);
+                 questionBox.value = "";
+                 questionBox.style.height = 'auto';
+                 return;
             }
 
             renderBubble(question, "user");
@@ -1848,14 +1858,31 @@
                     signal: abortController.signal
                 });
                 
+                // EXPLICIT TIMEOUT/CRASH CATCHER
+                if (!res.ok) {
+                    throw new Error(`Server crashed or timed out (Status: ${res.status}). The context block may have been too large to audit in time.`);
+                }
+                
                 const data = await res.json();
                 
+                // Handle hard limit blocks sent by backend processing
+                if (data.error) {
+                    renderBubble(`**System:** ${data.error}`, "ai", true, (txt) => {
+                        saveMessage(txt, "ai");
+                        toggleInputState(false);
+                        abortController = null;
+                        syncLimits(); 
+                    });
+                    return;
+                }
+
                 if (data.answer) {
                     const sources = data.sources || [];
                     renderBubble(data.answer, "ai", false, (finalText) => {
                         saveMessage(finalText, "ai", sources);
                         toggleInputState(false);
                         abortController = null;
+                        syncLimits(); 
                     }, sources);
                 } else {
                     renderBubble("Error: The server returned an empty response.", "ai", true, (txt) => {
@@ -1868,7 +1895,7 @@
                 if (err.name === 'AbortError') {
                     renderBubble("Generation aborted by user.", "ai", true, (txt) => saveMessage(txt, "ai"));
                 } else {
-                    renderBubble("Connection Error: Server unreachable.", "ai", true, (txt) => saveMessage(txt, "ai"));
+                    renderBubble(`Connection Error: ${err.message}`, "ai", true, (txt) => saveMessage(txt, "ai"));
                     console.error("Mensia Error:", err);
                 }
                 toggleInputState(false);
