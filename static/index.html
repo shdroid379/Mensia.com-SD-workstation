@@ -186,13 +186,13 @@
         .plans-view { flex-direction: column; align-items: center; padding: 60px 5%; width: 100%; }
         .plans-header { text-align: center; margin-bottom: 60px; padding-top: 20px; width: 100%; }
         .coming-soon-badge { display: inline-block; background: var(--accent-blue); color: #fff; padding: 8px 20px; border-radius: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-size: 0.9rem; animation: pulse 2s infinite; }
-        .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px; width: 100%; max-width: 1300px; }
-        .plan-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 40px; backdrop-filter: blur(12px); box-shadow: var(--shadow); position: relative; overflow: hidden; transition: 0.3s; }
+        .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; width: 100%; max-width: 1300px; }
+        .plan-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 30px; backdrop-filter: blur(12px); box-shadow: var(--shadow); position: relative; overflow: hidden; transition: 0.3s; }
         .plan-card:hover { transform: translateY(-10px); border-color: var(--accent-blue); }
-        .plan-card h3 { font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 10px; }
-        .plan-card .price { font-size: 1.2rem; color: var(--text-muted); margin-bottom: 30px; border-bottom: 1px solid var(--card-border); padding-bottom: 20px; }
-        .plan-card ul { list-style: none; margin-bottom: 30px; }
-        .plan-card li { font-size: 1.1rem; margin-bottom: 15px; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .plan-card h3 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 10px; }
+        .plan-card .price { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 25px; border-bottom: 1px solid var(--card-border); padding-bottom: 15px; }
+        .plan-card ul { list-style: none; margin-bottom: 20px; }
+        .plan-card li { font-size: 1rem; margin-bottom: 12px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .disclaimer-text { max-width: 800px; text-align: center; margin-top: 60px; font-size: 1.2rem; color: var(--text-muted); line-height: 1.6; font-weight: 600; padding-bottom: 50px; }
 
         /* Playbook Deck */
@@ -494,7 +494,7 @@
                 <div class="plan-upgrade-banner">
                     <div>
                         <h4 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">Scale Beyond 350 Queries</h4>
-                        <p style="font-size: 0.92rem; color: var(--text-muted);">Pro and Ultra dedicated compute tiers are launching in late 2026.</p>
+                        <p style="font-size: 0.92rem; color: var(--text-muted);">Pro, Ultra, and Deluxe compute tiers are launching late 2026.</p>
                     </div>
                     <button class="plan-upgrade-btn" onclick="showView('plans')">View Upcoming Plans <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
@@ -586,11 +586,29 @@
                     <li><i class="fa-solid fa-check" style="color:var(--accent-green); margin-right:10px;"></i> 8 Deep Research / Day</li>
                 </ul>
             </div>
+            <div class="plan-card" style="border-top: 4px solid var(--accent-purple);">
+                <h3>Ultra</h3>
+                <div class="price">$30 / Month</div>
+                <ul>
+                    <li><i class="fa-solid fa-check" style="color:var(--accent-green); margin-right:10px;"></i> 450 Casual / Day</li>
+                    <li><i class="fa-solid fa-check" style="color:var(--accent-green); margin-right:10px;"></i> 40 Standard / Day</li>
+                    <li><i class="fa-solid fa-check" style="color:var(--accent-green); margin-right:10px;"></i> 15 Deep Research / Day</li>
+                </ul>
+            </div>
+            <div class="plan-card" style="border-top: 4px solid #f59e0b;">
+                <h3>Deluxe</h3>
+                <div class="price">$50 / Month</div>
+                <ul>
+                    <li><i class="fa-solid fa-check" style="color:var(--accent-green); margin-right:10px;"></i> 500 Casual / Day</li>
+                    <li><i class="fa-solid fa-check" style="color:var(--accent-green); margin-right:10px;"></i> 50 Standard / Day</li>
+                    <li><i class="fa-solid fa-check" style="color:var(--accent-green); margin-right:10px;"></i> 25 Deep Research / Day</li>
+                </ul>
+            </div>
         </div>
-        <p class="disclaimer-text">Log in with a free account to instantly upgrade your limits across all three intelligence modes!</p>
+        <p class="disclaimer-text">Log in with a free account to instantly upgrade your limits across all intelligence modes!</p>
     </div>
 
-    <!-- PLAYBOOK VIEW (RESTORED MINI-GAMES) -->
+    <!-- PLAYBOOK VIEW -->
     <div class="view-container playbook-view" id="playbook-view">
         <div class="playbook-header">
             <h1 class="section-title" style="margin-bottom: 15px;">The Playbook</h1>
@@ -816,31 +834,23 @@
 
             try {
                 if (activeAuthTab === 'login') {
-                    // SIGN IN FLOW
                     const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-                    
-                    // IT CARES: Check if they actually clicked the verification link!
                     if (!userCredential.user.emailVerified) {
                         await firebase.auth().signOut();
                         throw new Error("This account hasn't been activated yet. Please click the verification link sent to your email.");
                     }
-                    
-                    // If verified, let them in!
                     closeAuthModal();
                 } else {
-                    // SIGN UP FLOW
                     const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                     if (userCredential.user) {
                         await userCredential.user.sendEmailVerification();
-                        await firebase.auth().signOut(); // Kick them out immediately
-                        
+                        await firebase.auth().signOut();
                         errorEl.style.color = "var(--accent-green)";
                         errorEl.innerText = "Account reserved! A verification link has been sent. You MUST click it before you can sign in.";
                         document.getElementById('auth-password').value = '';
                     }
                 }
             } catch (err) {
-                // STRICT ERROR HANDLING
                 if (err.code === 'auth/email-already-in-use') {
                     errorEl.innerText = "This email is already booked! Please switch to Sign In.";
                 } else if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
@@ -873,7 +883,7 @@
             try {
                 await firebase.auth().sendPasswordResetEmail(email);
                 errorEl.style.color = "var(--accent-green)";
-                errorEl.innerText = "Password reset email sent! Check your inbox and Spam/Promotions folders. Upon creating a new password, enter it and sign in.";
+                errorEl.innerText = "Password reset email sent! Check your inbox.";
             } catch (err) {
                 errorEl.style.color = "#ef4444";
                 errorEl.innerText = err.message.replace('Firebase: ', '');
@@ -894,7 +904,7 @@
                 alert("Account deleted successfully.");
                 showView('home');
             } catch (err) {
-                alert("Error: " + err.message + "\nPlease re-login before deleting your account.");
+                alert("Error: " + err.message + "\nPlease sign out and re-login before deleting your account.");
             }
         }
 
@@ -967,7 +977,7 @@
         const PLAYBOOK_MODES = {
             casual: { tag: "Latency Optimized", title: "Casual Mode", desc: "Bypasses all external web pipelines to deliver pure, immediate conversational response. Tap nodes inside the arena to fire synapse pulses across the neural web.", audit: "Passive", auditColor: "var(--accent-green)" },
             search: { tag: "Verified Live Grounding", title: "Search (Standard)", desc: "Queries real-time indexes and invokes the secondary cognitive auditor to eliminate hallucinations. Click the verified source targets as they pop up to lock down data accuracy.", audit: "Strict 1-Pass", auditColor: "var(--accent-blue)" },
-            deep: { tag: "Max Truth Extraction", title: "Deep Research", desc: "Fires concurrent queries across multiple independent search topologies. Click rogue anomaly blips to purge them before they reach the CCTV radar intercept zones.", audit: "Recursive MoE", auditColor: "#8b5cf6" },
+            deep: { tag: "Max Truth Extraction", title: "Deep Research", desc: "Fires concurrent queries across multiple independent search topologies. Click rogue anomaly blips to purge them before they reach the CCTV radar intercept zones. Purge 24 blips without reaching 10 scans to win!", audit: "Recursive MoE", auditColor: "#8b5cf6" },
             intense: { tag: "CLASSIFIED PROTOCOL", title: "Spoiler: Intense Dive", desc: "A strictly uninhibited, unhedged adversarial analysis mode designed to tear apart corporate disinformation. Under dark mode, structural containment fails.", audit: "RUTHLESS", auditColor: "#ff003c" }
         };
 
@@ -1033,14 +1043,88 @@
                 spawnTarget();
                 searchGameInterval = setInterval(spawnTarget, 1600);
             } else if (activePlaybookMode === 'deep') {
-                sandbox.innerHTML = `<div class="deep-arena" id="deep-arena"><div style="position: absolute; top: 10px; left: 12px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">PURGED: <span id="deep-purged">0</span>/24</div><div class="mini-radar" style="top: 20px; left: 25px;"><div class="mini-sweep"></div></div></div>`;
+                initDeepResearchGame();
             } else if (activePlaybookMode === 'intense') {
                 if (isDark) {
                     document.getElementById('interactive-deck').classList.add('horror-active');
-                    sandbox.innerHTML = `<div class="horror-chamber"><i class="fa-solid fa-triangle-exclamation horror-warning-icon"></i><div class="horror-blood-text">CONTAINMENT BREACH // ENTITY UNLEASHED</div></div>`;
+                    sandbox.innerHTML = `<div class="horror-chamber"><i class="fa-solid fa-triangle-exclamation horror-warning-icon"></i><div class="horror-blood-text">CONTAINMENT BREACH // ENTITY UNLEASHED</div><button class="unleash-btn" onclick="triggerJumpscare()">PING ENTITY</button></div>`;
                 } else {
                     sandbox.innerHTML = `<div style="text-align: center; padding: 20px;"><i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 15px;"></i><h4 style="font-size: 1.2rem; font-weight: 800;">Protocol Inactive</h4><p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">Switch to Dark Mode to breach containment.</p></div>`;
                 }
+            }
+        }
+
+        function initDeepResearchGame() {
+            const sandbox = document.getElementById('deck-sandbox');
+            sandbox.innerHTML = `<div class="deep-arena" id="deep-arena"><div style="position: absolute; top: 10px; left: 12px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); z-index: 10;">PURGED: <span id="deep-purged">0</span>/24</div><div style="position: absolute; top: 10px; right: 12px; font-size: 0.75rem; font-weight: 700; color: #ff003c; z-index: 10;">SCANNED: <span id="deep-scanned">0</span>/10</div><div class="mini-radar" style="top: 20px; left: 25px;"><div class="mini-sweep"></div></div><div class="mini-radar" style="top: 20px; right: 25px;"><div class="mini-sweep" style="animation-delay: 0.7s;"></div></div><div class="mini-radar" style="bottom: 20px; left: 50%; transform: translateX(-50%);"><div class="mini-sweep" style="animation-delay: 1.4s;"></div></div></div>`;
+            const arenaEl = document.getElementById('deep-arena');
+            let deepScore = 0, scannedScore = 0, spawnIntervalTime = 1800, speedMultiplier = 0.8;
+            const arenaW = arenaEl.clientWidth || 320, arenaH = arenaEl.clientHeight || 320;
+            const radarCenters = [{x: 70, y: 65, radius: 45}, {x: arenaW - 70, y: 65, radius: 45}, {x: arenaW / 2, y: arenaH - 65, radius: 45}];
+            const redThieves = [];
+
+            function spawnThief() {
+                if (activePlaybookMode !== 'deep') return;
+                let x, y, safe = false, attempts = 0;
+                while (!safe && attempts < 20) {
+                    x = Math.random() * (arenaW - 60) + 30; y = Math.random() * (arenaH - 70) + 50; safe = true;
+                    for (let rc of radarCenters) { if (Math.hypot(x - rc.x, y - rc.y) < rc.radius + 25) { safe = false; break; } }
+                    attempts++;
+                }
+                const thief = document.createElement('div'); thief.className = 'red-thief'; thief.style.left = x + 'px'; thief.style.top = y + 'px';
+                const obj = { el: thief, x: x, y: y, vx: (Math.random() - 0.5) * 1.2 * speedMultiplier, vy: (Math.random() - 0.5) * 1.2 * speedMultiplier, active: true };
+                thief.onclick = (e) => {
+                    e.stopPropagation(); if (!obj.active) return; obj.active = false; deepScore++;
+                    const purgedEl = document.getElementById('deep-purged'); if (purgedEl) purgedEl.innerText = deepScore;
+                    if (deepScore % 5 === 0) { speedMultiplier += 0.3; if (spawnIntervalTime > 600) spawnIntervalTime -= 250; resetSpawnTimer(); }
+                    if (deepScore >= 24) { endDeepGame(true); return; }
+                    thief.classList.add('poof'); setTimeout(() => thief.remove(), 200);
+                };
+                arenaEl.appendChild(thief); redThieves.push(obj);
+                setTimeout(() => { if (obj.active) { obj.active = false; thief.remove(); } }, 7000);
+            }
+
+            function resetSpawnTimer() {
+                if (thiefSpawnTimer) clearInterval(thiefSpawnTimer);
+                thiefSpawnTimer = setInterval(() => {
+                    if (activePlaybookMode !== 'deep') { clearInterval(thiefSpawnTimer); return; }
+                    if (redThieves.filter(t => t.active).length < 6) spawnThief();
+                }, spawnIntervalTime);
+            }
+            resetSpawnTimer();
+
+            thievesInterval = setInterval(() => {
+                if (activePlaybookMode !== 'deep') return;
+                redThieves.forEach(t => {
+                    if (!t.active) return;
+                    t.x += t.vx; t.y += t.vy;
+                    if(t.x < 10 || t.x > arenaW - 10) t.vx *= -1; if(t.y < 10 || t.y > arenaH - 10) t.vy *= -1;
+                    t.el.style.left = t.x + 'px'; t.el.style.top = t.y + 'px';
+                    for(let rc of radarCenters) {
+                        if(Math.hypot(t.x - rc.x, t.y - rc.y) < rc.radius) {
+                            t.active = false; t.el.classList.add('poof'); setTimeout(() => t.el.remove(), 200);
+                            scannedScore++; const scannedEl = document.getElementById('deep-scanned'); if (scannedEl) scannedEl.innerText = scannedScore;
+                            if (scannedScore >= 10) endDeepGame(false);
+                            break;
+                        }
+                    }
+                });
+            }, 30);
+        }
+
+        function endDeepGame(isWin) {
+            if (thievesInterval) clearInterval(thievesInterval); 
+            if (thiefSpawnTimer) clearInterval(thiefSpawnTimer);
+            const sandbox = document.getElementById('deck-sandbox');
+            sandbox.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:20px;"><h3 style="font-size:2rem; font-weight:800; color:${isWin ? 'var(--accent-green)' : '#ff003c'}; margin-bottom:10px;">${isWin ? 'SUCCESS!' : 'BREACH LIMIT REACHED'}</h3><p style="font-size:0.95rem; color:var(--text-muted); margin-bottom:20px;">${isWin ? 'You successfully purged 24 anomalies!' : '10 blips scanned! Meters reset.'}</p><button onclick="switchPlaybookMode('deep')" style="padding:10px 24px; background:var(--text-main); color:var(--bg-color); border:none; border-radius:14px; font-weight:700; cursor:pointer;">RESTART GRID</button></div>`;
+        }
+
+        function triggerJumpscare() {
+            const sandbox = document.getElementById('deck-sandbox');
+            for(let i=0; i<4; i++) {
+                const eye = document.createElement('div'); eye.className = 'ghost-eye'; 
+                eye.style.left = Math.random() * 70 + 15 + "%"; eye.style.top = Math.random() * 70 + 15 + "%"; eye.style.opacity = '1';
+                sandbox.appendChild(eye); setTimeout(() => eye.remove(), 600);
             }
         }
 
