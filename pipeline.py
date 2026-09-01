@@ -20,6 +20,11 @@ class Search_pipeline():
         response = client1.search(self.prompt, num_results=5, contents={"text": {"max_characters": 4500}}, type="neural")
         return [(item.url, item.text or "") for item in response.results]
 
+    def exa_deep_research(self):
+        client1 = Exa(api_key=os.getenv("EXA_API_KEY"))
+        response = client1.search(self.prompt, type="deep", num_results=7, contents={"text": {"max_characters": 5000}})
+        return [(item.url, item.text or "") for item in response.results]
+
     def tavily_search(self):
         client2 = TavilyClient(api_key=os.getenv("TAVILY_KEY"))
         answer = client2.search(
@@ -50,7 +55,15 @@ class Search_pipeline():
         )            
         return [(item.url, item.content) for item in output.results]
 
-
+    def linkup_deep_research(self):
+        client14 = LinkupClient(api_key=os.getenv("LINKUP_KEY"))
+        output = client14.search(
+            query=self.prompt,
+            depth="deep",
+            output_type="searchResults",
+            max_results=6
+        )
+        return [(item.url, item.content) for item in output.results]
 def _format(items: list[tuple[str, str]]):
     combined = ""
     sources = []

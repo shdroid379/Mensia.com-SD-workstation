@@ -8,9 +8,9 @@ async def combined_research(prompt):
     search_up = Search_pipeline(prompt)
     
     results = await asyncio.gather(
-        asyncio.to_thread(search_up.exa_search),
+        asyncio.to_thread(search_up.exa_deep_research),
         asyncio.to_thread(search_up.tavily_deep_research),
-        asyncio.to_thread(search_up.linkup_search),
+        asyncio.to_thread(search_up.linkup_deep_research),
         return_exceptions=True
     )
 
