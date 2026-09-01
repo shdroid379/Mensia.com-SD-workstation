@@ -31,9 +31,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     
     <style>
-        /* ==========================================================================
-           1. CSS VARIABLES & THEMES
-           ========================================================================== */
         :root {
             --bg-color: #f8fafc; 
             --text-main: #0f172a; 
@@ -71,857 +68,115 @@
             --nav-bg: rgba(9, 13, 22, 0.75);
         }
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            font-family: 'Outfit', sans-serif; 
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; 
-        }
-        
-        html { 
-            overflow-x: hidden; 
-            width: 100%; 
-        }
-        
-        body { 
-            background-color: var(--bg-color); 
-            color: var(--text-main); 
-            height: 100vh; 
-            height: 100dvh; 
-            overflow: hidden; 
-            position: relative; 
-            width: 100%; 
-            max-width: 100vw; 
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+        html { overflow-x: hidden; width: 100%; }
+        body { background-color: var(--bg-color); color: var(--text-main); height: 100vh; height: 100dvh; overflow: hidden; position: relative; width: 100%; max-width: 100vw; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
 
-        /* ==========================================================================
-           2. BACKGROUND BLUR EFFECTS
-           ========================================================================== */
-        .global-bg { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100vw; 
-            height: 100vh; 
-            height: 100dvh; 
-            z-index: 0; 
-            background: var(--bg-color); 
-            overflow: hidden; 
-        }
+        .global-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; z-index: 0; background: var(--bg-color); overflow: hidden; }
+        .blur-orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.55; transform: translateZ(0); }
+        body.dark-mode .blur-orb { opacity: 0.35; filter: blur(100px); }
+        .blur-1 { width: 600px; height: 600px; background: #38bdf8; top: -10%; left: -10%; animation: float 15s infinite ease-in-out alternate; }
+        .blur-2 { width: 500px; height: 500px; background: #34d399; bottom: -10%; right: -10%; animation: float 12s infinite ease-in-out alternate-reverse; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(150px, 100px) scale(1.1); } }
+
+        .global-navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: var(--nav-bg); backdrop-filter: blur(24px); position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; border-bottom: 1px solid var(--glass-border); }
+        .logo-container { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .logo-icon { width: 40px; height: 40px; background: var(--metallic-light); border: 2px solid var(--card-border); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: var(--text-main); box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3), inset 0 2px 5px rgba(255,255,255,0.2); position: relative; overflow: hidden; }
+        .logo-icon::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%); transform: rotate(45deg); animation: shine 3s infinite; }
+        @keyframes shine { 0% { left: -100%; } 20% { left: 100%; } 100% { left: 100%; } }
+        .logo-text { font-size: 28px; font-weight: 800; letter-spacing: -1px; background: var(--metallic-dark); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .blur-orb { 
-            position: absolute; 
-            border-radius: 50%; 
-            filter: blur(80px); 
-            opacity: 0.55; 
-            transform: translateZ(0); 
-        }
+        .nav-links { display: flex; gap: 30px; align-items: center; font-weight: 600; font-size: 1.05rem; }
+        .nav-links a { color: var(--text-muted); cursor: pointer; text-decoration: none; transition: 0.2s; }
+        .nav-links a:hover, .nav-links a.active { color: var(--text-main); }
         
-        body.dark-mode .blur-orb { 
-            opacity: 0.35; 
-            filter: blur(100px); 
-        }
-        
-        .blur-1 { 
-            width: 600px; 
-            height: 600px; 
-            background: #38bdf8; 
-            top: -10%; 
-            left: -10%; 
-            animation: float 15s infinite ease-in-out alternate; 
-        }
-        
-        .blur-2 { 
-            width: 500px; 
-            height: 500px; 
-            background: #34d399; 
-            bottom: -10%; 
-            right: -10%; 
-            animation: float 12s infinite ease-in-out alternate-reverse; 
-        }
-        
-        @keyframes float { 
-            0% { transform: translate(0, 0) scale(1); } 
-            100% { transform: translate(150px, 100px) scale(1.1); } 
-        }
+        .nav-actions { display: flex; align-items: center; gap: 12px; }
+        .auth-nav-btn { background: var(--text-main); color: var(--bg-color); border: 1px solid var(--card-border); padding: 8px 18px; border-radius: 12px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: var(--shadow); transition: all 0.2s ease; }
+        .auth-nav-btn:hover { transform: scale(1.04); border-color: var(--accent-blue); }
+        .user-nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--metallic-light); border: 1.5px solid var(--accent-blue); display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 0.95rem; overflow: hidden; flex-shrink: 0; }
 
-        /* ==========================================================================
-           3. GLOBAL NAVBAR
-           ========================================================================== */
-        .global-navbar { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 15px 5%; 
-            background: var(--nav-bg); 
-            backdrop-filter: blur(24px); 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            z-index: 1000; 
-            border-bottom: 1px solid var(--glass-border); 
-        }
-        
-        .logo-container { 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-            cursor: pointer; 
-        }
-        
-        .logo-icon { 
-            width: 40px; 
-            height: 40px; 
-            background: var(--metallic-light); 
-            border: 2px solid var(--card-border); 
-            border-radius: 12px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: 800; 
-            font-size: 20px; 
-            color: var(--text-main); 
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3), inset 0 2px 5px rgba(255,255,255,0.2); 
-            position: relative; 
-            overflow: hidden; 
-        }
-        
-        .logo-icon::after { 
-            content: ''; 
-            position: absolute; 
-            top: -50%; 
-            left: -50%; 
-            width: 200%; 
-            height: 200%; 
-            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%); 
-            transform: rotate(45deg); 
-            animation: shine 3s infinite; 
-        }
-        
-        @keyframes shine { 
-            0% { left: -100%; } 
-            20% { left: 100%; } 
-            100% { left: 100%; } 
-        }
-        
-        .logo-text { 
-            font-size: 28px; 
-            font-weight: 800; 
-            letter-spacing: -1px; 
-            background: var(--metallic-dark); 
-            -webkit-background-clip: text; 
-            background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-        }
-        
-        .nav-links { 
-            display: flex; 
-            gap: 30px; 
-            align-items: center; 
-            font-weight: 600; 
-            font-size: 1.05rem; 
-        }
-        
-        .nav-links a { 
-            color: var(--text-muted); 
-            cursor: pointer; 
-            text-decoration: none; 
-            transition: 0.2s; 
-        }
-        
-        .nav-links a:hover, 
-        .nav-links a.active { 
-            color: var(--text-main); 
-        }
-        
-        .nav-actions { 
-            display: flex; 
-            align-items: center; 
-            gap: 12px; 
-        }
-        
-        .auth-nav-btn {
-            background: var(--text-main);
-            color: var(--bg-color);
-            border: 1px solid var(--card-border);
-            padding: 8px 18px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: var(--shadow);
-            transition: all 0.2s ease;
-        }
-        
-        .auth-nav-btn:hover {
-            transform: scale(1.04);
-            border-color: var(--accent-blue);
-        }
+        .theme-toggle-btn { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 42px; height: 42px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow); transition: transform 0.2s, background-color 0.3s; flex-shrink: 0; }
+        .theme-toggle-btn:hover { transform: scale(1.08); border-color: var(--accent-blue); }
 
-        .user-nav-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--metallic-light);
-            border: 1.5px solid var(--accent-blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-main);
-            font-size: 0.95rem;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
+        .nav-hamburger { display: none; background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 42px; height: 42px; border-radius: 12px; cursor: pointer; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: var(--shadow); flex-shrink: 0; }
+        .nav-mobile-panel { display: none; }
 
-        .theme-toggle-btn { 
-            background: var(--card-bg); 
-            border: 1px solid var(--card-border); 
-            color: var(--text-main); 
-            width: 42px; 
-            height: 42px; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 1.1rem; 
-            box-shadow: var(--shadow); 
-            transition: transform 0.2s, background-color 0.3s; 
-            flex-shrink: 0; 
-        }
-        
-        .theme-toggle-btn:hover { 
-            transform: scale(1.08); 
-            border-color: var(--accent-blue); 
-        }
+        /* FULLSCREEN PROFESSIONAL AUTH OVERLAY */
+        .auth-fullscreen-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; background: rgba(9, 13, 22, 0.92); backdrop-filter: blur(32px); z-index: 9999; display: none; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; opacity: 0; transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .auth-fullscreen-overlay.open { display: flex; opacity: 1; }
+        .auth-card-professional { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 28px; width: 100%; max-width: 460px; padding: 42px 36px; box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45); position: relative; backdrop-filter: blur(24px); display: flex; flex-direction: column; animation: cardScaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes cardScaleIn { from { transform: scale(0.95) translateY(16px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+        .auth-close-btn { position: absolute; top: 24px; right: 24px; background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-muted); width: 36px; height: 36px; border-radius: 10px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .auth-close-btn:hover { color: var(--text-main); border-color: var(--accent-blue); transform: scale(1.05); }
+        .auth-brand-badge { display: inline-flex; align-items: center; gap: 8px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent-blue); margin-bottom: 12px; }
+        .auth-header-title { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-main); margin-bottom: 8px; }
+        .auth-header-subtitle { font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 24px; }
+        .auth-tab-group { display: grid; grid-template-columns: 1fr 1fr; background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 4px; margin-bottom: 24px; }
+        .auth-tab-btn { padding: 10px; background: transparent; border: none; color: var(--text-muted); font-weight: 700; font-size: 0.95rem; cursor: pointer; text-align: center; border-radius: 10px; transition: all 0.25s ease; }
+        .auth-tab-btn.active { color: var(--text-main); background: var(--card-bg); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .auth-google-btn-pro { width: 100%; padding: 13px; border-radius: 14px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 0.98rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; box-shadow: var(--shadow); transition: transform 0.2s, border-color 0.2s; margin-bottom: 20px; }
+        .auth-google-btn-pro:hover { transform: translateY(-2px); border-color: var(--accent-blue); }
+        .auth-divider { display: flex; align-items: center; gap: 14px; color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+        .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--card-border); }
+        .auth-input-field-group { margin-bottom: 18px; position: relative; }
+        .auth-input-field-group label { display: block; font-size: 0.82rem; font-weight: 700; margin-bottom: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .auth-input-wrapper { position: relative; display: flex; align-items: center; }
+        .auth-text-input { width: 100%; padding: 13px 44px 13px 16px; border-radius: 14px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text-main); font-size: 1rem; outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+        .auth-text-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); }
+        .password-toggle-eye { position: absolute; right: 14px; color: var(--text-muted); cursor: pointer; font-size: 1rem; user-select: none; transition: color 0.2s ease; }
+        .password-toggle-eye:hover { color: var(--text-main); }
+        .auth-action-row { display: flex; justify-content: flex-end; margin-top: -6px; margin-bottom: 20px; }
+        .auth-forgot-link { color: var(--accent-blue); font-size: 0.85rem; font-weight: 600; text-decoration: none; cursor: pointer; transition: color 0.2s ease; }
+        .auth-forgot-link:hover { text-decoration: underline; }
+        .auth-submit-btn-pro { width: 100%; padding: 15px; border-radius: 14px; border: none; background: linear-gradient(135deg, var(--text-main) 0%, #1e293b 100%); color: var(--bg-color); font-size: 1.05rem; font-weight: 800; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); }
+        body.dark-mode .auth-submit-btn-pro { background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%); color: #090d16; }
+        .auth-submit-btn-pro:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(56, 189, 248, 0.3); }
+        .auth-message-banner { font-size: 0.88rem; font-weight: 600; text-align: center; margin-top: 16px; min-height: 22px; line-height: 1.5; word-break: break-word; }
 
-        .nav-hamburger { 
-            display: none; 
-            background: var(--card-bg); 
-            border: 1px solid var(--card-border); 
-            color: var(--text-main); 
-            width: 42px; 
-            height: 42px; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 1.1rem; 
-            box-shadow: var(--shadow); 
-            flex-shrink: 0; 
-        }
-        
-        .nav-mobile-panel { 
-            display: none; 
-        }
+        /* PROFILE VIEW */
+        .profile-view { flex-direction: column; align-items: center; padding: 60px 5% 100px 5%; width: 100%; }
+        .profile-container { width: 100%; max-width: 820px; display: flex; flex-direction: column; gap: 28px; }
+        .profile-header-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 36px; box-shadow: var(--shadow); backdrop-filter: blur(16px); display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+        .profile-avatar-large { width: 90px; height: 90px; border-radius: 50%; background: var(--metallic-light); border: 3px solid var(--accent-blue); display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 2.8rem; box-shadow: 0 8px 24px rgba(56, 189, 248, 0.25); flex-shrink: 0; }
+        .profile-meta { flex: 1; min-width: 240px; }
+        .profile-user-name { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; color: var(--text-main); margin-bottom: 4px; }
+        .profile-user-email { font-size: 1rem; color: var(--text-muted); font-weight: 500; margin-bottom: 12px; }
+        .profile-badge-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .profile-tier-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); border: 1px solid rgba(56, 189, 248, 0.3); }
+        .profile-section-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 32px; box-shadow: var(--shadow); backdrop-filter: blur(16px); }
+        .profile-card-title { font-size: 1.3rem; font-weight: 800; color: var(--text-main); margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+        .quota-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+        .quota-card { background: var(--input-bg); border: 1px solid var(--card-border); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .quota-card-header { display: flex; justify-content: space-between; align-items: center; }
+        .quota-mode-name { font-size: 0.95rem; font-weight: 800; color: var(--text-main); }
+        .quota-count-text { font-size: 1.15rem; font-weight: 800; color: var(--accent-blue); }
+        .quota-progress-track { width: 100%; height: 8px; background: var(--card-border); border-radius: 10px; overflow: hidden; }
+        .quota-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-green)); border-radius: 10px; transition: width 0.4s ease; }
+        .plan-upgrade-banner { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(168, 85, 247, 0.12)); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 18px; padding: 22px; margin-top: 20px; gap: 18px; flex-wrap: wrap; }
+        .plan-upgrade-btn { background: var(--text-main); color: var(--bg-color); padding: 10px 22px; border-radius: 12px; font-weight: 800; font-size: 0.92rem; border: none; cursor: pointer; transition: transform 0.2s ease; }
+        .plan-upgrade-btn:hover { transform: scale(1.04); }
+        .danger-delete-btn { background: transparent; border: 1.5px solid #ef4444; color: #ef4444; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; transition: all 0.2s ease; }
+        .danger-delete-btn:hover { background: #ef4444; color: white; box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3); }
 
-        /* ==========================================================================
-           4. FULL-SCREEN PROFESSIONAL AUTHENTICATION MODAL
-           ========================================================================== */
-        .auth-fullscreen-overlay {
-            position: fixed;
-            top: 0; 
-            left: 0; 
-            width: 100vw; 
-            height: 100vh;
-            height: 100dvh;
-            background: rgba(9, 13, 22, 0.88);
-            backdrop-filter: blur(28px);
-            z-index: 5000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            overflow-y: auto;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .auth-fullscreen-overlay.open { 
-            display: flex;
-            opacity: 1;
-        }
-        
-        .auth-card-professional {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 28px;
-            width: 100%;
-            max-width: 460px;
-            padding: 42px 36px;
-            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
-            position: relative;
-            backdrop-filter: blur(24px);
-            display: flex;
-            flex-direction: column;
-            animation: cardScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes cardScaleIn {
-            from { transform: scale(0.96) translateY(12px); opacity: 0; }
-            to { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        
-        .auth-close-btn {
-            position: absolute;
-            top: 24px; 
-            right: 24px;
-            background: var(--input-bg);
-            border: 1px solid var(--card-border);
-            color: var(--text-muted);
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-        
-        .auth-close-btn:hover { 
-            color: var(--text-main); 
-            border-color: var(--accent-blue);
-            transform: scale(1.05);
-        }
-        
-        .auth-brand-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--accent-blue);
-            margin-bottom: 12px;
-        }
-
-        .auth-header-title {
-            font-size: 2rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--text-main);
-            margin-bottom: 8px;
-        }
-        
-        .auth-header-subtitle {
-            font-size: 0.95rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin-bottom: 24px;
-        }
-        
-        .auth-tab-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            background: var(--input-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 4px;
-            margin-bottom: 24px;
-        }
-        
-        .auth-tab-btn {
-            padding: 10px;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-            text-align: center;
-            border-radius: 10px;
-            transition: all 0.25s ease;
-        }
-        
-        .auth-tab-btn.active {
-            color: var(--text-main);
-            background: var(--card-bg);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-
-        .auth-google-btn-pro {
-            width: 100%;
-            padding: 13px;
-            border-radius: 14px;
-            border: 1px solid var(--card-border);
-            background: var(--input-bg);
-            color: var(--text-main);
-            font-size: 0.98rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            box-shadow: var(--shadow);
-            transition: transform 0.2s, border-color 0.2s;
-            margin-bottom: 20px;
-        }
-
-        .auth-google-btn-pro:hover {
-            transform: translateY(-2px);
-            border-color: var(--accent-blue);
-        }
-
-        .auth-divider {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 20px;
-        }
-
-        .auth-divider::before, .auth-divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: var(--card-border);
-        }
-        
-        .auth-input-field-group {
-            margin-bottom: 18px;
-            position: relative;
-        }
-        
-        .auth-input-field-group label {
-            display: block;
-            font-size: 0.82rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .auth-input-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        
-        .auth-text-input {
-            width: 100%;
-            padding: 13px 44px 13px 16px;
-            border-radius: 14px;
-            border: 1px solid var(--card-border);
-            background: var(--input-bg);
-            color: var(--text-main);
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .auth-text-input:focus { 
-            border-color: var(--accent-blue); 
-            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
-        }
-
-        .password-toggle-eye {
-            position: absolute;
-            right: 14px;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1rem;
-            user-select: none;
-            transition: color 0.2s ease;
-        }
-
-        .password-toggle-eye:hover {
-            color: var(--text-main);
-        }
-
-        .auth-action-row {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: -6px;
-            margin-bottom: 20px;
-        }
-
-        .auth-forgot-link {
-            color: var(--accent-blue);
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            transition: color 0.2s ease;
-        }
-
-        .auth-forgot-link:hover {
-            text-decoration: underline;
-        }
-        
-        .auth-submit-btn-pro {
-            width: 100%;
-            padding: 15px;
-            border-radius: 14px;
-            border: none;
-            background: linear-gradient(135deg, var(--text-main) 0%, #1e293b 100%);
-            color: var(--bg-color);
-            font-size: 1.05rem;
-            font-weight: 800;
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-        }
-
-        body.dark-mode .auth-submit-btn-pro {
-            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-            color: #090d16;
-        }
-        
-        .auth-submit-btn-pro:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 10px 25px rgba(56, 189, 248, 0.3);
-        }
-
-        .auth-message-banner {
-            font-size: 0.88rem;
-            font-weight: 600;
-            text-align: center;
-            margin-top: 16px;
-            min-height: 22px;
-            line-height: 1.5;
-            word-break: break-word;
-        }
-
-        /* ==========================================================================
-           5. PROFILE VIEW CSS
-           ========================================================================== */
-        .profile-view {
-            flex-direction: column;
-            align-items: center;
-            padding: 60px 5% 100px 5%;
-            width: 100%;
-        }
-
-        .profile-container {
-            width: 100%;
-            max-width: 820px;
-            display: flex;
-            flex-direction: column;
-            gap: 28px;
-        }
-
-        .profile-header-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            padding: 36px;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(16px);
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            flex-wrap: wrap;
-        }
-
-        .profile-avatar-large {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: var(--metallic-light);
-            border: 3px solid var(--accent-blue);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-main);
-            font-size: 2.8rem;
-            box-shadow: 0 8px 24px rgba(56, 189, 248, 0.25);
-            flex-shrink: 0;
-        }
-
-        .profile-meta {
-            flex: 1;
-            min-width: 240px;
-        }
-
-        .profile-user-name {
-            font-size: 2.2rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: var(--text-main);
-            margin-bottom: 4px;
-        }
-
-        .profile-user-email {
-            font-size: 1rem;
-            color: var(--text-muted);
-            font-weight: 500;
-            margin-bottom: 12px;
-        }
-
-        .profile-badge-row {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .profile-tier-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.82rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            background: rgba(56, 189, 248, 0.15);
-            color: var(--accent-blue);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-        }
-
-        .profile-section-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            padding: 32px;
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(16px);
-        }
-
-        .profile-card-title {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: var(--text-main);
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .quota-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 18px;
-        }
-
-        .quota-card {
-            background: var(--input-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 18px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .quota-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .quota-mode-name {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: var(--text-main);
-        }
-
-        .quota-count-text {
-            font-size: 1.15rem;
-            font-weight: 800;
-            color: var(--accent-blue);
-        }
-
-        .quota-progress-track {
-            width: 100%;
-            height: 8px;
-            background: var(--card-border);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-
-        .quota-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
-            border-radius: 10px;
-            transition: width 0.4s ease;
-        }
-
-        .plan-upgrade-banner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(168, 85, 247, 0.12));
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 18px;
-            padding: 22px;
-            margin-top: 20px;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
-
-        .plan-upgrade-btn {
-            background: var(--text-main);
-            color: var(--bg-color);
-            padding: 10px 22px;
-            border-radius: 12px;
-            font-weight: 800;
-            font-size: 0.92rem;
-            border: none;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-
-        .plan-upgrade-btn:hover {
-            transform: scale(1.04);
-        }
-
-        .danger-zone-card {
-            border-color: rgba(239, 68, 68, 0.3);
-            background: rgba(239, 68, 68, 0.03);
-        }
-
-        .danger-delete-btn {
-            background: transparent;
-            border: 1.5px solid #ef4444;
-            color: #ef4444;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 800;
-            font-size: 0.95rem;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            transition: all 0.2s ease;
-        }
-
-        .danger-delete-btn:hover {
-            background: #ef4444;
-            color: white;
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
-        }
-
-        /* ==========================================================================
-           6. VIEW CONTAINERS & PAGES
-           ========================================================================== */
-        .view-container { 
-            display: none; 
-            height: 100vh; 
-            width: 100vw; 
-            padding-top: 90px; 
-            overflow-y: auto; 
-            position: relative; 
-            z-index: 10; 
-            opacity: 0; 
-            transition: opacity 0.4s ease; 
-        }
-        
-        .view-container.active { 
-            display: flex; 
-            opacity: 1; 
-        }
+        .view-container { display: none; height: 100vh; width: 100vw; padding-top: 90px; overflow-y: auto; position: relative; z-index: 10; opacity: 0; transition: opacity 0.4s ease; }
+        .view-container.active { display: flex; opacity: 1; }
 
         /* Home Page */
         .home-view { flex-direction: column; }
-        .hero-section { 
-            position: relative; 
-            min-height: 100vh; 
-            margin-top: -90px; 
-            padding-top: 90px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            text-align: center; 
-            padding-inline: 20px; 
-            overflow: hidden; 
-            flex-shrink: 0; 
-        }
-        
-        .hero-bg { 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            z-index: 0; 
-            pointer-events: none; 
-        }
-        
-        .solid-ball { 
-            position: absolute; 
-            border-radius: 50%; 
-            top: 0; 
-            left: 0; 
-            box-shadow: inset -15px -15px 25px rgba(0,0,0,0.25), 0 15px 25px rgba(0,0,0,0.15); 
-            z-index: 1; 
-            transform: translateZ(0); 
-            pointer-events: none; 
-        }
-        
+        .hero-section { position: relative; min-height: 100vh; margin-top: -90px; padding-top: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding-inline: 20px; overflow: hidden; flex-shrink: 0; }
+        .hero-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .solid-ball { position: absolute; border-radius: 50%; top: 0; left: 0; box-shadow: inset -15px -15px 25px rgba(0,0,0,0.25), 0 15px 25px rgba(0,0,0,0.15); z-index: 1; transform: translateZ(0); pointer-events: none; }
         .solid-1 { width: 140px; height: 140px; background: radial-gradient(circle at 30% 30%, #7dd3fc, #0ea5e9); }
         .solid-2 { width: 100px; height: 100px; background: radial-gradient(circle at 30% 30%, #6ee7b7, #10b981); }
         .solid-3 { width: 170px; height: 170px; background: radial-gradient(circle at 30% 30%, #d8b4fe, #8b5cf6); }
 
-        .hero-content { 
-            position: relative; 
-            z-index: 10; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            pointer-events: auto; 
-        }
-        
-        .hero-title { 
-            font-size: 7.5rem; 
-            font-weight: 800; 
-            line-height: 1.1; 
-            margin-bottom: 20px; 
-            background: linear-gradient(to right, #0f172a, #38bdf8, #34d399); 
-            -webkit-background-clip: text; 
-            background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            position: relative; 
-        }
-        
-        body.dark-mode .hero-title { 
-            background: linear-gradient(to right, #ffffff, #e2e8f0, #94a3b8); 
-            -webkit-background-clip: text; 
-            background-clip: text; 
-            -webkit-text-fill-color: transparent; 
-            position: relative; 
-            animation: main-flicker 3s infinite linear; 
-        }
-        
-        body.dark-mode .hero-title::before, 
-        body.dark-mode .hero-title::after { 
-            content: attr(data-text); 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: transparent; 
-            -webkit-text-fill-color: #ffffff; 
-            pointer-events: none; 
-            opacity: 0.9; 
-        }
-        
-        body.dark-mode .hero-title::before { left: 4px; text-shadow: -3px 0 #ff003c; animation: horror-glitch-1 2s infinite step-end alternate-reverse; }
-        body.dark-mode .hero-title::after { left: -4px; text-shadow: 3px 0 #00ffff; animation: horror-glitch-2 2.5s infinite step-end alternate-reverse; }
-        
+        .hero-content { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; pointer-events: auto; }
+        .hero-title { font-size: 7.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 20px; background: linear-gradient(to right, #0f172a, #38bdf8, #34d399); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; position: relative; }
+        body.dark-mode .hero-title { background: linear-gradient(to right, #ffffff, #e2e8f0, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; position: relative; animation: main-flicker 3s infinite linear; }
         @keyframes main-flicker { 0%, 9%, 11%, 19%, 21%, 69%, 71%, 100% { opacity: 1; transform: skew(0deg); } 10% { opacity: 0.1; transform: skew(-10deg); } 20% { opacity: 0.5; transform: skew(5deg); } 70% { opacity: 0; transform: skew(0deg); } }
-        @keyframes horror-glitch-1 { 0% { clip-path: inset(20% 0 80% 0); transform: translate(4px, 1px) skew(2deg); } 50% { clip-path: inset(5% 0 90% 0); transform: translate(-5px, -2px) skew(-4deg); } 100% { clip-path: inset(50% 0 30% 0); transform: translate(4px, 2px) skew(1deg); } }
-        @keyframes horror-glitch-2 { 0% { clip-path: inset(10% 0 60% 0); transform: translate(-4px, 1px) skew(-2deg); } 50% { clip-path: inset(5% 0 85% 0); transform: translate(-4px, 1px) skew(-1deg); } 100% { clip-path: inset(80% 0 10% 0); transform: translate(4px, -1px) skew(1deg); } }
         
         .hero-subtitle { font-size: 1.6rem; color: var(--text-muted); max-width: 650px; margin-bottom: 50px; }
         .dive-btn-large { background: var(--text-main); color: var(--bg-color); font-size: 1.5rem; font-weight: 600; padding: 18px 60px; border-radius: 40px; border: 2px solid var(--card-border); cursor: pointer; box-shadow: 0 15px 35px rgba(56, 189, 248, 0.4); transition: all 0.3s; display: flex; align-items: center; gap: 15px; }
@@ -930,7 +185,6 @@
         .info-section { padding: 120px 5%; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 10; background: transparent; flex-shrink: 0; width: 100%; }
         .section-title { font-size: 3.5rem; font-weight: 800; margin-bottom: 60px; color: var(--text-main); text-align: center; background: var(--metallic-dark); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; width: 100%; max-width: 1200px; }
-        
         .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 40px; backdrop-filter: blur(12px); box-shadow: var(--shadow); transition: transform 0.3s, border-color 0.3s; }
         .card:hover { transform: translateY(-10px); border-color: var(--accent-blue); }
         .card i { font-size: 36px; background: linear-gradient(135deg, var(--accent-blue), var(--accent-green)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 25px; }
@@ -959,7 +213,7 @@
         .plan-card li i.fa-xmark { color: #ff003c; opacity: 0.5; }
         .disclaimer-text { max-width: 800px; text-align: center; margin-top: 60px; font-size: 1.2rem; color: var(--text-muted); line-height: 1.6; font-weight: 600; padding-bottom: 50px; }
         
-        /* The Playbook */
+        /* Playbook */
         .playbook-view { flex-direction: column; align-items: center; padding: 70px 5% 80px 5%; width: 100%; }
         .playbook-header { text-align: center; margin-bottom: 40px; padding-top: 30px; width: 100%; }
         .interactive-deck { width: 100%; max-width: 1100px; min-height: 520px; background: var(--card-bg); border: 2px solid var(--card-border); border-radius: 28px; backdrop-filter: blur(16px); box-shadow: var(--shadow); display: flex; flex-direction: column; position: relative; overflow: hidden; }
@@ -1006,12 +260,8 @@
         body.dark-mode .deck-sandbox.horror-active { border-color: #ff003c; background: radial-gradient(circle, #2a0008 0%, #050002 100%); }
         .ghost-eye { position: absolute; width: 60px; height: 30px; border-radius: 50%; background: #ff003c; box-shadow: 0 0 30px #ff003c; opacity: 0; pointer-events: none; }
         .ghost-eye::after { content: ''; position: absolute; top: 25%; left: 40%; width: 12px; height: 15px; background: #000; border-radius: 50%; }
-        @keyframes deck-convulse { 0% { transform: translate(0, 0); } 50% { transform: translate(2px, -2px); } 100% { transform: translate(1px, 1px); } }
-        @keyframes warning-shake { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-8deg); } 75% { transform: rotate(8deg); } }
 
-        /* ==========================================================================
-           7. APP CHAT VIEW
-           ========================================================================== */
+        /* Chat View */
         .app-view { flex-direction: row; background: transparent; padding-top: 75px; width: 100vw; height: calc(100vh - 75px); }
         .sidebar { width: 300px; background: var(--sidebar-bg); border-right: 1px solid var(--card-border); display: flex; flex-direction: column; padding: 20px; z-index: 30; height: 100%; flex-shrink: 0; }
         .new-chat-btn { background: var(--metallic-light); border: 1px solid var(--card-border); color: var(--text-main); padding: 14px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-top: 10px; }
@@ -1077,7 +327,6 @@
         .send-btn, .stop-btn, .mic-btn { border: none; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0; font-size: 1rem; }
         .send-btn { background: var(--text-main); color: var(--bg-color); }
         .send-btn:hover { background: var(--accent-blue); color: white; transform: scale(1.05); }
-        
         .mic-btn { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); }
         .mic-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); transform: scale(1.05); }
         .mic-btn.recording { background: #ff003c; color: white; border-color: #ff003c; animation: mic-pulse 1.3s infinite ease-in-out; }
@@ -1088,14 +337,6 @@
         .loader { display: none; font-size: 14px; font-weight: 600; color: var(--accent-blue); animation: pulse 1.5s infinite; }
         footer { text-align: center; padding: 40px; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid var(--card-border); background: transparent; width: 100%; }
 
-        /* Responsive Media Queries */
-        .hero-title { font-size: clamp(2.4rem, 8vw, 7.5rem); }
-        .hero-subtitle { font-size: clamp(1rem, 2.4vw, 1.6rem); }
-        .section-title { font-size: clamp(1.8rem, 5vw, 3.5rem); }
-        .split-text h2 { font-size: clamp(2rem, 5vw, 3.5rem); }
-        .mode-title { font-size: clamp(1.6rem, 4vw, 2.8rem); }
-        .dive-btn-large { font-size: clamp(1.1rem, 2.5vw, 1.5rem); padding: 16px clamp(30px, 6vw, 60px); }
-
         @media (max-width: 880px) {
             .nav-links { display: none; }
             .nav-hamburger { display: flex; }
@@ -1104,8 +345,6 @@
             .nav-mobile-panel a { color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 1.1rem; padding: 14px 5px; border-bottom: 1px solid var(--card-border); cursor: pointer; }
             .nav-mobile-panel a:last-child { border-bottom: none; }
             .nav-mobile-panel a:hover, .nav-mobile-panel a.active { color: var(--text-main); }
-            .split-section { gap: 35px; }
-            .info-section { padding: 70px 6%; }
         }
 
         @media (max-width: 768px) {
@@ -1123,41 +362,16 @@
             .history-overlay-close { background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-main); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
             .history-overlay-list { flex-grow: 1; overflow-y: auto; padding: 15px 5%; list-style: none; }
             .history-overlay-list .history-item { background: var(--card-bg); border: 1px solid var(--card-border); padding: 14px 16px; border-radius: 14px; margin-bottom: 10px; }
-            .history-overlay-list .delete-chat-icon { opacity: 1 !important; }
             .chat-container { height: 100% !important; }
             .chat-view { padding: 20px 4% 120px 4% !important; }
             .bubble { max-width: 92% !important; padding: 14px 18px !important; font-size: 15px !important; }
             .welcome-prompt { font-size: 1.6rem !important; }
             .input-wrapper { padding: 10px 4% !important; }
-            .input-controls { gap: 8px !important; }
-            select { font-size: 14px !important; padding: 8px 10px !important; }
-            textarea { font-size: 16px !important; }
-            .deck-stage { flex-direction: column !important; padding: 20px !important; gap: 20px !important; }
-            .deck-sandbox { width: 100% !important; min-width: unset !important; height: 260px !important; }
-            .deck-nav-bar { padding: 14px 15px; }
-            .deck-tab { padding: 10px 16px; font-size: 0.85rem; }
-            .split-image { order: -1; }
-            .grid-3 { gap: 20px; }
-            .card { padding: 28px; }
-            .plan-card { padding: 28px; }
-            .profile-header-card { padding: 24px; }
-            .profile-user-name { font-size: 1.7rem; }
-        }
-
-        @media (max-width: 420px) {
-            .global-navbar { padding: 10px 4%; }
-            .logo-text { font-size: 19px; }
-            .hero-section { padding-inline: 12px; }
-            .hero-subtitle { margin-bottom: 30px; }
-            .dive-btn-large { width: 100%; justify-content: center; }
-            .bubble { max-width: 96% !important; }
-            .auth-card-professional { padding: 32px 20px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- BACKGROUND BLUR -->
     <div class="global-bg">
         <div class="blur-orb blur-1"></div>
         <div class="blur-orb blur-2"></div>
@@ -1177,7 +391,6 @@
             <a id="nav-profile" style="display: none;" onclick="showView('profile')">Profile</a>
         </div>
         <div class="nav-actions">
-            <!-- Nav Action Button: Sign In or User Silhouette Avatar -->
             <button class="auth-nav-btn" id="nav-auth-btn" onclick="handleNavAuthClick()">
                 <div class="user-nav-avatar" id="nav-avatar-icon" style="display: none;">
                     <i class="fa-solid fa-user"></i>
@@ -1194,7 +407,6 @@
         </div>
     </nav>
 
-    <!-- MOBILE NAVBAR PANEL -->
     <div class="nav-mobile-panel" id="nav-mobile-panel">
         <a onclick="showView('home')">Home</a>
         <a onclick="showView('app')">Launch App</a>
@@ -1204,30 +416,19 @@
         <a onclick="handleNavAuthClick()" id="mobile-auth-link">Sign In / Register</a>
     </div>
 
-    <!-- ================================================================== -->
-    <!-- FULL-SCREEN PROFESSIONAL AUTHENTICATION MODAL                      -->
-    <!-- ================================================================== -->
+    <!-- FULLSCREEN PROFESSIONAL AUTH MODAL -->
     <div class="auth-fullscreen-overlay" id="auth-modal-overlay">
         <div class="auth-card-professional">
-            <button class="auth-close-btn" onclick="closeAuthModal()" title="Close">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-
-            <div class="auth-brand-badge">
-                <i class="fa-solid fa-shield-halved"></i> Mensia Auth Core
-            </div>
-
+            <button class="auth-close-btn" onclick="closeAuthModal()" title="Close"><i class="fa-solid fa-xmark"></i></button>
+            <div class="auth-brand-badge"><i class="fa-solid fa-shield-halved"></i> Mensia Auth Core</div>
             <h2 class="auth-header-title" id="auth-modal-title">Welcome to Mensia</h2>
-            <p class="auth-header-subtitle" id="auth-modal-subtitle">
-                Sign in to access 350 Casual, 25 Search, and 3 Deep Research queries daily.
-            </p>
-
+            <p class="auth-header-subtitle" id="auth-modal-subtitle">Sign in to access 350 Casual, 25 Search, and 3 Deep Research queries daily.</p>
+            
             <div class="auth-tab-group" id="auth-tab-group">
                 <button class="auth-tab-btn active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
                 <button class="auth-tab-btn" id="tab-register" onclick="switchAuthTab('register')">Sign Up</button>
             </div>
 
-            <!-- Continue with Google (Available on both Login & Register) -->
             <button type="button" class="auth-google-btn-pro" onclick="handleGoogleSignIn()">
                 <i class="fa-brands fa-google" style="color: #ea4335;"></i> Continue with Google
             </button>
@@ -1241,7 +442,6 @@
                         <input type="email" id="auth-email" class="auth-text-input" placeholder="name@example.com" required autocomplete="off">
                     </div>
                 </div>
-
                 <div class="auth-input-field-group">
                     <label for="auth-password">Password</label>
                     <div class="auth-input-wrapper">
@@ -1254,26 +454,17 @@
                     <a class="auth-forgot-link" id="forgot-password-link" onclick="handleForgotPassword()">Forgot Password?</a>
                 </div>
 
-                <button type="submit" class="auth-submit-btn-pro" id="auth-submit-btn">
-                    Sign In
-                </button>
-
+                <button type="submit" class="auth-submit-btn-pro" id="auth-submit-btn">Sign In</button>
                 <div class="auth-message-banner" id="auth-error-msg"></div>
             </form>
         </div>
     </div>
 
-    <!-- ================================================================== -->
-    <!-- VIEW: USER PROFILE PAGE                                            -->
-    <!-- ================================================================== -->
+    <!-- PROFILE VIEW -->
     <div class="view-container profile-view" id="profile-view">
         <div class="profile-container">
-            
-            <!-- User Info Card -->
             <div class="profile-header-card">
-                <div class="profile-avatar-large">
-                    <i class="fa-solid fa-user"></i>
-                </div>
+                <div class="profile-avatar-large"><i class="fa-solid fa-user"></i></div>
                 <div class="profile-meta">
                     <h1 class="profile-user-name" id="profile-name-display">Daniel Radcliffe</h1>
                     <p class="profile-user-email" id="profile-email-display">user@example.com</p>
@@ -1287,7 +478,6 @@
                 </button>
             </div>
 
-            <!-- Limits & Quotas Dashboard Card -->
             <div class="profile-section-card">
                 <div class="profile-card-title">
                     <span><i class="fa-solid fa-gauge-high" style="color: var(--accent-blue); margin-right: 8px;"></i> Daily Usage & Intelligence Quotas</span>
@@ -1298,61 +488,46 @@
                             <span class="quota-mode-name"><i class="fa-solid fa-bolt"></i> Casual Mode</span>
                             <span class="quota-count-text" id="quota-casual-text">0 / 350</span>
                         </div>
-                        <div class="quota-progress-track">
-                            <div class="quota-progress-bar" id="quota-casual-bar" style="width: 0%;"></div>
-                        </div>
+                        <div class="quota-progress-track"><div class="quota-progress-bar" id="quota-casual-bar" style="width: 0%;"></div></div>
                     </div>
                     <div class="quota-card">
                         <div class="quota-card-header">
                             <span class="quota-mode-name"><i class="fa-solid fa-magnifying-glass"></i> Search Standard</span>
                             <span class="quota-count-text" id="quota-search-text">0 / 25</span>
                         </div>
-                        <div class="quota-progress-track">
-                            <div class="quota-progress-bar" id="quota-search-bar" style="width: 0%;"></div>
-                        </div>
+                        <div class="quota-progress-track"><div class="quota-progress-bar" id="quota-search-bar" style="width: 0%;"></div></div>
                     </div>
                     <div class="quota-card">
                         <div class="quota-card-header">
                             <span class="quota-mode-name"><i class="fa-solid fa-microscope"></i> Deep Research</span>
                             <span class="quota-count-text" id="quota-deep-text">0 / 3</span>
                         </div>
-                        <div class="quota-progress-track">
-                            <div class="quota-progress-bar" id="quota-deep-bar" style="width: 0%;"></div>
-                        </div>
+                        <div class="quota-progress-track"><div class="quota-progress-bar" id="quota-deep-bar" style="width: 0%;"></div></div>
                     </div>
                 </div>
 
-                <!-- Plan Upgrade Notification Card -->
                 <div class="plan-upgrade-banner">
                     <div>
                         <h4 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">Scale Beyond 350 Queries</h4>
                         <p style="font-size: 0.92rem; color: var(--text-muted);">Pro and Ultra dedicated compute tiers are launching in late 2026.</p>
                     </div>
-                    <button class="plan-upgrade-btn" onclick="showView('plans')">
-                        View Upcoming Plans <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                    <button class="plan-upgrade-btn" onclick="showView('plans')">View Upcoming Plans <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
             </div>
 
-            <!-- Danger Zone (Delete Account) -->
-            <div class="profile-section-card danger-zone-card">
-                <div class="profile-card-title" style="color: #ef4444;">
-                    <span><i class="fa-solid fa-triangle-exclamation" style="margin-right: 8px;"></i> Danger Zone</span>
+            <div class="profile-section-card">
+                <div class="profile-card-title">
+                    <span><i class="fa-solid fa-user-gear" style="color: var(--accent-blue); margin-right: 8px;"></i> Account Management</span>
                 </div>
                 <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.6;">
                     Permanently delete your Mensia AI account, revoke all API tokens, and purge associated session records. This action cannot be undone.
                 </p>
-                <button class="danger-delete-btn" onclick="handleDeleteAccount()">
-                    <i class="fa-solid fa-trash"></i> Delete Account
-                </button>
+                <button class="danger-delete-btn" onclick="handleDeleteAccount()"><i class="fa-solid fa-trash"></i> Delete Account</button>
             </div>
-
         </div>
     </div>
 
-    <!-- ================================================================== -->
-    <!-- VIEW: HOME PAGE                                                    -->
-    <!-- ================================================================== -->
+    <!-- HOME VIEW -->
     <div class="view-container home-view active" id="home-view">
         <section class="hero-section" id="hero-arena">
             <div class="hero-bg">
@@ -1363,17 +538,13 @@
             <div class="hero-content">
                 <h1 class="hero-title" data-text="Uncompromising Intelligence.">Uncompromising<br>Intelligence.</h1>
                 <p class="hero-subtitle">Forged after intense research. Mensia is a zero-bluff, multi-agent reasoning engine built to cut through corporate AI fluff and deliver absolute truth.</p>
-                <button class="dive-btn-large" onclick="showView('app')">
-                    Dive In <i class="fa-solid fa-arrow-right"></i>
-                </button>
+                <button class="dive-btn-large" onclick="showView('app')">Dive In <i class="fa-solid fa-arrow-right"></i></button>
             </div>
         </section>
 
         <section class="info-section">
             <div class="split-section">
-                <div class="split-image">
-                    <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Tech Abstract">
-                </div>
+                <div class="split-image"><img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="Tech Abstract"></div>
                 <div class="split-text">
                     <h2>Why choose<br>Mensia?</h2>
                     <p>Standard language models are designed to be polite, conversational, and overly cautious. They hallucinate data to fill the gaps in their memory.</p>
@@ -1391,22 +562,10 @@
                 <div class="card"><i class="fa-solid fa-code"></i><h3>Engineers</h3><p>Debug faster with an AI that actively fact-checks documentation online before guessing a syntax solution.</p></div>
             </div>
         </section>
-
-        <section class="info-section" style="background: var(--glass-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--card-border);">
-            <h2 class="section-title">Future Features</h2>
-            <div class="grid-3">
-                <div class="card"><i class="fa-solid fa-file-pdf"></i><h3>Document Ingestion <span style="font-size:12px; color:var(--accent-blue);">(Coming Soon)</span></h3><p>Upload 1000-page enterprise PDFs and complex codebases. Mensia will parse, index, and reason across your private data.</p></div>
-                <div class="card"><i class="fa-solid fa-brain"></i><h3>Persistent Memory <span style="font-size:12px; color:var(--accent-green);">(In Dev)</span></h3><p>Mensia will learn your workflow, remembering past architectures and research constraints across entirely different sessions.</p></div>
-                <div class="card"><i class="fa-solid fa-crown"></i><h3>Mensia Pro Tier <span style="font-size:12px; color:var(--accent-blue);">(Late 2026)</span></h3><p>Dedicated compute clusters, priority routing for Deep Research, and API access for power users.</p></div>
-            </div>
-        </section>
-        
         <footer>&copy; 2026 Mensia. All rights reserved.</footer>
     </div>
 
-    <!-- ================================================================== -->
-    <!-- VIEW: PLANS PAGE                                                   -->
-    <!-- ================================================================== -->
+    <!-- PLANS VIEW -->
     <div class="view-container plans-view" id="plans-view">
         <div class="plans-header">
             <div class="coming-soon-badge">Coming Soon</div>
@@ -1422,91 +581,50 @@
                     <li><i class="fa-solid fa-check"></i> 25 Casual Searches / Day</li>
                     <li><i class="fa-solid fa-check"></i> 5 Standard Searches / Day</li>
                     <li><i class="fa-solid fa-check"></i> 1 Deep Research / Day</li>
-                    <li><i class="fa-solid fa-check"></i> Basic Cognitive Audit</li>
-                    <li><i class="fa-solid fa-xmark"></i> Cross-Device Sync</li>
                 </ul>
             </div>
-            <div class="plan-card" style="border-top: 4px solid var(--accent-blue); box-shadow: 0 10px 30px rgba(56, 189, 248, 0.15);">
+            <div class="plan-card" style="border-top: 4px solid var(--accent-blue);">
                 <h3>Free Registered</h3>
                 <div class="price">Free with Account</div>
                 <ul>
                     <li><i class="fa-solid fa-check"></i> 350 Casual Searches / Day</li>
                     <li><i class="fa-solid fa-check"></i> 25 Standard Searches / Day</li>
                     <li><i class="fa-solid fa-check"></i> 3 Deep Researches / Day</li>
-                    <li><i class="fa-solid fa-check"></i> Full Cognitive Audit</li>
-                    <li><i class="fa-solid fa-check"></i> Cross-Device Sync</li>
                 </ul>
             </div>
             <div class="plan-card" style="border-top: 4px solid var(--accent-green);">
                 <h3>Pro</h3>
                 <div class="price">$15 / Month</div>
                 <ul>
-                    <li><i class="fa-solid fa-check"></i> 400 Casual Searches / Day</li>
-                    <li><i class="fa-solid fa-check"></i> 35 Standard Searches / Day</li>
-                    <li><i class="fa-solid fa-check"></i> 8 Deep Researches / Day</li>
-                    <li><i class="fa-solid fa-check"></i> Priority Processing</li>
-                    <li><i class="fa-solid fa-check"></i> Persistent Memory</li>
-                </ul>
-            </div>
-            <div class="plan-card" style="border-top: 4px solid #8b5cf6;">
-                <h3>Ultra</h3>
-                <div class="price">$30 / Month</div>
-                <ul>
-                    <li><i class="fa-solid fa-check"></i> 450 Casual Searches / Day</li>
-                    <li><i class="fa-solid fa-check"></i> 40 Standard Searches / Day</li>
-                    <li><i class="fa-solid fa-check"></i> 15 Deep Researches / Day</li>
-                    <li><i class="fa-solid fa-check"></i> Dedicated Compute Nodes</li>
+                    <li><i class="fa-solid fa-check"></i> 400 Casual / Day</li>
+                    <li><i class="fa-solid fa-check"></i> 35 Standard / Day</li>
+                    <li><i class="fa-solid fa-check"></i> 8 Deep Research / Day</li>
                 </ul>
             </div>
         </div>
-        
-        <p class="disclaimer-text">
-            Log in with a free account to instantly upgrade your daily limits across all three intelligence modes!
-        </p>
     </div>
 
-    <!-- ================================================================== -->
-    <!-- VIEW: THE PLAYBOOK                                                 -->
-    <!-- ================================================================== -->
+    <!-- PLAYBOOK VIEW -->
     <div class="view-container playbook-view" id="playbook-view">
         <div class="playbook-header">
             <h1 class="section-title" style="margin-bottom: 15px;">The Playbook</h1>
-            <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 800px; margin: 0 auto;">
-                Select a tactical mode below to explore its real-time logic response.
-            </p>
         </div>
-
         <div class="interactive-deck" id="interactive-deck">
             <div class="deck-nav-bar">
                 <div class="deck-tab active" onclick="switchPlaybookMode('casual')"><i class="fa-solid fa-bolt"></i> Casual Mode</div>
-                <div class="deck-tab" onclick="switchPlaybookMode('search')"><i class="fa-solid fa-magnifying-glass"></i> Search Standard</div>
-                <div class="deck-tab" onclick="switchPlaybookMode('deep')"><i class="fa-solid fa-microscope"></i> Deep Research</div>
-                <div class="deck-tab" onclick="switchPlaybookMode('intense')" style="border-color: rgba(255, 0, 60, 0.4); color: #ff003c;"><i class="fa-solid fa-skull"></i> Spoiler: Intense Dive</div>
             </div>
-
             <div class="deck-stage">
                 <div class="deck-info">
                     <span class="mode-tag" id="deck-tag">Latency Optimized</span>
                     <h2 class="mode-title" id="deck-title">Casual Mode</h2>
-                    <p class="mode-desc" id="deck-desc">
-                        Bypasses all external web pipelines to deliver pure, immediate conversational response. Tap nodes inside the arena to fire synapse pulses across the neural web.
-                    </p>
-                    <div class="mode-metrics">
-                        <div class="metric-box" style="border-color: var(--accent-green);">
-                            <div class="metric-val" id="deck-audit">Passive</div>
-                            <div class="metric-lbl">Audit Level</div>
-                        </div>
-                    </div>
+                    <p class="mode-desc" id="deck-desc">Bypasses all external web pipelines to deliver pure, immediate conversational response.</p>
                 </div>
-
                 <div class="deck-sandbox" id="deck-sandbox"></div>
             </div>
         </div>
     </div>
 
-    <!-- ================================================================== -->
-    <!-- VIEW: MAIN APP (CHAT UI)                                           -->
-    <!-- ================================================================== -->
+    <!-- MAIN APP VIEW -->
     <div class="view-container app-view" id="app-view">
         <aside class="sidebar">
             <button class="new-chat-btn" onclick="newConversation()"><i class="fa-solid fa-pen-to-square"></i> New Chat</button>
@@ -1515,23 +633,9 @@
         </aside>
 
         <div class="chat-container">
-            <div class="mobile-chat-subnav">
-                <button class="mobile-subnav-btn" onclick="toggleMobileHistory()"><i class="fa-solid fa-scroll"></i> History</button>
-                <button class="mobile-subnav-btn" onclick="newConversation()"><i class="fa-solid fa-pen-to-square"></i> New</button>
-            </div>
-
-            <div class="history-overlay" id="mobile-history-overlay">
-                <div class="history-overlay-header">
-                    <h3>Chat History</h3>
-                    <button class="history-overlay-close" onclick="toggleMobileHistory()"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <ul class="history-overlay-list" id="mobile-history-list"></ul>
-            </div>
-
             <div class="chat-view" id="chat-view">
                 <div class="welcome-prompt" id="welcome-prompt">What do you wanna brain today?</div>
             </div>
-            
             <div class="input-wrapper">
                 <div class="input-container">
                     <textarea id="question" rows="1" placeholder="Initialize inquiry..." oninput="autoResize(this)" onkeydown="checkEnter(event)"></textarea>
@@ -1543,7 +647,6 @@
                         </select>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <div class="loader" id="loader">Auditing...</div>
-                            <button class="mic-btn" id="mic-btn" onclick="toggleVoiceInput()" title="Voice to Text"><i class="fa-solid fa-microphone"></i></button>
                             <button class="send-btn" id="send-btn" onclick="ask()" title="Send"><i class="fa-solid fa-arrow-up"></i></button>
                             <button class="stop-btn" id="stop-btn" onclick="stopGeneration()" title="Stop"><i class="fa-solid fa-stop"></i></button>
                         </div>
@@ -1553,13 +656,7 @@
         </div>
     </div>
 
-    <!-- ================================================================== -->
-    <!-- JAVASCRIPT LOGIC & AUTH CORE                                       -->
-    <!-- ================================================================== -->
     <script>
-        // --------------------------------------------------------------------
-        // 1. FIREBASE AUTH CONFIGURATION
-        // --------------------------------------------------------------------
         const firebaseConfig = {
             apiKey: "AIzaSyBlHBNWogrE4ZbkHRe_TZxGJR-B9rK8pq0",
             authDomain: "mensia-ai.firebaseapp.com",
@@ -1575,33 +672,21 @@
                 firebase.initializeApp(firebaseConfig);
                 firebaseAvailable = true;
             }
-        } catch (e) {
-            console.warn("Firebase initialization skipped:", e);
-        }
+        } catch (e) { console.warn(e); }
 
         let currentUserToken = null;
         let activeAuthTab = 'login';
 
-        // Format clean display name (e.g., 'daniel.radcliffe' -> 'Daniel Radcliffe')
         function formatUserName(user) {
             if (!user) return "User";
-            if (user.displayName && user.displayName.trim() !== "") {
-                return user.displayName;
-            }
+            if (user.displayName && user.displayName.trim() !== "") return user.displayName;
             if (user.email) {
                 const handle = user.email.split('@')[0];
-                return handle
-                    .replace(/[0-9._-]+/g, ' ')
-                    .trim()
-                    .split(' ')
-                    .filter(w => w.length > 0)
-                    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-                    .join(' ') || handle;
+                return handle.replace(/[0-9._-]+/g, ' ').trim().split(' ').filter(w => w.length > 0).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') || handle;
             }
             return "Mensia User";
         }
 
-        // Firebase Auth State Listener
         if (firebaseAvailable) {
             firebase.auth().onAuthStateChanged(async (user) => {
                 if (user) {
@@ -1632,7 +717,6 @@
                 if (mobileProfileLink) mobileProfileLink.style.display = 'block';
                 if (mobileAuthLink) mobileAuthLink.innerText = 'My Account';
 
-                // Update Profile View data
                 const profileNameEl = document.getElementById('profile-name-display');
                 const profileEmailEl = document.getElementById('profile-email-display');
                 if (profileNameEl) profileNameEl.innerText = formattedName;
@@ -1655,24 +739,16 @@
             }
         }
 
-        // --------------------------------------------------------------------
-        // 2. FULL-SCREEN AUTH MODAL CONTROLS & AUTOFILL BUG FIX
-        // --------------------------------------------------------------------
         function openAuthModal() {
-            const overlay = document.getElementById('auth-modal-overlay');
-            overlay.classList.add('open');
-            
-            // Clear inputs explicitly to prevent lingering autofill text bug
+            document.getElementById('auth-modal-overlay').classList.add('open');
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-password').value = '';
             document.getElementById('auth-error-msg').innerText = '';
-            
             switchAuthTab(activeAuthTab);
         }
 
         function closeAuthModal() {
             document.getElementById('auth-modal-overlay').classList.remove('open');
-            // Clear inputs on close as well
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-password').value = '';
         }
@@ -1681,8 +757,6 @@
             activeAuthTab = tab;
             document.getElementById('tab-login').classList.toggle('active', tab === 'login');
             document.getElementById('tab-register').classList.toggle('active', tab === 'register');
-            
-            // Clear input fields when switching tabs
             document.getElementById('auth-email').value = '';
             document.getElementById('auth-password').value = '';
             
@@ -1718,10 +792,7 @@
 
         async function handleAuthSubmit(e) {
             e.preventDefault();
-            if (!firebaseAvailable) {
-                document.getElementById('auth-error-msg').innerText = "Firebase config missing in code. Add your Firebase keys.";
-                return;
-            }
+            if (!firebaseAvailable) return;
 
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
@@ -1731,19 +802,21 @@
 
             try {
                 if (activeAuthTab === 'login') {
-                    await firebase.auth().signInWithEmailAndPassword(email, password);
-                    closeAuthModal();
-                } else {
-                    // Sign Up: creates account and automatically logs user in
-                    const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                    if (userCredential.user) {
-                        try {
-                            await userCredential.user.sendEmailVerification();
-                        } catch (emailErr) {
-                            console.warn("Verification email dispatch notice:", emailErr);
-                        }
+                    const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                    if (!userCredential.user.emailVerified) {
+                        await firebase.auth().signOut();
+                        throw new Error("Please verify your email address first. Check your inbox for the confirmation link.");
                     }
                     closeAuthModal();
+                } else {
+                    const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                    if (userCredential.user) {
+                        await userCredential.user.sendEmailVerification();
+                        await firebase.auth().signOut();
+                        errorEl.style.color = "var(--accent-green)";
+                        errorEl.innerText = "Account created! Verification link sent. Verify your address, then sign in.";
+                        document.getElementById('auth-password').value = '';
+                    }
                 }
             } catch (err) {
                 errorEl.innerText = err.message.replace('Firebase: ', '');
@@ -1751,37 +824,28 @@
         }
         
         async function handleGoogleSignIn() {
-            if (!firebaseAvailable) {
-                document.getElementById('auth-error-msg').innerText = "Firebase config missing in code. Add your Firebase keys.";
-                return;
-            }
-            
-            const errorEl = document.getElementById('auth-error-msg');
-            errorEl.innerText = '';
-            
+            if (!firebaseAvailable) return;
             const provider = new firebase.auth.GoogleAuthProvider();
             try {
                 await firebase.auth().signInWithPopup(provider);
                 closeAuthModal();
             } catch (err) {
-                errorEl.innerText = err.message.replace('Firebase: ', '');
+                document.getElementById('auth-error-msg').innerText = err.message.replace('Firebase: ', '');
             }
         }
 
         async function handleForgotPassword() {
             const email = document.getElementById('auth-email').value.trim();
             const errorEl = document.getElementById('auth-error-msg');
-            
             if (!email) {
                 errorEl.style.color = "#ef4444";
                 errorEl.innerText = "Please enter your email address first to reset your password.";
                 return;
             }
-
             try {
                 await firebase.auth().sendPasswordResetEmail(email);
                 errorEl.style.color = "var(--accent-green)";
-                errorEl.innerText = "Password reset email sent! Check your inbox to set a new password.";
+                errorEl.innerText = "Password reset email sent! Check your inbox.";
             } catch (err) {
                 errorEl.style.color = "#ef4444";
                 errorEl.innerText = err.message.replace('Firebase: ', '');
@@ -1789,857 +853,179 @@
         }
 
         async function handleSignOut() {
-            if (firebaseAvailable) {
-                await firebase.auth().signOut();
-            }
+            if (firebaseAvailable) await firebase.auth().signOut();
             closeAuthModal();
             showView('home');
         }
 
         async function handleDeleteAccount() {
             if (!firebaseAvailable || !firebase.auth().currentUser) return;
-            const confirmDelete = confirm("Are you sure you want to permanently delete your Mensia AI account? This action cannot be reversed.");
-            if (!confirmDelete) return;
-
+            if (!confirm("Are you sure you want to permanently delete your Mensia AI account?")) return;
             try {
-                const user = firebase.auth().currentUser;
-                await user.delete();
-                alert("Your account has been permanently deleted.");
+                await firebase.auth().currentUser.delete();
+                alert("Account deleted successfully.");
                 showView('home');
             } catch (err) {
-                alert("Account Deletion Notice: " + err.message.replace('Firebase: ', '') + "\n\nFor security reasons, please log in again before deleting your account.");
+                alert("Error: " + err.message + "\nPlease re-login before deleting your account.");
             }
         }
 
-        // --------------------------------------------------------------------
-        // 3. FRONTEND TO BACKEND LIMIT SYNCING
-        // --------------------------------------------------------------------
         async function syncLimits() {
             try {
                 const headers = {};
-                if (currentUserToken) {
-                    headers['Authorization'] = `Bearer ${currentUserToken}`;
-                }
-                
+                if (currentUserToken) headers['Authorization'] = `Bearer ${currentUserToken}`;
                 const res = await fetch('/limits', { headers });
                 if (!res.ok) return;
                 const data = await res.json();
                 
                 const modeSelect = document.getElementById('mode');
-                const options = modeSelect.options;
-                
-                for (let opt of options) {
-                    const modeVal = opt.value;
-                    const isExhausted = data.exhausted && data.exhausted[modeVal];
-                    
-                    if (isExhausted) {
+                for (let opt of modeSelect.options) {
+                    if (data.exhausted && data.exhausted[opt.value]) {
                         opt.disabled = true;
-                        if (!opt.innerText.includes("(Limit Reached)")) {
-                            const baseText = opt.innerText.split('(')[0].trim();
-                            opt.innerText = baseText + " (Limit Reached)";
-                        }
                     } else {
                         opt.disabled = false;
-                        if (opt.innerText.includes("(Limit Reached)")) {
-                            const baseText = opt.innerText.split('(')[0].trim();
-                            if (modeVal === 'casual') opt.innerText = `${baseText} (Lightning Fast)`;
-                            if (modeVal === 'search') opt.innerText = `${baseText} (Standard)`;
-                            if (modeVal === 'deep research') opt.innerText = `${baseText} (Max Truth)`;
-                        }
-                    }
-                }
-                
-                if (modeSelect.options[modeSelect.selectedIndex].disabled) {
-                    for(let opt of options) {
-                        if(!opt.disabled) {
-                            modeSelect.value = opt.value;
-                            break;
-                        }
                     }
                 }
 
-                // Update Profile View Quota Meters
                 if (data.usage && data.limits) {
-                    const cUsed = data.usage.casual || 0;
-                    const cMax = data.limits.casual || 350;
+                    const cUsed = data.usage.casual || 0, cMax = data.limits.casual || 350;
                     document.getElementById('quota-casual-text').innerText = `${cUsed} / ${cMax}`;
                     document.getElementById('quota-casual-bar').style.width = Math.min((cUsed / cMax) * 100, 100) + '%';
 
-                    const sUsed = data.usage.search || 0;
-                    const sMax = data.limits.search || 25;
+                    const sUsed = data.usage.search || 0, sMax = data.limits.search || 25;
                     document.getElementById('quota-search-text').innerText = `${sUsed} / ${sMax}`;
                     document.getElementById('quota-search-bar').style.width = Math.min((sUsed / sMax) * 100, 100) + '%';
 
-                    const dUsed = data.usage["deep research"] || 0;
-                    const dMax = data.limits["deep research"] || 3;
+                    const dUsed = data.usage["deep research"] || 0, dMax = data.limits["deep research"] || 3;
                     document.getElementById('quota-deep-text').innerText = `${dUsed} / ${dMax}`;
                     document.getElementById('quota-deep-bar').style.width = Math.min((dUsed / dMax) * 100, 100) + '%';
                 }
-            } catch (e) {
-                console.error("Could not sync limits:", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            syncLimits();
-        });
-
-        // --------------------------------------------------------------------
-        // 4. VIEW NAVIGATION
-        // --------------------------------------------------------------------
         function showView(viewId) {
             document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
             document.querySelectorAll('.nav-links a, .nav-mobile-panel a').forEach(a => a.classList.remove('active'));
-            
-            const targetView = document.getElementById(viewId + '-view');
-            if (targetView) targetView.classList.add('active');
-            
-            const navLink = document.getElementById('nav-' + viewId);
-            if (navLink) navLink.classList.add('active');
-            
-            closeMobileNav();
-
-            if (viewId === 'app') {
-                renderSidebar();
-                updateWelcomePrompt();
-                if (window.matchMedia('(pointer: fine)').matches) {
-                    document.getElementById('question').focus();
-                }
-            } else if (viewId === 'playbook') {
-                switchPlaybookMode('casual');
-            } else if (viewId === 'profile') {
-                syncLimits();
-            }
+            const target = document.getElementById(viewId + '-view');
+            if (target) target.classList.add('active');
+            const link = document.getElementById('nav-' + viewId);
+            if (link) link.classList.add('active');
+            if (viewId === 'app') { renderSidebar(); updateWelcomePrompt(); }
+            else if (viewId === 'profile') { syncLimits(); }
         }
 
         function toggleMobileNav() {
             const panel = document.getElementById('nav-mobile-panel');
-            const icon = document.getElementById('nav-hamburger-icon');
             const isOpen = panel.classList.toggle('open');
-            icon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
-        }
-        
-        function closeMobileNav() {
-            document.getElementById('nav-mobile-panel').classList.remove('open');
-            document.getElementById('nav-hamburger-icon').className = 'fa-solid fa-bars';
+            document.getElementById('nav-hamburger-icon').className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
         }
 
-        function toggleMobileHistory() {
-            const overlay = document.getElementById('mobile-history-overlay');
-            if (overlay) overlay.classList.toggle('open');
-        }
-
-        // --------------------------------------------------------------------
-        // 5. THEME MANAGER
-        // --------------------------------------------------------------------
         function applyTheme(isDark) {
-            const iconNav = document.getElementById("theme-icon-nav");
-            if (isDark) {
-                document.body.classList.add("dark-mode");
-                if (iconNav) iconNav.className = "fa-solid fa-sun";
-            } else {
-                document.body.classList.remove("dark-mode");
-                if (iconNav) iconNav.className = "fa-solid fa-moon";
-            }
-            if (document.getElementById('playbook-view').classList.contains('active')) {
-                renderCurrentSandbox();
-            }
+            if (isDark) document.body.classList.add("dark-mode");
+            else document.body.classList.remove("dark-mode");
         }
-        
         function toggleTheme() {
             const isDark = !document.body.classList.contains("dark-mode");
             localStorage.setItem("mensia_theme", isDark ? "dark" : "light");
             applyTheme(isDark);
         }
-        
-        const savedTheme = localStorage.getItem("mensia_theme");
-        if (savedTheme === "dark") applyTheme(true);
-        else applyTheme(false);
+        if (localStorage.getItem("mensia_theme") === "dark") applyTheme(true);
 
-        // --------------------------------------------------------------------
-        // 6. PLAYBOOK LIVE DECK (MINI-GAMES)
-        // --------------------------------------------------------------------
-        let activePlaybookMode = 'casual';
-        let thievesInterval = null;
-        let searchGameInterval = null;
-        let thiefSpawnTimer = null;
-
-        const PLAYBOOK_MODES = {
-            casual: { tag: "Latency Optimized", title: "Casual Mode", desc: "Bypasses all external web pipelines to deliver pure, immediate conversational response. Tap nodes inside the arena to fire synapse pulses across the neural web.", audit: "Passive", auditColor: "var(--accent-green)" },
-            search: { tag: "Verified Live Grounding", title: "Search (Standard)", desc: "Queries real-time indexes and invokes the secondary cognitive auditor to eliminate hallucinations. Click the verified source targets as they pop up to lock down data accuracy.", audit: "Strict 1-Pass", auditColor: "var(--accent-blue)" },
-            deep: { tag: "Max Truth Extraction", title: "Deep Research", desc: "Fires concurrent queries across multiple independent search topologies. Click rogue anomaly blips to purge them before they reach the CCTV radar intercept zones. Purge 24 blips without reaching 10 scans to win!", audit: "Recursive MoE", auditColor: "#8b5cf6" },
-            intense: { tag: "CLASSIFIED PROTOCOL", title: "Spoiler: Intense Dive", desc: "A strictly uninhibited, unhedged adversarial analysis mode designed to tear apart corporate and geopolitical disinformation with zero sugarcoating. Under dark mode, structural containment fails.", audit: "RUTHLESS", auditColor: "#ff003c" }
-        };
-
-        function switchPlaybookMode(modeKey) {
-            activePlaybookMode = modeKey;
-            if (thievesInterval) { clearInterval(thievesInterval); thievesInterval = null; }
-            if (searchGameInterval) { clearInterval(searchGameInterval); searchGameInterval = null; }
-            if (thiefSpawnTimer) { clearInterval(thiefSpawnTimer); thiefSpawnTimer = null; }
-
-            const data = PLAYBOOK_MODES[modeKey];
-            const tabs = document.querySelectorAll('.deck-tab');
-            tabs.forEach(t => t.classList.remove('active'));
-            const clickedIndex = ['casual', 'search', 'deep', 'intense'].indexOf(modeKey);
-            if (tabs[clickedIndex]) tabs[clickedIndex].classList.add('active');
-
-            document.getElementById('deck-tag').innerText = data.tag;
-            document.getElementById('deck-title').innerText = data.title;
-            document.getElementById('deck-desc').innerText = data.desc;
-            
-            const auditEl = document.getElementById('deck-audit');
-            auditEl.innerText = data.audit;
-            auditEl.parentElement.style.borderColor = data.auditColor;
-
-            const deck = document.getElementById('interactive-deck');
-            deck.classList.remove('horror-active');
-
-            renderCurrentSandbox();
-        }
-
-        function renderCurrentSandbox() {
-            const sandbox = document.getElementById('deck-sandbox');
-            const isDark = document.body.classList.contains("dark-mode");
-            sandbox.classList.remove('horror-active');
-            sandbox.innerHTML = "";
-
-            if (activePlaybookMode === 'casual') {
-                sandbox.innerHTML = `<div class="casual-sim" id="casual-sim" style="position: relative; width: 100%; height: 100%;"><div style="position: absolute; top: 12px; left: 15px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">SYNAPSES FIRED: <span id="synapse-count">0</span></div></div>`;
-                const sim = document.getElementById('casual-sim');
-                let count = 0;
-                for (let i = 0; i < 6; i++) {
-                    const node = document.createElement('div');
-                    node.className = 'spark-node';
-                    node.style.left = Math.random() * 70 + 15 + "%";
-                    node.style.top = Math.random() * 70 + 15 + "%";
-                    node.onclick = () => {
-                        count++;
-                        document.getElementById('synapse-count').innerText = count;
-                        node.style.transform = "translate(-50%, -50%) scale(2)";
-                        node.style.background = "#34d399";
-                        setTimeout(() => { node.style.transform = "translate(-50%, -50%) scale(1)"; node.style.background = "var(--accent-blue)"; }, 200);
-                        const wave = document.createElement('div');
-                        wave.className = 'synapse-wave';
-                        wave.style.left = node.style.left;
-                        wave.style.top = node.style.top;
-                        sim.appendChild(wave);
-                        setTimeout(() => wave.remove(), 600);
-                    };
-                    sim.appendChild(node);
-                }
-            } else if (activePlaybookMode === 'search') {
-                sandbox.innerHTML = `<div class="search-game" id="search-game"><div style="position: absolute; top: 12px; left: 15px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted);">VERIFIED SOURCES: <span id="search-score">0</span></div><div id="target-zone" style="position: relative; width: 100%; height: 220px; border: 2px dashed var(--card-border); border-radius: 16px;"></div></div>`;
-                const zone = document.getElementById('target-zone');
-                let score = 0;
-                function spawnTarget() {
-                    if (activePlaybookMode !== 'search') return;
-                    zone.innerHTML = "";
-                    const target = document.createElement('div');
-                    target.className = 'verify-target';
-                    target.innerHTML = '<i class="fa-solid fa-check"></i>';
-                    const zoneW = zone.clientWidth || 260;
-                    const zoneH = zone.clientHeight || 220;
-                    target.style.left = Math.random() * Math.max(zoneW - 62, 10) + 10 + 'px';
-                    target.style.top = Math.random() * Math.max(zoneH - 62, 10) + 10 + 'px';
-                    target.onclick = () => { score++; document.getElementById('search-score').innerText = score; target.remove(); spawnTarget(); };
-                    zone.appendChild(target);
-                }
-                spawnTarget();
-                searchGameInterval = setInterval(spawnTarget, 1600);
-            } else if (activePlaybookMode === 'deep') {
-                initDeepResearchGame();
-            } else if (activePlaybookMode === 'intense') {
-                if (isDark) {
-                    const deck = document.getElementById('interactive-deck');
-                    deck.classList.add('horror-active');
-                    sandbox.classList.add('horror-active');
-                    sandbox.innerHTML = `<div class="horror-chamber"><i class="fa-solid fa-triangle-exclamation horror-warning-icon"></i><div class="horror-blood-text">CONTAINMENT BREACH // ENTITY UNLEASHED</div><p style="font-size: 0.8rem; color: #ff003c; margin-top: 5px;">MENSIA WILL NOT HEDGE. MENSIA WILL NOT APOLOGIZE.</p><button class="unleash-btn" onclick="triggerJumpscare()">PING ENTITY</button></div>`;
-                } else {
-                    sandbox.innerHTML = `<div style="text-align: center; padding: 20px;"><i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 15px;"></i><h4 style="font-size: 1.2rem; font-weight: 800;">Protocol Inactive</h4><p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px;">Switch to Dark Mode to breach containment.</p></div>`;
-                }
-            }
-        }
-
-        function initDeepResearchGame() {
-            const sandbox = document.getElementById('deck-sandbox');
-            sandbox.innerHTML = `<div class="deep-arena" id="deep-arena"><div style="position: absolute; top: 10px; left: 12px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); z-index: 10;">PURGED: <span id="deep-purged">0</span>/24</div><div style="position: absolute; top: 10px; right: 12px; font-size: 0.75rem; font-weight: 700; color: #ff003c; z-index: 10;">SCANNED: <span id="deep-scanned">0</span>/10</div><div class="mini-radar" style="top: 20px; left: 25px;"><div class="mini-sweep"></div></div><div class="mini-radar" style="top: 20px; right: 25px;"><div class="mini-sweep" style="animation-delay: 0.7s;"></div></div><div class="mini-radar" style="bottom: 20px; left: 50%; transform: translateX(-50%);"><div class="mini-sweep" style="animation-delay: 1.4s;"></div></div></div>`;
-            const arenaEl = document.getElementById('deep-arena');
-            let deepScore = 0; let scannedScore = 0; let spawnIntervalTime = 1800; let speedMultiplier = 0.8;
-            const arenaW = arenaEl.clientWidth || 320; const arenaH = arenaEl.clientHeight || 320;
-            const radarCenters = [{x: 25 + 45, y: 20 + 45, radius: 45}, {x: arenaW - 25 - 45, y: 20 + 45, radius: 45}, {x: arenaW / 2, y: arenaH - 20 - 45, radius: 45}];
-            const redThieves = [];
-
-            function spawnThief() {
-                if (activePlaybookMode !== 'deep') return;
-                let x, y, safe = false; let attempts = 0;
-                while (!safe && attempts < 20) {
-                    x = Math.random() * (arenaW - 60) + 30; y = Math.random() * (arenaH - 70) + 50; safe = true;
-                    for (let rc of radarCenters) { if (Math.hypot(x - rc.x, y - rc.y) < rc.radius + 25) { safe = false; break; } }
-                    attempts++;
-                }
-                const thief = document.createElement('div'); thief.className = 'red-thief'; thief.style.left = x + 'px'; thief.style.top = y + 'px';
-                const obj = { el: thief, x: x, y: y, vx: (Math.random() - 0.5) * 1.2 * speedMultiplier, vy: (Math.random() - 0.5) * 1.2 * speedMultiplier, active: true };
-                thief.onclick = (e) => {
-                    e.stopPropagation(); if (!obj.active) return; obj.active = false; deepScore++;
-                    const purgedEl = document.getElementById('deep-purged'); if (purgedEl) purgedEl.innerText = deepScore;
-                    if (deepScore % 5 === 0) { speedMultiplier += 0.3; if (spawnIntervalTime > 600) spawnIntervalTime -= 250; resetSpawnTimer(); }
-                    if (deepScore >= 24) { endDeepGame(true); return; }
-                    thief.classList.add('poof'); setTimeout(() => thief.remove(), 200);
-                };
-                arenaEl.appendChild(thief); redThieves.push(obj);
-                setTimeout(() => { if (obj.active) { obj.active = false; thief.remove(); } }, 7000);
-            }
-
-            function resetSpawnTimer() {
-                if (thiefSpawnTimer) clearInterval(thiefSpawnTimer);
-                thiefSpawnTimer = setInterval(() => {
-                    if (activePlaybookMode !== 'deep') { clearInterval(thiefSpawnTimer); return; }
-                    if (redThieves.filter(t => t.active).length < 6) { spawnThief(); }
-                }, spawnIntervalTime);
-            }
-            resetSpawnTimer();
-
-            thievesInterval = setInterval(() => {
-                if (activePlaybookMode !== 'deep') return;
-                redThieves.forEach(t => {
-                    if (!t.active) return;
-                    t.x += t.vx; t.y += t.vy;
-                    if(t.x < 10 || t.x > arenaW - 10) t.vx *= -1; if(t.y < 10 || t.y > arenaH - 10) t.vy *= -1;
-                    t.el.style.left = t.x + 'px'; t.el.style.top = t.y + 'px';
-                    for(let rc of radarCenters) {
-                        let dist = Math.hypot(t.x - rc.x, t.y - rc.y);
-                        if(dist < rc.radius) {
-                            t.active = false; t.el.classList.add('poof'); setTimeout(() => t.el.remove(), 200);
-                            scannedScore++; const scannedEl = document.getElementById('deep-scanned'); if (scannedEl) scannedEl.innerText = scannedScore;
-                            if (scannedScore >= 10) { endDeepGame(false); }
-                            break;
-                        }
-                    }
-                });
-            }, 30);
-        }
-
-        function endDeepGame(isWin) {
-            if (thievesInterval) { clearInterval(thievesInterval); thievesInterval = null; }
-            if (thiefSpawnTimer) { clearInterval(thiefSpawnTimer); thiefSpawnTimer = null; }
-            const sandbox = document.getElementById('deck-sandbox');
-            if (!sandbox) return;
-            sandbox.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:20px;"><h3 style="font-size:2rem; font-weight:800; color:${isWin ? 'var(--accent-green)' : '#ff003c'}; margin-bottom:10px;">${isWin ? 'SUCCESS!' : 'BREACH LIMIT REACHED'}</h3><p style="font-size:0.95rem; color:var(--text-muted); margin-bottom:20px;">${isWin ? 'You successfully purged 24 anomalies!' : '10 blips scanned! Both meters reset.'}</p><button onclick="switchPlaybookMode('deep')" style="padding:10px 24px; background:var(--text-main); color:var(--bg-color); border:none; border-radius:14px; font-weight:700; cursor:pointer;">RESTART GRID</button></div>`;
-        }
-
-        function triggerJumpscare() {
-            const sandbox = document.getElementById('deck-sandbox');
-            for(let i=0; i<4; i++) {
-                const eye = document.createElement('div'); eye.className = 'ghost-eye'; eye.style.left = Math.random() * 70 + 15 + "%"; eye.style.top = Math.random() * 70 + 15 + "%"; eye.style.opacity = '1';
-                sandbox.appendChild(eye); setTimeout(() => eye.remove(), 600);
-            }
-        }
-
-        // --------------------------------------------------------------------
-        // 7. PHYSICS ENGINE
-        // --------------------------------------------------------------------
-        const arena = document.getElementById('hero-arena');
-        function ballRadius(el, fallback) { const r = el ? el.getBoundingClientRect().width / 2 : 0; return r > 0 ? r : fallback; }
-        const el1 = document.getElementById('ball1'); const el2 = document.getElementById('ball2'); const el3 = document.getElementById('ball3');
-        const arenaW = arena ? arena.clientWidth : window.innerWidth; const arenaH = arena ? arena.clientHeight : window.innerHeight;
-        const balls = [
-            { id: 'ball1', el: el1, radius: ballRadius(el1, 70), x: arenaW * 0.2, y: arenaH * 0.3, vx: 1.2, vy: 1.0 },
-            { id: 'ball2', el: el2, radius: ballRadius(el2, 50), x: arenaW * 0.8, y: arenaH * 0.7, vx: -1.0, vy: -1.2 },
-            { id: 'ball3', el: el3, radius: ballRadius(el3, 85), x: arenaW * 0.5, y: arenaH * 0.5, vx: -0.8, vy: 1.4 }
-        ];
-        function physicsLoop() {
-            if (!arena) return;
-            const width = arena.clientWidth; const height = arena.clientHeight;
-            for (let b of balls) {
-                b.x += b.vx; b.y += b.vy;
-                if (b.x - b.radius < 0) { b.x = b.radius; b.vx *= -1; }
-                if (b.x + b.radius > width) { b.x = width - b.radius; b.vx *= -1; }
-                if (b.y - b.radius < 0) { b.y = b.radius; b.vy *= -1; }
-                if (b.y + b.radius > height) { b.y = height - b.radius; b.vy *= -1; }
-            }
-            for (let i = 0; i < balls.length; i++) {
-                for (let j = i + 1; j < balls.length; j++) {
-                    let b1 = balls[i]; let b2 = balls[j]; let dx = b2.x - b1.x; let dy = b2.y - b1.y;
-                    let distance = Math.hypot(dx, dy); let minDist = b1.radius + b2.radius;
-                    if (distance < minDist) {
-                        let angle = Math.atan2(dy, dx); let sin = Math.sin(angle); let cos = Math.cos(angle);
-                        let vx1 = b1.vx * cos + b1.vy * sin; let vy1 = b1.vy * cos - b1.vx * sin;
-                        let vx2 = b2.vx * cos + b2.vy * sin; let vy2 = b2.vy * cos - b2.vx * sin;
-                        let m1 = b1.radius * b1.radius; let m2 = b2.radius * b2.radius;
-                        let vx1Final = ((m1 - m2) * vx1 + 2 * m2 * vx2) / (m1 + m2); let vx2Final = ((m2 - m1) * vx2 + 2 * m1 * vx1) / (m1 + m2);
-                        b1.vx = vx1Final * cos - vy1 * sin; b1.vy = vy1 * cos + vx1Final * sin;
-                        b2.vx = vx2Final * cos - vy2 * sin; b2.vy = vy2 * cos + vx2Final * sin;
-                        let overlap = (minDist - distance) / 2;
-                        b1.x -= overlap * Math.cos(angle); b1.y -= overlap * Math.sin(angle);
-                        b2.x += overlap * Math.cos(angle); b2.y += overlap * Math.sin(angle);
-                    }
-                }
-            }
-            for (let b of balls) { b.el.style.transform = `translate(${b.x - b.radius}px, ${b.y - b.radius}px) translateZ(0)`; }
-            requestAnimationFrame(physicsLoop);
-        }
-        physicsLoop();
-
-        // --------------------------------------------------------------------
-        // 8. CHAT STORAGE & SESSION
-        // --------------------------------------------------------------------
-        let sessionId = sessionStorage.getItem("active_session");
+        let sessionId = sessionStorage.getItem("active_session") || crypto.randomUUID();
+        sessionStorage.setItem("active_session", sessionId);
         let savedChats = JSON.parse(localStorage.getItem("mensia_chats")) || {};
-        let abortController = null;
-        let stopTypingFlag = false;
-
-        if (!sessionId) {
-            sessionId = crypto.randomUUID();
-            sessionStorage.setItem("active_session", sessionId);
-            savedChats[sessionId] = { title: "New Chat", messages: [] };
-        }
+        if (!savedChats[sessionId]) savedChats[sessionId] = { title: "New Chat", messages: [] };
 
         function updateWelcomePrompt() {
             const prompt = document.getElementById("welcome-prompt");
-            if (!prompt) return;
-            const currentMessages = (savedChats[sessionId] && savedChats[sessionId].messages) || [];
-            if (currentMessages.length === 0) {
-                prompt.style.display = "block";
-            } else {
-                prompt.style.display = "none";
-            }
+            if (prompt) prompt.style.display = (savedChats[sessionId]?.messages.length === 0) ? "block" : "none";
         }
 
         function renderSidebar() {
-            const desktopList = document.getElementById("history-list");
-            const mobileList = document.getElementById("mobile-history-list");
-            
-            if (desktopList) desktopList.innerHTML = "";
-            if (mobileList) mobileList.innerHTML = "";
-            
-            const sessions = Object.keys(savedChats).reverse();
-            
-            sessions.forEach(id => {
+            const list = document.getElementById("history-list");
+            if (!list) return;
+            list.innerHTML = "";
+            Object.keys(savedChats).reverse().forEach(id => {
                 const chat = savedChats[id];
                 if (chat.messages.length === 0 && id !== sessionId) return;
-                
-                function createItem() {
-                    const li = document.createElement("li");
-                    li.className = "history-item" + (id === sessionId ? " active" : "");
-                    
-                    const titleSpan = document.createElement("span");
-                    titleSpan.className = "history-item-title";
-                    titleSpan.innerText = chat.title;
-                    titleSpan.onclick = () => {
-                        loadChat(id);
-                        const overlay = document.getElementById('mobile-history-overlay');
-                        if (overlay) overlay.classList.remove('open');
-                    };
-                    
-                    const deleteBtn = document.createElement("i");
-                    deleteBtn.className = "fa-solid fa-trash delete-chat-icon";
-                    deleteBtn.title = "Delete Chat";
-                    deleteBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        deleteChat(id);
-                    };
-                    
-                    li.appendChild(titleSpan);
-                    li.appendChild(deleteBtn);
-                    return li;
-                }
-
-                if (desktopList) desktopList.appendChild(createItem());
-                if (mobileList) mobileList.appendChild(createItem());
+                const li = document.createElement("li");
+                li.className = "history-item" + (id === sessionId ? " active" : "");
+                li.innerHTML = `<span class="history-item-title">${chat.title}</span><i class="fa-solid fa-trash delete-chat-icon"></i>`;
+                li.onclick = () => { sessionId = id; sessionStorage.setItem("active_session", id); renderSidebar(); loadChat(id); };
+                list.appendChild(li);
             });
-        }
-
-        function deleteChat(id) {
-            if (abortController && id === sessionId) stopGeneration();
-            delete savedChats[id];
-            localStorage.setItem("mensia_chats", JSON.stringify(savedChats));
-            
-            if (id === sessionId) {
-                const remaining = Object.keys(savedChats);
-                if (remaining.length > 0) {
-                    loadChat(remaining[remaining.length - 1]);
-                } else {
-                    newConversation();
-                }
-            } else {
-                renderSidebar();
-            }
         }
 
         function loadChat(id) {
-            if (id === sessionId) return;
-            if (abortController) stopGeneration(); 
             sessionId = id;
-            sessionStorage.setItem("active_session", sessionId);
-            renderSidebar();
             const chatView = document.getElementById("chat-view");
             chatView.innerHTML = '<div class="welcome-prompt" id="welcome-prompt">What do you wanna brain today?</div>';
-            savedChats[id].messages.forEach(msg => {
-                renderBubble(msg.text, msg.sender, true, null, msg.sources || []); 
-            });
+            savedChats[id].messages.forEach(m => renderBubble(m.text, m.sender, true, null, m.sources || []));
             updateWelcomePrompt();
         }
 
         function newConversation() {
-            if (abortController) stopGeneration();
             sessionId = crypto.randomUUID();
             sessionStorage.setItem("active_session", sessionId);
             savedChats[sessionId] = { title: "New Chat", messages: [] };
-            
-            const overlay = document.getElementById('mobile-history-overlay');
-            if (overlay) overlay.classList.remove('open');
-
-            const chatView = document.getElementById("chat-view");
-            chatView.innerHTML = '<div class="welcome-prompt" id="welcome-prompt">What do you wanna brain today?</div>';
+            document.getElementById("chat-view").innerHTML = '<div class="welcome-prompt" id="welcome-prompt">What do you wanna brain today?</div>';
             updateWelcomePrompt();
             renderSidebar();
-            
-            if (window.matchMedia('(pointer: fine)').matches) {
-                document.getElementById('question').focus();
-            }
         }
 
         function saveMessage(text, sender, sources = []) {
-            if (!savedChats[sessionId]) {
-                savedChats[sessionId] = { title: "New Chat", messages: [] };
-            }
-            const chat = savedChats[sessionId];
-            chat.messages.push({ text: text, sender: sender, sources: sources });
-            if (sender === 'user' && chat.messages.length === 1) {
-                chat.title = text.length > 28 ? text.substring(0, 28) + '...' : text;
+            if (!savedChats[sessionId]) savedChats[sessionId] = { title: "New Chat", messages: [] };
+            savedChats[sessionId].messages.push({ text, sender, sources });
+            if (sender === 'user' && savedChats[sessionId].messages.length === 1) {
+                savedChats[sessionId].title = text.length > 28 ? text.substring(0, 28) + '...' : text;
             }
             localStorage.setItem("mensia_chats", JSON.stringify(savedChats));
             renderSidebar();
             updateWelcomePrompt();
         }
 
-        // --------------------------------------------------------------------
-        // 9. VOICE INPUT (WEB SPEECH API)
-        // --------------------------------------------------------------------
-        let recognition = null;
-        let isRecording = false;
+        function autoResize(ta) { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }
+        function checkEnter(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); } }
 
-        function initSpeechRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return null;
-            
-            const rec = new SpeechRecognition();
-            rec.continuous = false;
-            rec.interimResults = true;
-            rec.lang = 'en-US';
-
-            rec.onstart = () => {
-                isRecording = true;
-                const micBtn = document.getElementById("mic-btn");
-                if (micBtn) micBtn.classList.add("recording");
-            };
-
-            rec.onresult = (event) => {
-                const transcript = Array.from(event.results).map(result => result[0].transcript).join('');
-                const q = document.getElementById("question");
-                if (q) {
-                    q.value = transcript;
-                    autoResize(q);
-                }
-            };
-
-            rec.onerror = (event) => {
-                console.error("Speech Recognition Error:", event.error);
-                stopVoiceInput();
-            };
-
-            rec.onend = () => { stopVoiceInput(); };
-            return rec;
-        }
-
-        function toggleVoiceInput() {
-            if (!recognition) { recognition = initSpeechRecognition(); }
-            if (!recognition) { alert("Speech recognition is not supported in your browser."); return; }
-            if (isRecording) { recognition.stop(); } else { try { recognition.start(); } catch (err) { console.error("Failed to start speech recognition:", err); } }
-        }
-
-        function stopVoiceInput() {
-            isRecording = false;
-            const micBtn = document.getElementById("mic-btn");
-            if (micBtn) micBtn.classList.remove("recording");
-        }
-
-        // --------------------------------------------------------------------
-        // 10. UI HELPERS, MATH & MARKDOWN
-        // --------------------------------------------------------------------
-        let loadingInterval = null;
-
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.height = textarea.scrollHeight + 'px';
-        }
-
-        function checkEnter(e) {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); }
-        }
-
-        function toggleInputState(isGenerating, mode = "casual") {
-            const sendBtn = document.getElementById("send-btn");
-            const stopBtn = document.getElementById("stop-btn");
-            const micBtn = document.getElementById("mic-btn");
-            const loader = document.getElementById("loader");
-            
-            if (isGenerating) {
-                sendBtn.style.display = "none";
-                if (micBtn) micBtn.style.display = "none";
-                stopBtn.style.display = "flex";
-                loader.style.display = "block";
-
-                if (loadingInterval) clearInterval(loadingInterval);
-
-                if (mode === "casual") {
-                    loader.innerText = "Formulating...";
-                } else {
-                    const stages = mode === "deep research" ? 
-                        ["Deep Searching...", "Synthesising...", "Formulating...", "Auditing..."] :
-                        ["Searching...", "Formulating...", "Auditing..."];
-                    
-                    loader.innerText = stages[0];
-                    let i = 0;
-                    loadingInterval = setInterval(() => {
-                        i = Math.min(i + 1, stages.length - 1);
-                        loader.innerText = stages[i];
-                    }, 4000);
-                }
-            } else {
-                sendBtn.style.display = "flex";
-                if (micBtn) micBtn.style.display = "flex";
-                stopBtn.style.display = "none";
-                loader.style.display = "none";
-                if (loadingInterval) {
-                    clearInterval(loadingInterval);
-                    loadingInterval = null;
-                }
-            }
-        }
-
-        function stopGeneration() {
-            if (abortController) abortController.abort(); 
-            stopTypingFlag = true; 
-            toggleInputState(false);
-        }
-
-        function renderMath(element) {
-            if (window.renderMathInElement && element) {
-                renderMathInElement(element, {
-                    delimiters: [
-                        { left: '$$', right: '$$', display: true },
-                        { left: '$', right: '$', display: false }
-                    ],
-                    throwOnError: false
-                });
-            }
-        }
-
-        function toggleSourcesDrawer(btn) {
-            const drawer = btn.closest('.sources-drawer');
-            if (drawer) drawer.classList.toggle('open');
-        }
-
-        function processMarkdownAndCitations(rawText, sources = []) {
-            let parsed = marked.parse(rawText);
-            if (sources && sources.length > 0) {
-                const sourceMap = {};
-                sources.forEach(s => { sourceMap[s.id] = s.url; });
-                parsed = parsed.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g, (match, nums) => {
-                    const indices = nums.split(',').map(n => n.trim());
-                    const badges = indices.map(id => {
-                        const url = sourceMap[id];
-                        if (url) {
-                            return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="citation-badge" title="${url}">${id}</a>`;
-                        }
-                        return `[${id}]`;
-                    }).join('');
-                    return badges;
-                });
-            }
-            return parsed;
-        }
-
-        function createSourcesDrawerHtml(sources = []) {
-            if (!sources || sources.length === 0) return '';
-            return `
-                <div class="sources-drawer">
-                    <button class="sources-toggle-btn" onclick="toggleSourcesDrawer(this)">
-                        <i class="fa-solid fa-layer-group"></i> <span>Sources (${sources.length})</span>
-                        <i class="fa-solid fa-chevron-down toggle-icon"></i>
-                    </button>
-                    <div class="sources-panel">
-                        <div class="sources-grid">
-                            ${sources.map(s => `
-                                <a href="${s.url}" target="_blank" rel="noopener noreferrer" class="source-item-card">
-                                    <span class="source-num">${s.id}</span>
-                                    <div class="source-info">
-                                        <div class="source-domain">${s.domain || 'Web Source'}</div>
-                                        <div class="source-url">${s.url}</div>
-                                    </div>
-                                    <i class="fa-solid fa-arrow-up-right-from-square source-ext-icon"></i>
-                                </a>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function renderBubble(text, sender, skipTypewriter = false, onComplete = null, sources = []) {
+        function renderBubble(text, sender, skip = false, cb = null, sources = []) {
             const chatView = document.getElementById("chat-view");
-            const prompt = document.getElementById("welcome-prompt");
-            if (prompt) prompt.style.display = "none";
-
+            document.getElementById("welcome-prompt")?.style.setProperty('display', 'none');
             const row = document.createElement("div");
             row.className = "message-row " + sender;
-            
             const bubble = document.createElement("div");
             bubble.className = "bubble " + sender;
+            bubble.innerHTML = marked.parse(text);
             row.appendChild(bubble);
-            
-            if (sender === 'ai') {
-                const copyBtn = document.createElement("button");
-                copyBtn.className = "copy-bubble-btn";
-                copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy';
-                copyBtn.title = "Copy to clipboard";
-                copyBtn.onclick = () => {
-                    navigator.clipboard.writeText(text);
-                    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
-                    setTimeout(() => { copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> Copy'; }, 1500);
-                };
-                row.appendChild(copyBtn);
-            }
-
             chatView.appendChild(row);
-
-            if (sender === 'user') {
-                bubble.innerText = text;
-                chatView.scrollTop = chatView.scrollHeight; 
-                if (onComplete) onComplete(text);
-            } else {
-                const fullHtml = processMarkdownAndCitations(text, sources) + createSourcesDrawerHtml(sources);
-                bubble.innerHTML = fullHtml;
-                renderMath(bubble);
-
-                if (skipTypewriter) {
-                    if (onComplete) onComplete(text);
-                } else {
-                    stopTypingFlag = false;
-                    const children = Array.from(bubble.children);
-                    
-                    children.forEach(child => {
-                        child.style.opacity = '0';
-                        child.style.transform = 'translateY(8px)';
-                        child.style.transition = 'opacity 0.25s ease-out, transform 0.25s ease-out';
-                    });
-
-                    children.forEach((child, index) => {
-                        setTimeout(() => {
-                            if (!stopTypingFlag) {
-                                child.style.opacity = '1';
-                                child.style.transform = 'translateY(0)';
-                            } else {
-                                child.style.opacity = '1';
-                                child.style.transform = 'translateY(0)';
-                            }
-                        }, index * 45); 
-                    });
-
-                    setTimeout(() => {
-                        if (onComplete) onComplete(text);
-                    }, children.length * 45 + 250);
-                }
-            }
+            chatView.scrollTop = chatView.scrollHeight;
+            if (cb) cb(text);
         }
 
-        // --------------------------------------------------------------------
-        // 11. ASK (CHAT API)
-        // --------------------------------------------------------------------
         async function ask() {
-            const questionBox = document.getElementById("question");
-            const question = questionBox.value.trim();
-            const modeSelect = document.getElementById("mode");
-            const mode = modeSelect.value;
+            const qBox = document.getElementById("question");
+            const q = qBox.value.trim();
+            const mode = document.getElementById("mode").value;
+            if (!q) return;
 
-            if (!question) return;
-
-            if (modeSelect.options[modeSelect.selectedIndex].disabled) {
-                 renderBubble(question, "user");
-                 const authMsg = currentUserToken 
-                     ? `You have exhausted your daily limit for **${mode}** mode on this account.` 
-                     : `You have reached the free guest limit for **${mode}** mode. Sign in with a free account to unlock 350 Casual, 25 Search, and 3 Deep Research queries daily!`;
-                 renderBubble(`**Limit Reached:** ${authMsg}`, "ai", true);
-                 questionBox.value = "";
-                 questionBox.style.height = 'auto';
-                 return;
-            }
-
-            renderBubble(question, "user");
-            saveMessage(question, "user");
-            
-            questionBox.value = "";
-            questionBox.style.height = 'auto'; 
-            
-            toggleInputState(true, mode);
-            abortController = new AbortController();
-
-            const endpoint = mode === "deep research" ? "/deep-research" : "/ask";
+            renderBubble(q, "user");
+            saveMessage(q, "user");
+            qBox.value = "";
+            qBox.style.height = 'auto';
 
             try {
                 const headers = { "Content-Type": "application/json" };
-                if (currentUserToken) {
-                    headers["Authorization"] = `Bearer ${currentUserToken}`;
-                }
-
-                const res = await fetch(endpoint, {
-                    method: "POST",
-                    headers: headers,
-                    body: JSON.stringify({ question: question, mode: mode, session_id: sessionId }),
-                    signal: abortController.signal
+                if (currentUserToken) headers["Authorization"] = `Bearer ${currentUserToken}`;
+                const res = await fetch(mode === "deep research" ? "/deep-research" : "/ask", {
+                    method: "POST", headers, body: JSON.stringify({ question: q, mode, session_id: sessionId })
                 });
-                
-                if (!res.ok) {
-                    throw new Error(`Server status ${res.status}: Context took too long or backend error.`);
-                }
-                
                 const data = await res.json();
-                
                 if (data.error) {
-                    renderBubble(`**System:** ${data.error}`, "ai", true, (txt) => {
-                        saveMessage(txt, "ai");
-                        toggleInputState(false);
-                        abortController = null;
-                        syncLimits(); 
-                    });
-                    return;
+                    renderBubble(`**System:** ${data.error}`, "ai", true, t => saveMessage(t, "ai"));
+                } else if (data.answer) {
+                    renderBubble(data.answer, "ai", false, t => saveMessage(t, "ai", data.sources || []), data.sources || []);
                 }
-
-                if (data.answer) {
-                    const sources = data.sources || [];
-                    renderBubble(data.answer, "ai", false, (finalText) => {
-                        saveMessage(finalText, "ai", sources);
-                        toggleInputState(false);
-                        abortController = null;
-                        syncLimits(); 
-                    }, sources);
-                } else {
-                    renderBubble("Error: The server returned an empty response.", "ai", true, (txt) => {
-                        saveMessage(txt, "ai");
-                        toggleInputState(false);
-                    });
-                }
-
             } catch (err) {
-                if (err.name === 'AbortError') {
-                    renderBubble("Generation aborted by user.", "ai", true, (txt) => saveMessage(txt, "ai"));
-                } else {
-                    renderBubble(`Connection Error: ${err.message}`, "ai", true, (txt) => saveMessage(txt, "ai"));
-                    console.error("Mensia Error:", err);
-                }
-                toggleInputState(false);
-                abortController = null;
+                renderBubble(`Connection Error: ${err.message}`, "ai", true, t => saveMessage(t, "ai"));
             }
         }
     </script>
