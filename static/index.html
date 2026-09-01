@@ -816,24 +816,38 @@
 
             try {
                 if (activeAuthTab === 'login') {
+                    // SIGN IN FLOW
                     const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                    
+                    // IT CARES: Check if they actually clicked the verification link!
                     if (!userCredential.user.emailVerified) {
                         await firebase.auth().signOut();
-                        throw new Error("Please verify your email address first. Check your inbox for the confirmation link.");
+                        throw new Error("This account hasn't been activated yet. Please click the verification link sent to your email.");
                     }
+                    
+                    // If verified, let them in!
                     closeAuthModal();
                 } else {
+                    // SIGN UP FLOW
                     const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
                     if (userCredential.user) {
                         await userCredential.user.sendEmailVerification();
-                        await firebase.auth().signOut();
+                        await firebase.auth().signOut(); // Kick them out immediately
+                        
                         errorEl.style.color = "var(--accent-green)";
-                        errorEl.innerText = "Account created! Verification link sent. Check your inbox and Spam/Promotions folders, verify your address, login successfully. Then go to the sign in window and sign in.";
+                        errorEl.innerText = "Account reserved! A verification link has been sent. You MUST click it before you can sign in.";
                         document.getElementById('auth-password').value = '';
                     }
                 }
             } catch (err) {
-                errorEl.innerText = err.message.replace('Firebase: ', '');
+                // STRICT ERROR HANDLING
+                if (err.code === 'auth/email-already-in-use') {
+                    errorEl.innerText = "This email is already booked! Please switch to Sign In.";
+                } else if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                    errorEl.innerText = "Account doesn't exist or incorrect credentials.";
+                } else {
+                    errorEl.innerText = err.message.replace('Firebase: ', '');
+                }
             }
         }
         
