@@ -3739,7 +3739,31 @@
         }
 
         function processMarkdownAndCitations(rawText, sources = []) {
-            let parsed = marked.parse(rawText);
+            const mathTokens = [];
+            
+            // 1. Temporarily replace display math ($$...$$) with safe tokens
+            let protectedText = rawText.replace(/\$\$([\s\S]*?)\$\$/g, (match) => {
+                const token = `%%MATH_DISPLAY_${mathTokens.length}%%`;
+                mathTokens.push({ token, math: match });
+                return token;
+            });
+
+            // 2. Temporarily replace inline math ($...$) with safe tokens
+            protectedText = protectedText.replace(/\$([^\$\n]+?)\$/g, (match) => {
+                const token = `%%MATH_INLINE_${mathTokens.length}%%`;
+                mathTokens.push({ token, math: match });
+                return token;
+            });
+
+            // 3. Parse markdown safely without corrupting underscores or backslashes
+            let parsed = marked.parse(protectedText);
+
+            // 4. Restore the pristine math back into the HTML
+            mathTokens.forEach(({ token, math }) => {
+                parsed = parsed.replace(token, math);
+            });
+
+            // 5. Render citations
             if (sources && sources.length > 0) {
                 const sourceMap = {};
                 sources.forEach(s => { sourceMap[s.id] = s.url; });
@@ -3755,6 +3779,7 @@
                     return badges;
                 });
             }
+
             return parsed;
         }
 
