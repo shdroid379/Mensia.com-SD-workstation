@@ -69,7 +69,11 @@ async def fetch_linkup_dossier(query: str, client: httpx.AsyncClient, status_cb=
     if not task_id:
         return ("Third Plug", "No dossier available from this source.", [])
 
-    while True:
+    # 15-minute ceiling (180 attempts * 5 seconds = 900s)
+    attempts = 0
+    max_attempts = 180
+
+    while attempts < max_attempts:
         poll_res = await client.get(f"https://api.linkup.so/v1/research/{task_id}", headers=headers)
         job = poll_res.json()
                 
@@ -83,12 +87,17 @@ async def fetch_linkup_dossier(query: str, client: httpx.AsyncClient, status_cb=
                     "content": src.get('snippet', src.get('content', ''))
                 })
             return ("Third Plug", summary, sources)
+            
         elif job.get("status") == "failed":
             return ("Third Plug", f"THIRD PLUG FAILED: {job.get('error')}\n\n", [])
             
         if status_cb:
             status_cb("PULLING SOURCES FROM THIRD PLUG...")
+            
+        attempts += 1
         await asyncio.sleep(5)
+        
+    return ("Third Plug", "THIRD PLUG TIMEOUT: Agent exceeded maximum run window.\n\n", [])
 
 async def semantic_scholar_data(query: str, client: httpx.AsyncClient, status_cb=None):
     if status_cb:
@@ -132,12 +141,17 @@ def compile_and_deduplicate(results: list, status_cb=None) -> str:
             master_dossier += f"--- {source_name.upper()} RAW SOURCE DATA ---\n"
             for src in sources:
                 url = src.get("url", "")
-                if not url:
+                
+                # Forces empty data into a string so it doesn't crash on None
+                content = src.get("content") or "" 
+                
+                if not url or not content:
                     continue
+                    
                 clean_url = url.split("://")[-1].replace("www.", "").rstrip("/")
                 if clean_url not in seen_urls:
                     seen_urls.add(clean_url)
-                    master_dossier += f"Source ({url}):\n{src['content'][:5000]}\n\n"
+                    master_dossier += f"Source ({url}):\n{content[:5000]}\n\n"
 
     return master_dossier
 
