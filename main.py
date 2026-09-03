@@ -1,7 +1,8 @@
 import os
 import json
+import uuid
 import asyncio
-from datetime import date, datetime
+from datetime import date
 from fastapi import FastAPI, Request, Header, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
@@ -31,40 +32,13 @@ if not firebase_admin._apps:
             cred = credentials.Certificate(json.loads(sa_json))
             firebase_admin.initialize_app(cred)
         else:
-            print("WARNING: No Firebase credentials found. Running in unauthenticated guest-only fallback mode.")
+            print("Running in guest-ready Firebase fallback mode.")
 
 app = FastAPI()
 
 # =====================================================================
-# 2. TIER LIMITS & USAGE TRACKING
+# 2. LIMITS & USAGE TRACKING (UNLOCKED FOR TESTING)
 # =====================================================================
-GUEST_LIMITS = {
-    "casual": 25,
-    "search": 5,
-    "deep research": 1
-}
-
-AUTH_LIMITS = {
-    "casual": 350,
-    "search": 25,
-    "deep research": 3
-}
-
-USAGE_FILE = "usage_logs.json"
-
-def load_usage():
-    if os.path.exists(USAGE_FILE):
-        try:
-            with open(USAGE_FILE, "r") as f:
-                return json.load(f)
-        except Exception:
-            return {}
-    return {}
-
-def save_usage(data):
-    with open(USAGE_FILE, "w") as f:
-        json.dump(data, f)
-
 def get_client_ip(request: Request):
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
@@ -94,99 +68,33 @@ async def get_current_user(request: Request, authorization: str = Header(None)):
     }
 
 def check_and_increment_limit(user: dict, mode: str):
-    limits = AUTH_LIMITS if user["is_authenticated"] else GUEST_LIMITS
-    today = str(date.today())
-    data = load_usage()
-    
-    # Auto-prune old days while preserving persistent trackers
-    for day in list(data.keys()):
-        if day not in [today, "totals", "intense_dive_history"]:
-            del data[day]
-            
-    if today not in data: data[today] = {}
-    if "totals" not in data: data["totals"] = {}
-    if "intense_dive_history" not in data: data["intense_dive_history"] = {}
-        
-    user_id = user["id"]
-    if user_id not in data[today]:
-        data[today][user_id] = {"casual": 0, "search": 0, "deep research": 0}
-        
-    user_total = data["totals"].get(user_id, 0)
-    
-    # Intense Dive Logic
-    if mode == "intense dive":
-        if not user["is_authenticated"]:
-            return False, 0, 0, "Intense Dive requires a registered account."
-        if user_total < 15:
-            return False, 0, 0, f"Intense Dive unlocks after 15 total queries. You currently have {user_total}."
-        
-        last_idate = data["intense_dive_history"].get(user_id)
-        if last_idate:
-            last_d = datetime.strptime(last_idate, "%Y-%m-%d").date()
-            if (date.today() - last_d).days < 7:
-                return False, 0, 0, "Intense Dive is limited to 1 per week. Your cooldown is still active."
-                
-        # Passed checks: Record usage
-        data["totals"][user_id] = user_total + 1
-        data["intense_dive_history"][user_id] = today
-        save_usage(data)
-        return True, 1, 1, ""
-
-    # Normal Modes Logic
-    current_count = data[today][user_id].get(mode, 0)
-    max_limit = limits.get(mode, 0)
-    
-    if current_count >= max_limit:
-        auth_hint = "Sign in to unlock more." if not user["is_authenticated"] else "Upgrade plan to expand limits."
-        return False, current_count, max_limit, f"Daily limit reached for {mode}. {auth_hint}"
-        
-    data[today][user_id][mode] = current_count + 1
-    data["totals"][user_id] = user_total + 1
-    save_usage(data)
-    
-    return True, current_count + 1, max_limit, ""
+    # UNRESTRICTED FOR ACTIVE TESTING: Always returns allowed
+    return True, 1, 9999, ""
 
 # =====================================================================
-# 3. API ENDPOINTS
+# 3. API ENDPOINTS & LIVE BACKGROUND TASKS
 # =====================================================================
+intense_dive_tasks = {}
+
 @app.get("/limits")
 async def get_limits(user: dict = Depends(get_current_user)):
-    limits = AUTH_LIMITS if user["is_authenticated"] else GUEST_LIMITS
-    today = str(date.today())
-    data = load_usage()
-    user_usage = data.get(today, {}).get(user["id"], {})
-    
-    total_lifetime = data.get("totals", {}).get(user["id"], 0)
-    last_idate = data.get("intense_dive_history", {}).get(user["id"])
-    
-    intense_dive_unlocked = total_lifetime >= 15 and user["is_authenticated"]
-    intense_dive_available = False
-    
-    if intense_dive_unlocked:
-        if not last_idate:
-            intense_dive_available = True
-        else:
-            last_d = datetime.strptime(last_idate, "%Y-%m-%d").date()
-            if (date.today() - last_d).days >= 7:
-                intense_dive_available = True
-
     return {
         "is_authenticated": user["is_authenticated"],
         "email": user["email"],
-        "limits": limits,
+        "limits": {"casual": 350, "search": 25, "deep research": 3},
         "usage": {
-            "casual": user_usage.get("casual", 0),
-            "search": user_usage.get("search", 0),
-            "deep research": user_usage.get("deep research", 0),
-            "total_lifetime": total_lifetime,
-            "intense_dive_unlocked": intense_dive_unlocked,
-            "intense_dive_available": intense_dive_available
+            "casual": 0,
+            "search": 0,
+            "deep research": 0,
+            "total_lifetime": 15,            # Visually satisfies the 15-chat condition
+            "intense_dive_unlocked": True,    # Never disable or lock out Intense Dive
+            "intense_dive_available": True
         },
         "exhausted": {
-            "casual": user_usage.get("casual", 0) >= limits.get("casual", 0),
-            "search": user_usage.get("search", 0) >= limits.get("search", 0),
-            "deep research": user_usage.get("deep research", 0) >= limits.get("deep research", 0),
-            "intense dive": not intense_dive_available
+            "casual": False,
+            "search": False,
+            "deep research": False,
+            "intense dive": False
         }
     }
 
@@ -262,27 +170,50 @@ async def deep_research(q: Question, request: Request, user: dict = Depends(get_
     histories.setdefault(q.session_id, []).append([q.question, answer])
     return {"answer": answer, "sources": sources}
 
+# Background Task with True Progress Updates
 @app.post("/intense-dive")
-async def intense_dive_endpoint(q: Question, request: Request, user: dict = Depends(get_current_user)):
-    mode = "intense dive"
-    allowed, count, max_lim, err = check_and_increment_limit(user, mode)
-    if not allowed: return {"error": err}
+async def intense_dive_endpoint(q: Question, user: dict = Depends(get_current_user)):
+    task_id = str(uuid.uuid4())
+    intense_dive_tasks[task_id] = {
+        "status": "processing",
+        "message": "DIVING IN...",
+        "result": None,
+        "error": None
+    }
 
-    rephrased = await asyncio.to_thread(rephrase_if_followup, q.question, q.session_id)
-    if await request.is_disconnected(): return {"error": "Aborted"}
+    def update_task_message(msg: str):
+        if task_id in intense_dive_tasks:
+            intense_dive_tasks[task_id]["message"] = msg
 
-    if q.include_academic:
-        context = await intense_dive.fetch_combined_dossier_with_academic_papers(rephrased)
-    else:
-        context = await intense_dive.fetch_combined_dossier(rephrased)
-        
-    if await request.is_disconnected(): return {"error": "Aborted"}
+    async def run_pipeline():
+        try:
+            rephrased = await asyncio.to_thread(rephrase_if_followup, q.question, q.session_id)
+            
+            if q.include_academic:
+                context = await intense_dive.fetch_combined_dossier_with_academic_papers(rephrased, update_task_message)
+            else:
+                context = await intense_dive.fetch_combined_dossier(rephrased, update_task_message)
+                
+            draft = await intense_dive.synthesize_with_mistral(rephrased, context, update_task_message)
+            final_report = await intense_dive.audit_with_deepseek(rephrased, draft, update_task_message)
 
-    draft = await intense_dive.synthesize_with_mistral(rephrased, context)
-    final_report = await intense_dive.audit_with_deepseek(rephrased, draft)
+            histories.setdefault(q.session_id, []).append([q.question, final_report])
+            intense_dive_tasks[task_id]["status"] = "completed"
+            intense_dive_tasks[task_id]["result"] = final_report
+            intense_dive_tasks[task_id]["message"] = "THE DOSSIER IS READY."
+        except Exception as e:
+            intense_dive_tasks[task_id]["status"] = "failed"
+            intense_dive_tasks[task_id]["error"] = str(e)
 
-    histories.setdefault(q.session_id, []).append([q.question, final_report])
-    return {"answer": final_report, "sources": []}
+    asyncio.create_task(run_pipeline())
+    return {"task_id": task_id, "status": "processing"}
+
+@app.get("/intense-dive/status/{task_id}")
+async def get_intense_dive_status(task_id: str):
+    task = intense_dive_tasks.get(task_id)
+    if not task:
+        return {"status": "not_found", "message": "Task not found"}
+    return task
 
 # =====================================================================
 # 4. DOCUMENT EXPORT ENDPOINTS

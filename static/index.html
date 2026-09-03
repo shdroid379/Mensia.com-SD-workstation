@@ -1903,7 +1903,8 @@
         }
 
         let abortController = null;
-        let loadingInterval = null;
+        let loadingInterval = null; // Old fake timer variable (can be removed, but kept for safety if referenced elsewhere)
+        let pollInterval = null;    // NEW: Tracks the background polling loop
 
         function toggleInputState(isGenerating, mode = "casual") {
             const sendBtn = document.getElementById("send-btn");
@@ -1917,50 +1918,33 @@
                 stopBtn.style.display = "flex";
                 loader.style.display = "block";
 
-                if (loadingInterval) clearInterval(loadingInterval);
-
-                if (mode === "casual") {
-                    loader.innerText = "Formulating...";
-                } else if (mode === "intense dive") {
-                    // LIVE LOADING ARRAYS FOR INTENSE DIVE
-                    const stages = [
-                        "DIVING IN...", 
-                        "PULLING SOURCES FROM FIRST PLUG...", 
-                        "PULLING SOURCES FROM SECOND PLUG...", 
-                        "FETCHING ACADEMIC PAPERS...", 
-                        "DOSSIERING...", 
-                        "SYNTHESIZING THE SYNTHESIS...", 
-                        "AUDITING THE SYNTHESIS...", 
-                        "THE DOSSIER IS ALMOST READY..."
-                    ];
-                    loader.innerText = stages[0];
-                    let i = 0;
-                    loadingInterval = setInterval(() => {
-                        i = Math.min(i + 1, stages.length - 1);
-                        loader.innerText = stages[i];
-                    }, 8000); 
+                // Initial text before the backend takes over and updates it dynamically
+                if (mode === "intense dive") {
+                    loader.innerText = "DIVING IN...";
+                } else if (mode === "deep research") {
+                    loader.innerText = "Deep Searching...";
+                } else if (mode === "search") {
+                    loader.innerText = "Searching...";
                 } else {
-                    const stages = mode === "deep research" ? 
-                        ["Deep Searching...", "Synthesising...", "Formulating...", "Auditing..."] :
-                        ["Searching...", "Formulating...", "Auditing..."];
-                    
-                    loader.innerText = stages[0];
-                    let i = 0;
-                    loadingInterval = setInterval(() => {
-                        i = Math.min(i + 1, stages.length - 1);
-                        loader.innerText = stages[i];
-                    }, 4000);
+                    loader.innerText = "Formulating...";
                 }
             } else {
                 sendBtn.style.display = "flex";
                 if (micBtn) micBtn.style.display = "flex";
                 stopBtn.style.display = "none";
                 loader.style.display = "none";
-                if (loadingInterval) {
-                    clearInterval(loadingInterval);
-                    loadingInterval = null;
+                
+                // Kill the polling loop if generation stops or finishes
+                if (pollInterval) {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
                 }
             }
+        }
+
+        function updateLoaderText(text) {
+            const loader = document.getElementById("loader");
+            if (loader && text) loader.innerText = text;
         }
 
         function stopGeneration() {
@@ -2169,7 +2153,7 @@
             
             if (!q) return;
 
-            // Stop if limit reached
+            /* FRONTEND LIMIT BLOCK BYPASSED FOR TESTING
             if (modeSelect.options[modeSelect.selectedIndex].disabled) {
                  renderBubble(q, "user");
                  const authMsg = currentUserToken 
@@ -2180,6 +2164,7 @@
                  qBox.style.height = 'auto';
                  return;
             }
+            */
 
             renderBubble(q, "user");
             saveMessage(q, "user");
@@ -2190,66 +2175,152 @@
             toggleInputState(true, mode);
             abortController = new AbortController();
 
-            const endpoint = mode === "intense dive" ? "/intense-dive" : mode === "deep research" ? "/deep-research" : "/ask";
+            // --------------------------------------------------------
+            // 1. INTENSE DIVE MODE: Non-Blocking Task + True Progress Polling
+            // --------------------------------------------------------
+            if (mode === "intense dive") {
+                try {
+                    const token = await getFreshToken();
+                    const headers = { "Content-Type": "application/json" };
+                    if (token) {
+                        headers["Authorization"] = `Bearer ${token}`;
+                    }
 
-            try {
-                const token = await getFreshToken();
-                const headers = { "Content-Type": "application/json" };
-                if (token) {
-                    headers["Authorization"] = `Bearer ${token}`;
-                }
-
-                const res = await fetch(endpoint, {
-                    method: "POST",
-                    headers: headers,
-                    body: JSON.stringify({ 
-                        question: q, 
-                        mode: mode, 
-                        session_id: sessionId,
-                        include_academic: isAcademic
-                    }),
-                    signal: abortController.signal
-                });
-                
-                if (!res.ok) {
-                    throw new Error(`Server status ${res.status}: Context took too long or backend error.`);
-                }
-                
-                const data = await res.json();
-                
-                if (data.error) {
-                    renderBubble(`**System:** ${data.error}`, "ai", true, (txt) => {
-                        saveMessage(txt, "ai");
-                        toggleInputState(false);
-                        abortController = null;
-                        syncLimits(); 
+                    // Fire and forget: starts the background task on the server instantly
+                    const res = await fetch("/intense-dive", {
+                        method: "POST",
+                        headers: headers,
+                        body: JSON.stringify({ 
+                            question: q, 
+                            mode: mode, 
+                            session_id: sessionId,
+                            include_academic: isAcademic
+                        }),
+                        signal: abortController.signal
                     });
-                    return;
-                }
+                    
+                    if (!res.ok) throw new Error(`Server error ${res.status}`);
+                    
+                    const data = await res.json();
+                    
+                    if (data.error) {
+                        renderBubble(`**System:** ${data.error}`, "ai", true, (txt) => {
+                            saveMessage(txt, "ai");
+                            toggleInputState(false);
+                            syncLimits(); 
+                        });
+                        return;
+                    }
 
-                if (data.answer) {
-                    const sources = data.sources || [];
-                    renderBubble(data.answer, "ai", false, (finalText) => {
-                        saveMessage(finalText, "ai", sources);
-                        toggleInputState(false);
-                        abortController = null;
-                        syncLimits(); 
-                    }, sources);
-                } else {
-                    renderBubble("Error: The server returned an empty response.", "ai", true, (txt) => {
-                        saveMessage(txt, "ai");
-                        toggleInputState(false);
+                    const taskId = data.task_id;
+
+                    // Poll every 3 seconds for exact status updates from the backend
+                    pollInterval = setInterval(async () => {
+                        try {
+                            if (abortController.signal.aborted) {
+                                clearInterval(pollInterval);
+                                toggleInputState(false);
+                                return;
+                            }
+
+                            const pollRes = await fetch(`/intense-dive/status/${taskId}`);
+                            const pollData = await pollRes.json();
+
+                            // LIVE UPDATE: Change the loading text based on what the backend is actually doing
+                            if (pollData.message) {
+                                updateLoaderText(pollData.message);
+                            }
+
+                            if (pollData.status === "completed") {
+                                clearInterval(pollInterval);
+                                toggleInputState(false);
+                                renderBubble(pollData.result, "ai", false, (finalText) => {
+                                    saveMessage(finalText, "ai", []);
+                                    syncLimits(); 
+                                }, []);
+                            } else if (pollData.status === "failed") {
+                                clearInterval(pollInterval);
+                                toggleInputState(false);
+                                renderBubble(`**System Error:** ${pollData.error}`, "ai", true, (txt) => {
+                                    saveMessage(txt, "ai");
+                                });
+                            }
+                        } catch (pollErr) {
+                            console.error("Polling error:", pollErr);
+                        }
+                    }, 3000);
+
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        renderBubble("Generation aborted by user.", "ai", true, (txt) => saveMessage(txt, "ai"));
+                    } else {
+                        renderBubble(`Connection Error: ${err.message}`, "ai", true, (txt) => saveMessage(txt, "ai"));
+                    }
+                    toggleInputState(false);
+                    abortController = null;
+                }
+            } 
+            // --------------------------------------------------------
+            // 2. STANDARD SYNCHRONOUS MODES (Casual, Search, Deep Research)
+            // --------------------------------------------------------
+            else {
+                const endpoint = mode === "deep research" ? "/deep-research" : "/ask";
+
+                try {
+                    const token = await getFreshToken();
+                    const headers = { "Content-Type": "application/json" };
+                    if (token) {
+                        headers["Authorization"] = `Bearer ${token}`;
+                    }
+
+                    const res = await fetch(endpoint, {
+                        method: "POST",
+                        headers: headers,
+                        body: JSON.stringify({ 
+                            question: q, 
+                            mode: mode, 
+                            session_id: sessionId,
+                            include_academic: isAcademic
+                        }),
+                        signal: abortController.signal
                     });
-                }
+                    
+                    if (!res.ok) {
+                        throw new Error(`Server status ${res.status}: Context took too long or backend error.`);
+                    }
+                    
+                    const data = await res.json();
+                    toggleInputState(false);
+                    
+                    if (data.error) {
+                        renderBubble(`**System:** ${data.error}`, "ai", true, (txt) => {
+                            saveMessage(txt, "ai");
+                            syncLimits(); 
+                        });
+                        return;
+                    }
 
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    renderBubble("Generation aborted by user.", "ai", true, (txt) => saveMessage(txt, "ai"));
-                } else {
-                    renderBubble(`Connection Error: ${err.message}`, "ai", true, (txt) => saveMessage(txt, "ai"));
+                    if (data.answer) {
+                        const sources = data.sources || [];
+                        renderBubble(data.answer, "ai", false, (finalText) => {
+                            saveMessage(finalText, "ai", sources);
+                            syncLimits(); 
+                        }, sources);
+                    } else {
+                        renderBubble("Error: The server returned an empty response.", "ai", true, (txt) => {
+                            saveMessage(txt, "ai");
+                        });
+                    }
+
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        renderBubble("Generation aborted by user.", "ai", true, (txt) => saveMessage(txt, "ai"));
+                    } else {
+                        renderBubble(`Connection Error: ${err.message}`, "ai", true, (txt) => saveMessage(txt, "ai"));
+                    }
+                    toggleInputState(false);
+                    abortController = null;
                 }
-                toggleInputState(false);
-                abortController = null;
             }
         }
     </script>
