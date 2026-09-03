@@ -210,24 +210,31 @@ async def audit_with_deepseek(query: str, draft_dossier: str, status_cb=None) ->
     if status_cb:
         status_cb("AUDITING THE SYNTHESIS...")
 
-    hyperbolic_client = AsyncOpenAI(
-    api_key=os.getenv("HYPERBOLIC_API_KEY"),
-    base_url="https://api.hyperbolic.xyz/v1"
-)
+    try:
+        hyperbolic_client = AsyncOpenAI(
+            api_key=os.getenv("HYPERBOLIC_API_KEY"),
+            base_url="https://api.hyperbolic.xyz/v1"
+        )
 
-    formatted_user_prompt = DEEPSEEK_AUDIT_USER_PROMPT.format(
-        query=query,
-        draft_dossier=draft_dossier
-    )
+        formatted_user_prompt = DEEPSEEK_AUDIT_USER_PROMPT.format(
+            query=query,
+            draft_dossier=draft_dossier
+        )
 
-    response = await hyperbolic_client.chat.completions.create(
-        model="deepseek-ai/DeepSeek-V3",
-        messages=[
-            {"role": "system", "content": DEEPSEEK_INTENSE_DIVE_AUDIT_INSTRUCTION},
-            {"role": "user", "content": formatted_user_prompt}
-        ],
-        temperature=0.1
-    )
-    if status_cb:
-        status_cb("THE DOSSIER IS ALMOST READY...")
-    return response.choices[0].message.content
+        response = await hyperbolic_client.chat.completions.create(
+            model="deepseek-ai/DeepSeek-V3",
+            messages=[
+                {"role": "system", "content": DEEPSEEK_INTENSE_DIVE_AUDIT_INSTRUCTION},
+                {"role": "user", "content": formatted_user_prompt}
+            ],
+            temperature=0.1
+        )
+        if status_cb:
+            status_cb("THE DOSSIER IS ALMOST READY...")
+        return response.choices[0].message.content
+
+    except Exception as e:
+        print(f"Hyperbolic Audit Failed in Intense Dive: {e}")
+        if status_cb:
+            status_cb("AUDIT UNAVAILABLE. FINALIZING DRAFT...")
+        return draft_dossier
