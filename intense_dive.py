@@ -183,11 +183,13 @@ async def fetch_combined_dossier(query: str, status_cb=None):
 # =====================================================================
 
 from mistralai.client import Mistral
-mistral_client = Mistral(api_key=os.getenv("MISTRAL_API_KEY"))
+
 
 async def synthesize_with_mistral(query: str, master_dossier: str, status_cb=None) -> str:
     if status_cb:
         status_cb("SYNTHESIZING THE SYNTHESIS...")
+
+    mistral_client = Mistral(api_key=os.getenv("MISTRAL_API_KEY"))
     formatted_user_prompt = MISTRAL_SYNTHESIS_USER_PROMPT.format(
         query=query, 
         master_dossier=master_dossier
@@ -203,14 +205,16 @@ async def synthesize_with_mistral(query: str, master_dossier: str, status_cb=Non
     return response.choices[0].message.content
 
 from openai import AsyncOpenAI
-hyperbolic_client = AsyncOpenAI(
-    api_key=os.getenv("HYPERBOLIC_API_KEY"),
-    base_url="https://api.hyperbolic.xyz/v1"
-)
 
 async def audit_with_deepseek(query: str, draft_dossier: str, status_cb=None) -> str:
     if status_cb:
         status_cb("AUDITING THE SYNTHESIS...")
+
+    hyperbolic_client = AsyncOpenAI(
+    api_key=os.getenv("HYPERBOLIC_API_KEY"),
+    base_url="https://api.hyperbolic.xyz/v1"
+)
+
     formatted_user_prompt = DEEPSEEK_AUDIT_USER_PROMPT.format(
         query=query,
         draft_dossier=draft_dossier
