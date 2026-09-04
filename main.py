@@ -6,6 +6,7 @@ from datetime import date
 from fastapi import FastAPI, Request, Header, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
+from openai import OpenAI, api_key
 from pydantic import BaseModel
 from groq import Groq
 
@@ -235,6 +236,7 @@ async def test_hyperbolic():
     """Quick test to verify Hyperbolic API key and model availability."""
     from openai import OpenAI
     api_key = os.getenv("HYPERBOLIC_API_KEY")
+    print(f"Using HYPERBOLIC_API_KEY prefix: {api_key[:8] if api_key else 'None'}")
     if not api_key:
         return {"error": "HYPERBOLIC_API_KEY not set in environment"}
 
