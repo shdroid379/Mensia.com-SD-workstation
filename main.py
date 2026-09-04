@@ -231,46 +231,61 @@ async def get_intense_dive_status(task_id: str):
 # =====================================================================
 # TEST HYPERBOLIC ENDPOINT (instant key verification)
 # =====================================================================
+import requests  # add to imports
+
 @app.get("/test-hyperbolic")
 async def test_hyperbolic():
-    from openai import OpenAI
     import os
+    import requests
+    import json
 
     api_key = os.getenv("HYPERBOLIC_API_KEY")
-    
-    # Return preview info (never expose full key)
-    preview = {
-        "key_present": bool(api_key),
-        "key_length": len(api_key) if api_key else 0,
-        "key_prefix": api_key[:8] if api_key else None,
-        "key_suffix": api_key[-4:] if api_key else None,
-    }
-    
     if not api_key:
-        return {"error": "HYPERBOLIC_API_KEY not set", "preview": preview}
+        return {"error": "HYPERBOLIC_API_KEY not set"}
 
-    # Also print to logs for extra confirmation
-    print(f"Key present: {bool(api_key)}, length: {len(api_key)}, prefix: {api_key[:8]}", flush=True)
+    # Preview info
+    preview = {
+        "key_present": True,
+        "key_length": len(api_key),
+        "key_prefix": api_key[:8],
+        "key_suffix": api_key[-4:],
+    }
+
+    # Test with direct requests to see the raw response
+    url = "https://api.hyperbolic.xyz/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": "deepseek-ai/DeepSeek-V3",
+        "messages": [{"role": "user", "content": "Hello"}],
+        "max_tokens": 5,
+        "temperature": 0.0,
+    }
 
     try:
-        client = OpenAI(
-            api_key=api_key,
-            base_url="https://api.hyperbolic.xyz/v1",
-            timeout=10.0
-        )
-        response = client.chat.completions.create(
-            model="deepseek-ai/DeepSeek-V3",
-            messages=[{"role": "user", "content": "Say 'Hello, Mensia!'"}],
-            temperature=0.0,
-            max_tokens=10
-        )
-        return {"success": True, "response": response.choices[0].message.content, "preview": preview}
+        response = requests.post(url, headers=headers, json=payload, timeout=10)
+        status = response.status_code
+        body = response.text
+        print(f"Hyperbolic test status: {status}, body: {body}", flush=True)
+
+        if status == 200:
+            return {
+                "success": True,
+                "response": response.json().get("choices", [{}])[0].get("message", {}).get("content", ""),
+                "preview": preview,
+            }
+        else:
+            # Return the raw error body
+            return {
+                "error": f"HTTP {status}",
+                "details": body,
+                "preview": preview,
+            }
     except Exception as e:
-        status = getattr(e, 'status_code', None)
-        body = getattr(e, 'body', None) or getattr(e, 'response', None)
-        error_details = {"status_code": status, "body": str(body) if body is not None else None}
-        return {"error": str(e), "details": error_details, "preview": preview}# =====================================================================
-# 4. DOCUMENT EXPORT ENDPOINTS
+        return {"error": str(e), "preview": preview}
+    # 4. DOCUMENT EXPORT ENDPOINTS
 # =====================================================================
 class ExportRequest(BaseModel):
     markdown: str
