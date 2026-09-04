@@ -233,12 +233,24 @@ async def get_intense_dive_status(task_id: str):
 # =====================================================================
 @app.get("/test-hyperbolic")
 async def test_hyperbolic():
-    """Quick test to verify Hyperbolic API key and model availability."""
     from openai import OpenAI
+    import os
+
     api_key = os.getenv("HYPERBOLIC_API_KEY")
-    print(f"Using HYPERBOLIC_API_KEY prefix: {api_key[:8] if api_key else 'None'}")
+    
+    # Return preview info (never expose full key)
+    preview = {
+        "key_present": bool(api_key),
+        "key_length": len(api_key) if api_key else 0,
+        "key_prefix": api_key[:8] if api_key else None,
+        "key_suffix": api_key[-4:] if api_key else None,
+    }
+    
     if not api_key:
-        return {"error": "HYPERBOLIC_API_KEY not set in environment"}
+        return {"error": "HYPERBOLIC_API_KEY not set", "preview": preview}
+
+    # Also print to logs for extra confirmation
+    print(f"Key present: {bool(api_key)}, length: {len(api_key)}, prefix: {api_key[:8]}", flush=True)
 
     try:
         client = OpenAI(
@@ -252,21 +264,12 @@ async def test_hyperbolic():
             temperature=0.0,
             max_tokens=10
         )
-        return {
-            "success": True,
-            "response": response.choices[0].message.content,
-            "usage": response.usage
-        }
+        return {"success": True, "response": response.choices[0].message.content, "preview": preview}
     except Exception as e:
-        # Safely extract details
         status = getattr(e, 'status_code', None)
         body = getattr(e, 'body', None) or getattr(e, 'response', None)
-        error_details = {
-            "status_code": status,
-            "body": str(body) if body is not None else None
-        }
-        return {"error": str(e), "details": error_details}
-# =====================================================================
+        error_details = {"status_code": status, "body": str(body) if body is not None else None}
+        return {"error": str(e), "details": error_details, "preview": preview}# =====================================================================
 # 4. DOCUMENT EXPORT ENDPOINTS
 # =====================================================================
 class ExportRequest(BaseModel):
