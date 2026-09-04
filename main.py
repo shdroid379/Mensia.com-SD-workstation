@@ -170,7 +170,9 @@ async def deep_research(q: Question, request: Request, user: dict = Depends(get_
     histories.setdefault(q.session_id, []).append([q.question, answer])
     return {"answer": answer, "sources": sources}
 
-# Background Task with True Progress Updates
+# =====================================================================
+# INTENSE DIVE WITH SOURCES
+# =====================================================================
 @app.post("/intense-dive")
 async def intense_dive_endpoint(q: Question, user: dict = Depends(get_current_user)):
     task_id = str(uuid.uuid4())
@@ -178,6 +180,7 @@ async def intense_dive_endpoint(q: Question, user: dict = Depends(get_current_us
         "status": "processing",
         "message": "DIVING IN...",
         "result": None,
+        "sources": [],   # <-- now storing sources
         "error": None
     }
 
@@ -190,17 +193,20 @@ async def intense_dive_endpoint(q: Question, user: dict = Depends(get_current_us
             rephrased = await asyncio.to_thread(rephrase_if_followup, q.question, q.session_id)
             
             if q.include_academic:
-                context = await intense_dive.fetch_combined_dossier_with_academic_papers(rephrased, update_task_message)
+                context, sources = await intense_dive.fetch_combined_dossier_with_academic_papers(rephrased, update_task_message)
             else:
-                context = await intense_dive.fetch_combined_dossier(rephrased, update_task_message)
+                context, sources = await intense_dive.fetch_combined_dossier(rephrased, update_task_message)
                 
             draft = await intense_dive.synthesize_with_mistral(rephrased, context, update_task_message)
             final_report = await intense_dive.audit_with_deepseek(rephrased, draft, update_task_message)
 
-            histories.setdefault(q.session_id, []).append([q.question, final_report])
-            intense_dive_tasks[task_id]["status"] = "completed"
+            # Store both result and sources
             intense_dive_tasks[task_id]["result"] = final_report
+            intense_dive_tasks[task_id]["sources"] = sources
+            intense_dive_tasks[task_id]["status"] = "completed"
             intense_dive_tasks[task_id]["message"] = "THE DOSSIER IS READY."
+
+            histories.setdefault(q.session_id, []).append([q.question, final_report])
         except Exception as e:
             intense_dive_tasks[task_id]["status"] = "failed"
             intense_dive_tasks[task_id]["error"] = str(e)
@@ -213,8 +219,51 @@ async def get_intense_dive_status(task_id: str):
     task = intense_dive_tasks.get(task_id)
     if not task:
         return {"status": "not_found", "message": "Task not found"}
-    return task
+    return {
+        "status": task.get("status"),
+        "message": task.get("message"),
+        "result": task.get("result"),
+        "sources": task.get("sources", []),
+        "error": task.get("error")
+    }
 
+# =====================================================================
+# TEST HYPERBOLIC ENDPOINT (instant key verification)
+# =====================================================================
+@app.get("/test-hyperbolic")
+async def test_hyperbolic():
+    """Quick test to verify Hyperbolic API key and model availability."""
+    from openai import OpenAI
+    api_key = os.getenv("HYPERBOLIC_API_KEY")
+    if not api_key:
+        return {"error": "HYPERBOLIC_API_KEY not set in environment"}
+
+    try:
+        client = OpenAI(
+            api_key=api_key,
+            base_url="https://api.hyperbolic.xyz/v1",
+            timeout=10.0
+        )
+        response = client.chat.completions.create(
+            model="deepseek-ai/DeepSeek-V3",
+            messages=[{"role": "user", "content": "Say 'Hello, Mensia!'"}],
+            temperature=0.0,
+            max_tokens=10
+        )
+        return {
+            "success": True,
+            "response": response.choices[0].message.content,
+            "usage": response.usage
+        }
+    except Exception as e:
+        # Safely extract details
+        status = getattr(e, 'status_code', None)
+        body = getattr(e, 'body', None) or getattr(e, 'response', None)
+        error_details = {
+            "status_code": status,
+            "body": str(body) if body is not None else None
+        }
+        return {"error": str(e), "details": error_details}
 # =====================================================================
 # 4. DOCUMENT EXPORT ENDPOINTS
 # =====================================================================

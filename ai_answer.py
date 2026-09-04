@@ -16,14 +16,19 @@ from ai_instructions import (
 )
 from google import genai
 from google.genai import types
-from openai import OpenAI
-
+from openai import OpenAI, APIError
 
 def hyperbolic_audit(prompt, context, outcome, mode):
     try:
+        api_key = os.getenv("HYPERBOLIC_API_KEY")
+        if not api_key:
+            print("ERROR: HYPERBOLIC_API_KEY is not set!")
+            return outcome
+
         client = OpenAI(
-            api_key=os.getenv("HYPERBOLIC_API_KEY"),
-            base_url="https://api.hyperbolic.xyz/v1"
+            api_key=api_key,
+            base_url="https://api.hyperbolic.xyz/v1",
+            timeout=30.0
         )
 
         response = client.chat.completions.create(
@@ -43,10 +48,17 @@ def hyperbolic_audit(prompt, context, outcome, mode):
         raw_answer = response.choices[0].message.content
         return raw_answer.strip() if raw_answer else outcome
 
-    except Exception as e:
-        print(f"Hyperbolic Auditor Error: {e}. Returning Gemini draft directly.")
+    except APIError as e:
+        # Safe error extraction
+        status = getattr(e, 'status_code', 'unknown')
+        body = getattr(e, 'body', None) or getattr(e, 'response', None)
+        print(f"Hyperbolic APIError (status {status}): {e}")
+        if body:
+            print(f"Response body: {body}")
         return outcome
-
+    except Exception as e:
+        print(f"Hyperbolic Auditor Error: {e}")
+        return outcome
 
 def ai_summary(prompt, context="", mode="casual", history=None):
     if history is None:
@@ -73,7 +85,7 @@ def ai_summary(prompt, context="", mode="casual", history=None):
                     max_output_tokens=1000
                 )
             ).text
-            return outcome  # casual skips audit
+            return outcome
 
         elif mode.lower() == "search":
             outcome = client.models.generate_content(

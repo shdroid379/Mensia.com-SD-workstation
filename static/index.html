@@ -2215,6 +2215,7 @@
                     const taskId = data.task_id;
 
                     // Poll every 3 seconds for exact status updates from the backend
+                    // Inside ask(), after starting the Intense Dive task
                     pollInterval = setInterval(async () => {
                         try {
                             if (abortController.signal.aborted) {
@@ -2226,7 +2227,6 @@
                             const pollRes = await fetch(`/intense-dive/status/${taskId}`);
                             const pollData = await pollRes.json();
 
-                            // LIVE UPDATE: Change the loading text based on what the backend is actually doing
                             if (pollData.message) {
                                 updateLoaderText(pollData.message);
                             }
@@ -2234,10 +2234,12 @@
                             if (pollData.status === "completed") {
                                 clearInterval(pollInterval);
                                 toggleInputState(false);
+                                // Pass sources from pollData
+                                const sources = pollData.sources || [];
                                 renderBubble(pollData.result, "ai", false, (finalText) => {
-                                    saveMessage(finalText, "ai", []);
-                                    syncLimits(); 
-                                }, []);
+                                    saveMessage(finalText, "ai", sources);
+                                    syncLimits();
+                                }, sources);
                             } else if (pollData.status === "failed") {
                                 clearInterval(pollInterval);
                                 toggleInputState(false);

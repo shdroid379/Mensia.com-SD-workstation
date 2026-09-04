@@ -1,4 +1,9 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=env_path, override=True)
+
 import asyncio
 import httpx
 from exa_py import AsyncExa
@@ -9,12 +14,17 @@ from ai_instructions import (
     DEEPSEEK_INTENSE_DIVE_AUDIT_INSTRUCTION,
     DEEPSEEK_AUDIT_USER_PROMPT
 )
+from openai import AsyncOpenAI, APIError
+
+# Debug: verify keys are loaded
+print(f"HYPERBOLIC_API_KEY present: {bool(os.getenv('HYPERBOLIC_API_KEY'))}")
+print(f"LINKUP_KEY present: {bool(os.getenv('LINKUP_KEY'))}")
 
 exakey = AsyncExa(api_key=os.getenv("EXA_API_KEY"))
 tavilykey = AsyncTavilyClient(api_key=os.getenv("TAVILY_KEY"))
 
 # =====================================================================
-# 1. SCRAPERS
+# 1. SCRAPERS (unchanged)
 # =====================================================================
 
 async def fetch_tavily_dossier(query: str, status_cb=None):
@@ -69,7 +79,7 @@ async def fetch_linkup_dossier(query: str, client: httpx.AsyncClient, status_cb=
     if not task_id:
         return ("Third Plug", "No dossier available from this source.", [])
 
-    # 15-minute ceiling (180 attempts * 5 seconds = 900s)
+    # 15-minute ceiling (180 attempts * 5 seconds = 900s) – UNCHANGED
     attempts = 0
     max_attempts = 180
 
@@ -124,36 +134,38 @@ async def semantic_scholar_data(query: str, client: httpx.AsyncClient, status_cb
     return ("Semantic Scholar", dossier, [])
 
 # =====================================================================
-# 2. DEDUPLICATOR
+# 2. DEDUPLICATOR – now returns (text, sources)
 # =====================================================================
 
-def compile_and_deduplicate(results: list, status_cb=None) -> str:
+def compile_and_deduplicate(results: list, status_cb=None):
     if status_cb:
         status_cb("DOSSIERING...")
     master_dossier = ""
     seen_urls = set()
-    
-    for source_name, summary, sources in results:
+    sources = []   # will hold final deduplicated sources with IDs
+    idx = 1
+
+    for source_name, summary, raw_sources in results:
         if summary:
             master_dossier += summary
-            
-        if sources:
+
+        if raw_sources:
             master_dossier += f"--- {source_name.upper()} RAW SOURCE DATA ---\n"
-            for src in sources:
+            for src in raw_sources:
                 url = src.get("url", "")
-                
-                # Forces empty data into a string so it doesn't crash on None
-                content = src.get("content") or "" 
-                
+                content = src.get("content") or ""
                 if not url or not content:
                     continue
-                    
+
                 clean_url = url.split("://")[-1].replace("www.", "").rstrip("/")
                 if clean_url not in seen_urls:
                     seen_urls.add(clean_url)
+                    domain = url.split("://")[-1].replace("www.", "").split("/")[0]
+                    sources.append({"id": idx, "url": url, "domain": domain})
                     master_dossier += f"Source ({url}):\n{content[:5000]}\n\n"
+                    idx += 1
 
-    return master_dossier
+    return master_dossier, sources
 
 async def fetch_combined_dossier_with_academic_papers(query: str, status_cb=None):
     if status_cb:
@@ -184,7 +196,6 @@ async def fetch_combined_dossier(query: str, status_cb=None):
 
 from mistralai.client import Mistral
 
-
 async def synthesize_with_mistral(query: str, master_dossier: str, status_cb=None) -> str:
     if status_cb:
         status_cb("SYNTHESIZING THE SYNTHESIS...")
@@ -204,16 +215,20 @@ async def synthesize_with_mistral(query: str, master_dossier: str, status_cb=Non
     )
     return response.choices[0].message.content
 
-from openai import AsyncOpenAI
-
 async def audit_with_deepseek(query: str, draft_dossier: str, status_cb=None) -> str:
     if status_cb:
         status_cb("AUDITING THE SYNTHESIS...")
 
     try:
+        api_key = os.getenv("HYPERBOLIC_API_KEY")
+        if not api_key:
+            print("ERROR: HYPERBOLIC_API_KEY missing in Intense Dive!")
+            return draft_dossier
+
         hyperbolic_client = AsyncOpenAI(
-            api_key=os.getenv("HYPERBOLIC_API_KEY"),
-            base_url="https://api.hyperbolic.xyz/v1"
+            api_key=api_key,
+            base_url="https://api.hyperbolic.xyz/v1",
+            timeout=30.0
         )
 
         formatted_user_prompt = DEEPSEEK_AUDIT_USER_PROMPT.format(
@@ -233,8 +248,16 @@ async def audit_with_deepseek(query: str, draft_dossier: str, status_cb=None) ->
             status_cb("THE DOSSIER IS ALMOST READY...")
         return response.choices[0].message.content
 
+    except APIError as e:
+        print(f"Hyperbolic APIError in Intense Dive: {e}")
+        if hasattr(e, 'response'):
+            print(f"Response status: {e.response.status_code}")
+            print(f"Response body: {e.response.text}")
+        if status_cb:
+            status_cb("AUDIT UNAVAILABLE. FINALIZING DRAFT...")
+        return draft_dossier
     except Exception as e:
-        print(f"Hyperbolic Audit Failed in Intense Dive: {e}")
+        print(f"Hyperbolic Audit Failed: {e}")
         if status_cb:
             status_cb("AUDIT UNAVAILABLE. FINALIZING DRAFT...")
         return draft_dossier
