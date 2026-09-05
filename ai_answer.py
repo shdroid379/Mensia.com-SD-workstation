@@ -16,48 +16,34 @@ from ai_instructions import (
 )
 from google import genai
 from google.genai import types
-from openai import OpenAI, APIError
 
-def hyperbolic_audit(prompt, context, outcome, mode):
+def gemini_audit(prompt, context, outcome, mode):
     try:
-        api_key = os.getenv("HYPERBOLIC_API_KEY")
-        if not api_key:
-            print("ERROR: HYPERBOLIC_API_KEY is not set!")
-            return outcome
-
-        client = OpenAI(
-            api_key=api_key,
-            base_url="https://api.hyperbolic.xyz/v1",
-            timeout=30.0
+        client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        
+        # Search mode is no longer audited. This is strictly for Deep Research now.
+        audit_model = "gemini-3.1-pro"
+        
+        response = client.models.generate_content(
+            model=audit_model,
+            contents=mistral_prompt.format(
+                prompt=prompt,
+                context=context,
+                mode=mode,
+                outcome=outcome
+            ),
+            config=types.GenerateContentConfig(
+                system_instruction=mistral_instructions,
+                temperature=0.0,
+                max_output_tokens=3250
+            )
         )
 
-        response = client.chat.completions.create(
-            model="deepseek-ai/DeepSeek-V3",
-            messages=[
-                {"role": "system", "content": mistral_instructions},
-                {"role": "user", "content": mistral_prompt.format(
-                    prompt=prompt,
-                    context=context,
-                    mode=mode,
-                    outcome=outcome
-                )}
-            ],
-            temperature=0.0
-        )
-
-        raw_answer = response.choices[0].message.content
+        raw_answer = response.text
         return raw_answer.strip() if raw_answer else outcome
 
-    except APIError as e:
-        # Safe error extraction
-        status = getattr(e, 'status_code', 'unknown')
-        body = getattr(e, 'body', None) or getattr(e, 'response', None)
-        print(f"Hyperbolic APIError (status {status}): {e}")
-        if body:
-            print(f"Response body: {body}")
-        return outcome
     except Exception as e:
-        print(f"Hyperbolic Auditor Error: {e}")
+        print(f"Gemini Auditor Error ({audit_model}): {e}")
         return outcome
 
 def ai_summary(prompt, context="", mode="casual", history=None):
@@ -88,6 +74,7 @@ def ai_summary(prompt, context="", mode="casual", history=None):
             return outcome
 
         elif mode.lower() == "search":
+            # NO AUDITING FOR STANDARD SEARCH - Latency optimized single-pass
             outcome = client.models.generate_content(
                 model="gemini-3.5-flash-lite",
                 contents=search_input.format(prompt=prompt, context=context),
@@ -97,17 +84,11 @@ def ai_summary(prompt, context="", mode="casual", history=None):
                     max_output_tokens=1500
                 )
             ).text
-
-            audited_answer = hyperbolic_audit(prompt, context, outcome, mode) or outcome
-
-            if audited_answer.upper() == "CORRECT":
-                print("Gemini answered. Hyperbolic approved.")
-                return outcome
-            else:
-                print("Hyperbolic revised Gemini's answer.")
-                return audited_answer
+            
+            return outcome
 
         elif mode.lower() == "deep research":
+            # DEEP RESEARCH - Actively audited by Gemini 3.1 Pro
             outcome = client.models.generate_content(
                 model="gemini-3.5-flash-lite",
                 contents=deep_input.format(prompt=prompt, context=context),
@@ -118,13 +99,13 @@ def ai_summary(prompt, context="", mode="casual", history=None):
                 )
             ).text
 
-            audited_answer = hyperbolic_audit(prompt, context, outcome, mode) or outcome
+            audited_answer = gemini_audit(prompt, context, outcome, mode) or outcome
 
             if audited_answer.upper() == "CORRECT":
-                print("Gemini answered. Hyperbolic approved.")
+                print("Gemini answered. Gemini 3.1 Pro Auditor approved.")
                 return outcome
             else:
-                print("Hyperbolic revised Gemini's answer.")
+                print("Gemini 3.1 Pro Auditor revised Gemini's answer.")
                 return audited_answer
 
         else:
