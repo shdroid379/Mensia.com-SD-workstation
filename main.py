@@ -6,7 +6,6 @@ from datetime import date
 from fastapi import FastAPI, Request, Header, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, StreamingResponse
-from openai import OpenAI, api_key
 from pydantic import BaseModel
 from groq import Groq
 
@@ -87,8 +86,8 @@ async def get_limits(user: dict = Depends(get_current_user)):
             "casual": 0,
             "search": 0,
             "deep research": 0,
-            "total_lifetime": 15,            # Visually satisfies the 15-chat condition
-            "intense_dive_unlocked": True,    # Never disable or lock out Intense Dive
+            "total_lifetime": 15,            
+            "intense_dive_unlocked": True,    
             "intense_dive_available": True
         },
         "exhausted": {
@@ -172,16 +171,16 @@ async def deep_research(q: Question, request: Request, user: dict = Depends(get_
     return {"answer": answer, "sources": sources}
 
 # =====================================================================
-# INTENSE DIVE WITH SOURCES
+# INTENSE DIVE WITH PROGRAMMATIC SOURCES
 # =====================================================================
 @app.post("/intense-dive")
 async def intense_dive_endpoint(q: Question, user: dict = Depends(get_current_user)):
     task_id = str(uuid.uuid4())
     intense_dive_tasks[task_id] = {
         "status": "processing",
-        "message": "DIVING IN...",
+        "message": "PULLING SOURCES ACROSS PLUGS...",
         "result": None,
-        "sources": [],   # <-- now storing sources
+        "sources": [],
         "error": None
     }
 
@@ -199,9 +198,9 @@ async def intense_dive_endpoint(q: Question, user: dict = Depends(get_current_us
                 context, sources = await intense_dive.fetch_combined_dossier(rephrased, update_task_message)
                 
             draft = await intense_dive.synthesize_with_mistral(rephrased, context, update_task_message)
-            final_report = await intense_dive.audit_with_deepseek(rephrased, draft, update_task_message)
+            final_report = await intense_dive.audit_the_synthesis(rephrased, draft, update_task_message)
 
-            # Store both result and sources
+            # Store both result and structured sources for frontend rendering
             intense_dive_tasks[task_id]["result"] = final_report
             intense_dive_tasks[task_id]["sources"] = sources
             intense_dive_tasks[task_id]["status"] = "completed"
@@ -229,63 +228,7 @@ async def get_intense_dive_status(task_id: str):
     }
 
 # =====================================================================
-# TEST HYPERBOLIC ENDPOINT (instant key verification)
-# =====================================================================
-import requests  # add to imports
-
-@app.get("/test-hyperbolic")
-async def test_hyperbolic():
-    import os
-    import requests
-    import json
-
-    api_key = os.getenv("HYPERBOLIC_API_KEY")
-    if not api_key:
-        return {"error": "HYPERBOLIC_API_KEY not set"}
-
-    # Preview info
-    preview = {
-        "key_present": True,
-        "key_length": len(api_key),
-        "key_prefix": api_key[:8],
-        "key_suffix": api_key[-4:],
-    }
-
-    # Test with direct requests to see the raw response
-    url = "https://api.hyperbolic.xyz/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "model": "deepseek-ai/DeepSeek-V3",
-        "messages": [{"role": "user", "content": "Hello"}],
-        "max_tokens": 5,
-        "temperature": 0.0,
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=10)
-        status = response.status_code
-        body = response.text
-        print(f"Hyperbolic test status: {status}, body: {body}", flush=True)
-
-        if status == 200:
-            return {
-                "success": True,
-                "response": response.json().get("choices", [{}])[0].get("message", {}).get("content", ""),
-                "preview": preview,
-            }
-        else:
-            # Return the raw error body
-            return {
-                "error": f"HTTP {status}",
-                "details": body,
-                "preview": preview,
-            }
-    except Exception as e:
-        return {"error": str(e), "preview": preview}
-    # 4. DOCUMENT EXPORT ENDPOINTS
+# 4. DOCUMENT EXPORT ENDPOINTS
 # =====================================================================
 class ExportRequest(BaseModel):
     markdown: str
