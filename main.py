@@ -11,6 +11,15 @@ from groq import Groq
 
 import firebase_admin
 from firebase_admin import credentials, auth
+import logging
+from datetime import datetime, timezone
+
+# Configure logging so Render captures it instantly
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 import pipeline
 import ai_answer
@@ -70,6 +79,25 @@ async def get_current_user(request: Request, authorization: str = Header(None)):
 def check_and_increment_limit(user: dict, mode: str):
     # UNRESTRICTED FOR ACTIVE TESTING: Always returns allowed
     return True, 1, 9999, ""
+
+# =====================================================================
+# 2.5 CENTRALIZED LOGGING HELPER
+# =====================================================================
+def log_interaction(user: dict, session_id: str, mode: str, question: str, answer: str):
+    timestamp = datetime.now(timezone.utc).isoformat()
+    # Truncate to 150 chars to prevent terminal flood on Render
+    short_q = question[:150] + "..." if len(question) > 150 else question
+    short_a = answer[:150] + "..." if len(answer) > 150 else answer
+    user_identifier = user.get("email") or user.get("id") or "Unknown"
+    
+    logger.info(
+        f"TIMESTAMP: {timestamp} | "
+        f"USER: {user_identifier} | "
+        f"SESSION: {session_id} | "
+        f"MODE: {mode} | "
+        f"Q: '{short_q}' | "
+        f"A: '{short_a}'"
+    )
 
 # =====================================================================
 # 3. API ENDPOINTS & LIVE BACKGROUND TASKS
@@ -150,6 +178,10 @@ async def ask(q: Question, request: Request, user: dict = Depends(get_current_us
     answer = await asyncio.to_thread(ai_answer.ai_summary, rephrased, context, mode, current_history) or ""
     
     histories.setdefault(q.session_id, []).append([q.question, answer])
+    
+    # Log the interaction
+    log_interaction(user, q.session_id, mode, q.question, answer)
+    
     return {"answer": answer, "sources": sources}
 
 @app.post("/deep-research")
@@ -168,6 +200,10 @@ async def deep_research(q: Question, request: Request, user: dict = Depends(get_
     answer = await asyncio.to_thread(ai_answer.ai_summary, rephrased, context, mode, current_history) or ""
 
     histories.setdefault(q.session_id, []).append([q.question, answer])
+    
+    # Log the interaction
+    log_interaction(user, q.session_id, mode, q.question, answer)
+    
     return {"answer": answer, "sources": sources}
 
 # =====================================================================
@@ -207,9 +243,14 @@ async def intense_dive_endpoint(q: Question, user: dict = Depends(get_current_us
             intense_dive_tasks[task_id]["message"] = "THE DOSSIER IS READY."
 
             histories.setdefault(q.session_id, []).append([q.question, final_report])
+            
+            # Log the interaction for Intense Dive
+            log_interaction(user, q.session_id, "intense dive", q.question, final_report)
+            
         except Exception as e:
             intense_dive_tasks[task_id]["status"] = "failed"
             intense_dive_tasks[task_id]["error"] = str(e)
+            logger.error(f"Intense Dive failed for session {q.session_id}: {str(e)}")
 
     asyncio.create_task(run_pipeline())
     return {"task_id": task_id, "status": "processing"}
