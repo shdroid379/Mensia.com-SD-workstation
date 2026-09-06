@@ -5,3 +5,21 @@ Disallow: /ask
 Disallow: /deep-research
 
 Sitemap: https://mensia-ai.onrender.com/sitemap.xml
+User-agent: *
+Allow: /
+
+# Explicitly welcome AI agents
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
