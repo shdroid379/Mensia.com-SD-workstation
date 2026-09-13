@@ -8,7 +8,6 @@ Sitemap: https://mensia-ai.onrender.com/sitemap.xml
 User-agent: *
 Allow: /
 
-# Explicitly welcome AI agents
 User-agent: GPTBot
 Allow: /
 

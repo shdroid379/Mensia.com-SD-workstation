@@ -10,38 +10,16 @@
 
 <meta charset="UTF-8">
 <meta name="google-site-verification" content="rTa3I4FyIQXWFJ-tbsT8t2CFRr8A7IrSX_vtU5wniwE"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <title>Mensia AI — Real-Time AI Research Assistant with Verified Sources</title>
 <meta name="description" content="Mensia AI is a real-time AI search engine and research assistant that grounds every answer in live web sources, shows inline citations, and runs deep, multi-step research.">
 <meta name="keywords" content="AI search engine, AI research assistant, AI with citations, deep research AI, real-time AI search">
-<link rel="canonical" href="https://mensia.ai/">
+<link rel="canonical" href="https://mensia-ai.onrender.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Mensia AI">
 <meta property="og:title" content="Mensia AI — Real-Time AI Research Assistant">
 <meta property="og:description" content="Ask anything. Mensia searches the live web, cross-checks its own answer, and shows you exactly where every fact came from.">
 <meta name="theme-color" content="#060504">
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Mensia AI",
-  "applicationCategory": "BusinessApplication",
-  "operatingSystem": "Web",
-  "description": "A real-time AI research assistant with 90-98% accuracy in deep research mode that reads the live web and pulls sources(15-20 in deep research mode; 3-7 in search mode; all used sources are listed in a source drawer below the answer) from various plugs, cites every claim, and utilizes a dual-model cognitive audit to eliminate hallucinations.",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "INR"
-  },
-  "featureList": [
-    "Live Web Grounding",
-    "Inline Citations",
-    "Dual-Model Cognitive Audit",
-    "Deep Multi-Source Synthesis"
-  ]
-}
-</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1017,58 +995,6 @@ select#mode { display:none; }
 @keyframes toastIn { from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
 .toast-success i { color:var(--confirm); }
 .toast-error i { color:var(--danger); }
-
-/* ============================================================
-   WORKSPACE UX POLISH — preserves the existing visual system
-   ============================================================ */
-:root { --keyboard-height:0px; }
-.chat-scroll { scroll-behavior:auto; overscroll-behavior:contain; }
-.chat-main { min-height:0; }
-.app-view.active { height:calc(100dvh - var(--keyboard-height)); }
-.input-zone {
-  bottom:var(--keyboard-height);
-  padding-bottom:max(16px, env(safe-area-inset-bottom));
-}
-.chat-scroll {
-  padding-bottom:calc(220px + var(--keyboard-height) + env(safe-area-inset-bottom));
-}
-.reading-status {
-  position:absolute; bottom:calc(206px + var(--keyboard-height)); left:50%;
-  transform:translateX(-50%) translateY(8px); z-index:42; display:none;
-  align-items:center; gap:8px; white-space:nowrap;
-  border:1px solid var(--glass-border); border-radius:999px;
-  padding:8px 13px; background:var(--bg-elevated); color:var(--ink);
-  box-shadow:var(--shadow); backdrop-filter:blur(18px);
-  font-size:.75rem; font-weight:700; transition:opacity .2s, transform .2s;
-}
-.reading-status.show { display:flex; animation:toastIn .22s ease both; }
-.reading-status:hover { background:var(--accent-soft); }
-.reading-status i { color:var(--confirm); font-size:.7rem; }
-.welcome-actions { display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:22px; pointer-events:auto; }
-.welcome-action {
-  border:1px solid var(--glass-border); background:var(--accent-soft); color:var(--muted);
-  border-radius:999px; padding:8px 12px; font-size:.76rem; font-weight:600;
-  transition:background .18s, color .18s, border-color .18s, transform .18s;
-}
-.welcome-action:hover { background:var(--bg-elevated); color:var(--ink); border-color:var(--muted); transform:translateY(-1px); }
-.answer-followups { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
-.answer-followup {
-  border:1px solid var(--glass-border); background:transparent; color:var(--muted);
-  border-radius:999px; padding:5px 10px; font-size:.72rem; font-weight:600;
-  transition:background .18s, color .18s, border-color .18s;
-}
-.answer-followup:hover { background:var(--accent-soft); color:var(--ink); border-color:var(--muted); }
-.draft-recovered { color:var(--muted); font-size:.72rem; margin:7px 16px 0; }
-@media (max-width:768px) {
-  .app-view.active { height:calc(100dvh - var(--keyboard-height)); }
-  .chat-scroll { padding-bottom:calc(200px + var(--keyboard-height) + env(safe-area-inset-bottom)) !important; }
-  .input-zone { padding-bottom:max(12px, env(safe-area-inset-bottom)) !important; }
-  .reading-status { bottom:calc(188px + var(--keyboard-height)); max-width:88vw; overflow:hidden; text-overflow:ellipsis; }
-  .welcome-actions { margin-top:18px; }
-}
-@media (prefers-reduced-motion:reduce) {
-  *,*::before,*::after { animation-duration:.001ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:.001ms !important; }
-}
 </style>
 </head>
 
@@ -1087,11 +1013,11 @@ select#mode { display:none; }
   </a>
 
   <div class="nav-links">
-    <a id="nav-home" class="active" onclick="showView('home')">Home</a>
-    <a id="nav-app" onclick="showView('app')">Workspace</a>
-    <a id="nav-plans" onclick="showView('plans')">Plans</a>
-    <a id="nav-guide" onclick="showView('guide')">Guide</a>
-    <a id="nav-profile" style="display:none" onclick="showView('profile')">Account</a>
+    <a id="nav-home" class="active" href="/" onclick="event.preventDefault(); showView('home')">Home</a>
+    <a id="nav-app" href="/workspace" onclick="event.preventDefault(); showView('app')">Workspace</a>
+    <a id="nav-plans" href="/plans" onclick="event.preventDefault(); showView('plans')">Plans</a>
+    <a id="nav-guide" href="/guide" onclick="event.preventDefault(); showView('guide')">Guide</a>
+    <a id="nav-profile" style="display:none" href="/profile" onclick="event.preventDefault(); showView('profile')">Account</a>
   </div>
 
   <div class="nav-right">
@@ -1110,12 +1036,12 @@ select#mode { display:none; }
 </nav>
 
 <div class="nav-mobile-panel" id="nav-mobile-panel">
-  <a onclick="showView('home')">Home</a>
-  <a onclick="showView('app')">Workspace</a>
-  <a onclick="showView('plans')">Plans</a>
-  <a onclick="showView('guide')">Guide</a>
-  <a id="mobile-profile-link" style="display:none" onclick="showView('profile')">Account</a>
-  <a id="mobile-auth-link" onclick="handleNavAuthClick()">Sign In / Register</a>
+  <a href="/" onclick="event.preventDefault(); showView('home')">Home</a>
+  <a href="/workspace" onclick="event.preventDefault(); showView('app')">Workspace</a>
+  <a href="/plans" onclick="event.preventDefault(); showView('plans')">Plans</a>
+  <a href="/guide" onclick="event.preventDefault(); showView('guide')">Guide</a>
+  <a id="mobile-profile-link" style="display:none" href="/profile" onclick="event.preventDefault(); showView('profile')">Account</a>
+  <a id="mobile-auth-link" href="#" onclick="event.preventDefault(); handleNavAuthClick()">Sign In / Register</a>
 </div>
 
 <!-- AUTH FULLSCREEN -->
@@ -1368,9 +1294,9 @@ select#mode { display:none; }
   <footer class="home-footer">
     <span>&copy; 2026 Mensia AI Intelligence. All rights reserved.</span>
     <div>
-      <a onclick="showView('guide')">Guide</a>
-      <a onclick="showView('plans')">Plans</a>
-      <a onclick="showView('app')">Research</a>
+      <a href="/guide" onclick="event.preventDefault(); showView('guide')">Guide</a>
+      <a href="/plans" onclick="event.preventDefault(); showView('plans')">Plans</a>
+      <a href="/workspace" onclick="event.preventDefault(); showView('app')">Research</a>
     </div>
   </footer>
 </div>
@@ -1646,19 +1572,11 @@ select#mode { display:none; }
       <div class="welcome-wrap" id="welcome-prompt-wrap">
         <div class="welcome-h" id="welcome-prompt">Executive Research Workspace</div>
         <p class="welcome-sub">Press <kbd style="background:var(--accent-soft); padding:2px 6px; border:1px solid var(--glass-border); border-radius:4px;">/</kbd> to focus input. Press <kbd style="background:var(--accent-soft); padding:2px 6px; border:1px solid var(--glass-border); border-radius:4px;">Shift + Tab</kbd> to toggle archive.</p>
-      <div class="welcome-actions" id="welcome-actions">
-        <button class="welcome-action" onclick="useStarterPrompt('Compare the best options for me')">Compare options</button>
-        <button class="welcome-action" onclick="useStarterPrompt('Research a topic with current sources')">Research a topic</button>
-        <button class="welcome-action" onclick="useStarterPrompt('Help me turn an idea into a clear plan')">Turn an idea into a plan</button>
-      </div>
       </div>
     </div>
 
     <button class="scroll-btn" id="scroll-to-bottom-btn" onclick="scrollChatToBottom(true)" title="Jump to latest">
       <i class="fa-solid fa-arrow-down"></i>
-    </button>
-    <button class="reading-status" id="reading-status" onclick="resumeLatestAnswer()" aria-live="polite">
-      <i class="fa-solid fa-sparkles"></i><span>New answer ready · Resume</span>
     </button>
 
     <!-- Input Zone with Advanced Dock -->
@@ -1689,7 +1607,7 @@ select#mode { display:none; }
           </div>    
         </div>
 
-        <textarea id="question" rows="1" placeholder="Define the parameters of your research... (press / to focus)" oninput="autoResize(this);queueDraftSave(this.value)" onkeydown="checkEnter(event)" autocomplete="off" autocapitalize="sentences"></textarea>
+        <textarea id="question" rows="1" placeholder="Define the parameters of your research... (press / to focus)" oninput="autoResize(this)" onkeydown="checkEnter(event)"></textarea>
         
         <div class="input-bottom-row">
           <div class="kbd-hint">
@@ -1964,16 +1882,47 @@ function selectMode(mode){
 /* ============================================================
    NAVIGATION & SHORTCUTS (Shift + Tab Supported)
    ============================================================ */
-function showView(id){
+/* ============================================================
+   ROUTING & VIEW SYSTEM
+   ============================================================ */
+function showView(id, pushToHistory = true){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-links a,.nav-mobile-panel a').forEach(a=>a.classList.remove('active'));
   const t=document.getElementById(id+'-view');if(t)t.classList.add('active');
   const l=document.getElementById('nav-'+id);if(l)l.classList.add('active');
-  if(id==='app'){ensureWorkspaceReady();setTimeout(()=>{document.getElementById('question')?.focus();updateReadingState();},100);}
+  
+  if(id==='app'){renderSidebar();updateWelcomePrompt();setTimeout(()=>{document.getElementById('question')?.focus();scrollChatToBottom(false);},100);}
   else if(id==='profile')syncLimits();
   else if(id==='guide')renderFaqList();
   document.getElementById('nav-mobile-panel')?.classList.remove('open');
+
+  // Change the URL without reloading the page
+  if (pushToHistory) {
+    const urlMap = { 'home': '/', 'app': '/workspace', 'plans': '/plans', 'guide': '/guide', 'profile': '/profile' };
+    window.history.pushState({ view: id }, '', urlMap[id] || '/');
+  }
 }
+
+// Handle browser Back/Forward buttons
+window.addEventListener('popstate', (event) => {
+  if (event.state && event.state.view) {
+    showView(event.state.view, false);
+  } else {
+    showView('home', false);
+  }
+});
+
+// Check URL on first load so direct links (like mensia.ai/plans) open the right view
+document.addEventListener('DOMContentLoaded', () => {
+  const path = window.location.pathname;
+  let startView = 'home';
+  if (path.includes('/workspace')) startView = 'app';
+  else if (path.includes('/plans')) startView = 'plans';
+  else if (path.includes('/guide')) startView = 'guide';
+  else if (path.includes('/profile')) startView = 'profile';
+  
+  showView(startView, false);
+});
 function toggleMobileNav(){
   const p=document.getElementById('nav-mobile-panel');
   const o=p.classList.toggle('open');
@@ -2005,12 +1954,10 @@ document.addEventListener('keydown',e=>{
   const c=document.getElementById('ambient-canvas');if(!c)return;
   const ctx=c.getContext('2d');
   let mx=window.innerWidth/2,my=window.innerHeight/2;
-  let dirty=true;
-  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;dirty=true;}
-  window.addEventListener('resize',resize,{passive:true});resize();
-  window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;dirty=true;},{passive:true});
+  function resize(){c.width=window.innerWidth;c.height=window.innerHeight;}
+  window.addEventListener('resize',resize);resize();
+  window.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
   function frame(){
-    if(!dirty){requestAnimationFrame(frame);return;}
     ctx.clearRect(0,0,c.width,c.height);
     const isDark = document.body.classList.contains('dark');
     const grad=ctx.createRadialGradient(mx,my,0,mx,my,500);
@@ -2018,7 +1965,6 @@ document.addEventListener('keydown',e=>{
     grad.addColorStop(1,'transparent');
     ctx.fillStyle=grad;
     ctx.fillRect(0,0,c.width,c.height);
-    dirty=false;
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
@@ -2056,7 +2002,7 @@ document.addEventListener('click',e=>{
 
 const FAQ_ITEMS=[
   {q:"What makes an AI search engine different from a regular chatbot?",a:"An AI search engine like Mensia reads live web pages before answering instead of relying only on pre-trained memory, so responses reflect current information and can be traced back to a real source."},
-  {q:"Does Mensia AI show its sources?",a:"Yes. Every Search, and Deep Research answer includes numbered inline citations plus an expandable sources panel linking straight to the pages used."},
+  {q:"Does Mensia AI show its sources?",a:"Yes. Every Search and Deep Research answer includes numbered inline citations plus an expandable sources panel linking straight to the pages used."},
   {q:"What is Deep Research mode used for?",a:"Deep Research fires multiple concurrent queries across independent sources and synthesises them into one audited report — useful for comparisons, market research, and technical or academic-style summaries."},
   {q:"Is Mensia AI free to use?",a:"Yes — there's a free guest tier with no login, plus a larger free daily quota across Casual, Search, and Deep Research modes once you create an account."},
   {q:"Can I export an answer as a document?",a:"Deep Research answers include export buttons for PDF, Word, and Markdown so you can save or share the full report."}
@@ -2083,15 +2029,6 @@ Object.keys(savedChats).forEach(id=>{
 });
 let sessionId=localStorage.getItem('mensia_active_session');
 if(!sessionId||!savedChats[sessionId]){sessionId=crypto.randomUUID();localStorage.setItem('mensia_active_session',sessionId);}
-let renderedWorkspaceSession=null;
-let lastAnswerRow=null;
-let lastAnswerFullyRead=false;
-let latestAnswerWaiting=false;
-let followUserMessage=false;
-let followGeneration=false;
-let askInFlight=false;
-let draftSaveTimer=null;
-let lastViewportHeight=window.innerHeight;
 
 const GREETINGS={
   morning:["Good morning{n}. What are you exploring?","Morning{n} — what should we dig into?","Good morning{n}. Where do we start?"],
@@ -2128,41 +2065,6 @@ function saveMessage(text,sender,sources=[],mode='casual'){
   localStorage.setItem('mensia_chats',JSON.stringify(savedChats));
   renderSidebar();updateWelcomePrompt();
 }
-function draftKey(id=sessionId){return`mensia_draft_${id}`;}
-function queueDraftSave(value){
-  clearTimeout(draftSaveTimer);
-  draftSaveTimer=setTimeout(()=>{
-    try{
-      const clean=(value||'').slice(0,12000);
-      if(clean.trim())localStorage.setItem(draftKey(),clean);
-      else localStorage.removeItem(draftKey());
-    }catch(e){}
-  },220);
-}
-function saveCurrentDraft(){
-  const q=document.getElementById('question');
-  if(q)queueDraftSave(q.value);
-}
-function restoreDraft(){
-  const q=document.getElementById('question');
-  if(!q)return;
-  let draft='';
-  try{draft=localStorage.getItem(draftKey())||'';}catch(e){}
-  document.getElementById('draft-recovered')?.remove();
-  q.value=draft;
-  autoResize(q);
-  if(draft.trim()){
-    const n=document.createElement('div');
-    n.id='draft-recovered';n.className='draft-recovered';
-    n.innerHTML='<i class="fa-solid fa-rotate-left"></i> Draft restored for this session';
-    document.querySelector('.dock-wrapper')?.prepend(n);
-  }
-}
-function clearDraft(){
-  clearTimeout(draftSaveTimer);
-  try{localStorage.removeItem(draftKey());}catch(e){}
-  document.getElementById('draft-recovered')?.remove();
-}
 function renderSidebar(){
   const list=document.getElementById('history-list');
   const mlist=document.getElementById('mobile-history-list');
@@ -2195,116 +2097,31 @@ function renderSidebar(){
   });
 }
 function loadChat(id){
-  saveCurrentDraft();
   sessionId=id;localStorage.setItem('mensia_active_session',sessionId);
   const cv=document.getElementById('chat-view');
-  cv.dataset.session=id;
-  cv.innerHTML=`<div class="welcome-wrap" id="welcome-prompt-wrap" style="display:none"><div class="welcome-h" id="welcome-prompt"></div><p class="welcome-sub">Press <kbd style="background:var(--accent-soft); padding:2px 6px; border:1px solid var(--glass-border); border-radius:4px;">/</kbd> to focus input. Press <kbd style="background:var(--accent-soft); padding:2px 6px; border:1px solid var(--glass-border); border-radius:4px;">Shift + Tab</kbd> to toggle archive.</p><div class="welcome-actions" id="welcome-actions"><button class="welcome-action" onclick="useStarterPrompt('Compare the best options for me')">Compare options</button><button class="welcome-action" onclick="useStarterPrompt('Research a topic with current sources')">Research a topic</button><button class="welcome-action" onclick="useStarterPrompt('Help me turn an idea into a clear plan')">Turn an idea into a plan</button></div></div>`;
-  lastAnswerRow=null;lastAnswerFullyRead=false;latestAnswerWaiting=false;hideReadingStatus();
+  cv.innerHTML=`<div class="welcome-wrap" id="welcome-prompt-wrap" style="display:none"><div class="welcome-h" id="welcome-prompt"></div></div>`;
   (savedChats[id]?.messages||[]).forEach(m=>renderBubble(m.text,m.sender,true,null,m.sources||[],m.mode||'casual'));
-  renderedWorkspaceSession=id;
-  updateWelcomePrompt();renderSidebar();restoreDraft();
-  setTimeout(()=>scrollChatToBottom(true),30);
+  updateWelcomePrompt();renderSidebar();setTimeout(()=>scrollChatToBottom(false),30);
 }
-function newConversation(silent=false){
-  saveCurrentDraft();
+function newConversation(){
   sessionId=crypto.randomUUID();localStorage.setItem('mensia_active_session',sessionId);
-  const cv=document.getElementById('chat-view');
-  cv.dataset.session=sessionId;
-  cv.innerHTML=`<div class="welcome-wrap" id="welcome-prompt-wrap"><div class="welcome-h" id="welcome-prompt"></div><p class="welcome-sub">Press <kbd style="background:var(--accent-soft); padding:2px 6px; border:1px solid var(--glass-border); border-radius:4px;">/</kbd> to focus input. Press <kbd style="background:var(--accent-soft); padding:2px 6px; border:1px solid var(--glass-border); border-radius:4px;">Shift + Tab</kbd> to toggle archive.</p><div class="welcome-actions" id="welcome-actions"><button class="welcome-action" onclick="useStarterPrompt('Compare the best options for me')">Compare options</button><button class="welcome-action" onclick="useStarterPrompt('Research a topic with current sources')">Research a topic</button><button class="welcome-action" onclick="useStarterPrompt('Help me turn an idea into a clear plan')">Turn an idea into a plan</button></div></div>`;
-  renderedWorkspaceSession=sessionId;lastAnswerRow=null;lastAnswerFullyRead=false;latestAnswerWaiting=false;hideReadingStatus();
-  clearDraft();updateWelcomePrompt();renderSidebar();restoreDraft();
+  document.getElementById('chat-view').innerHTML=`<div class="welcome-wrap" id="welcome-prompt-wrap"><div class="welcome-h" id="welcome-prompt"></div><p class="welcome-sub">Press <kbd style="background:var(--accent-soft); padding:2px 6px; border:1px solid var(--glass-border); border-radius:4px;">/</kbd> to focus input. Press <kbd style="background:var(--accent-soft); padding:2px 6px; border:1px solid var(--glass-border); border-radius:4px;">Shift + Tab</kbd> to toggle archive.</p></div>`;
+  updateWelcomePrompt();renderSidebar();
   document.getElementById('mobile-history-overlay')?.classList.remove('open');
-  if(!silent)document.getElementById('question')?.focus();
 }
 function toggleMobileHistory(){document.getElementById('mobile-history-overlay')?.classList.toggle('open');}
 function isNearBottom(){const cv=document.getElementById('chat-view');if(!cv)return true;return cv.scrollHeight-cv.scrollTop-cv.clientHeight<130;}
-function scrollChatToBottom(force=false){
-  const cv=document.getElementById('chat-view');if(!cv)return;
-  if(force||isNearBottom())cv.scrollTop=cv.scrollHeight;
-}
-function usableChatBottom(){
-  const cv=document.getElementById('chat-view'),zone=document.querySelector('.input-zone');
-  if(!cv)return 0;
-  return cv.getBoundingClientRect().bottom-(zone?.getBoundingClientRect().height||0)-12;
-}
-function answerEndingVisible(){
-  if(!lastAnswerRow)return false;
-  const r=lastAnswerRow.getBoundingClientRect(),c=document.getElementById('chat-view')?.getBoundingClientRect();
-  return !!c&&r.bottom<=usableChatBottom()&&r.bottom>=c.top-4&&r.top<usableChatBottom();
-}
-function updateReadingState(){
-  const cv=document.getElementById('chat-view');if(!cv)return;
-  const near=isNearBottom();
-  document.getElementById('scroll-to-bottom-btn')?.classList.toggle('show',!near);
-  if(lastAnswerRow&&!latestAnswerWaiting){
-    if(answerEndingVisible())lastAnswerFullyRead=true;
-    else if(lastAnswerFullyRead)lastAnswerFullyRead=false;
-  }
-  if(latestAnswerWaiting&&!near)showReadingStatus();
-  if(latestAnswerWaiting&&near){latestAnswerWaiting=false;hideReadingStatus();}
-}
-document.getElementById('chat-view')?.addEventListener('scroll',updateReadingState,{passive:true});
-function showReadingStatus(){document.getElementById('reading-status')?.classList.add('show');}
-function hideReadingStatus(){document.getElementById('reading-status')?.classList.remove('show');}
-function resumeLatestAnswer(){
-  if(!lastAnswerRow)return;
-  const cv=document.getElementById('chat-view');
-  cv?.scrollTo({top:Math.max(0,lastAnswerRow.offsetTop-18),behavior:'auto'});
-  latestAnswerWaiting=false;hideReadingStatus();updateReadingState();
-}
-function prepareForNextQuestion(){
-  if(!lastAnswerRow||!lastAnswerFullyRead||!answerEndingVisible())return false;
-  const cv=document.getElementById('chat-view');
-  cv?.scrollTo({top:Math.max(0,lastAnswerRow.offsetTop-18),behavior:'auto'});
-  lastAnswerFullyRead=false;
-  return true;
-}
-function useStarterPrompt(text){
-  const q=document.getElementById('question');if(!q)return;
-  q.value=text;autoResize(q);queueDraftSave(text);q.focus();
-}
-function askFollowup(text){
-  const q=document.getElementById('question');if(!q)return;
-  q.value=text;autoResize(q);queueDraftSave(text);q.focus();
-  showToast("Follow-up ready — edit it or press Enter.","info");
-}
-function ensureWorkspaceReady(){
-  const cv=document.getElementById('chat-view');if(!cv)return;
-  if(!sessionId||!savedChats[sessionId]){newConversation(true);return;}
-  if(renderedWorkspaceSession!==sessionId||cv.dataset.session!==sessionId)loadChat(sessionId);
-  else{updateWelcomePrompt();renderSidebar();restoreDraft();}
-}
+function scrollChatToBottom(force){const cv=document.getElementById('chat-view');if(!cv)return;if(force||isNearBottom())cv.scrollTop=cv.scrollHeight;}
+document.getElementById('chat-view')?.addEventListener('scroll',()=>{
+  document.getElementById('scroll-to-bottom-btn')?.classList.toggle('show',!isNearBottom());
+});
 function escHtml(s){const d=document.createElement('div');d.innerText=s||'';return d.innerHTML;}
 
 /* ============================================================
    INPUT & VOICE
    ============================================================ */
-function autoResize(ta){
-  if(!ta)return;
-  ta.style.height='auto';
-  ta.style.height=Math.min(ta.scrollHeight,160)+'px';
-  ta.scrollTop=ta.scrollHeight;
-}
+function autoResize(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}
 function checkEnter(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask();}}
-
-function updateVisualViewport(){
-  const vv=window.visualViewport;
-  if(!vv)return;
-  const keyboard=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
-  document.documentElement.style.setProperty('--keyboard-height',keyboard+'px');
-  const q=document.getElementById('question');
-  if(keyboard>80&&document.activeElement===q){
-    requestAnimationFrame(()=>q.scrollIntoView({block:'nearest',inline:'nearest'}));
-  }
-  if(Math.abs(vv.height-lastViewportHeight)>40)requestAnimationFrame(updateReadingState);
-  lastViewportHeight=vv.height;
-}
-if(window.visualViewport){
-  window.visualViewport.addEventListener('resize',updateVisualViewport,{passive:true});
-  window.visualViewport.addEventListener('scroll',updateVisualViewport,{passive:true});
-}
-window.addEventListener('resize',updateVisualViewport,{passive:true});
 
 let recognition=null,isRecording=false;
 function toggleVoiceInput(){
@@ -2384,19 +2201,6 @@ function shareTo(ch,text){
 function copyShareText(text){navigator.clipboard.writeText(text);showToast("Copied — paste anywhere.","success");closeAllShareMenus(null);}
 
 let lastQuestion='';
-function addAnswerFollowups(row){
-  const follow=document.createElement('div');follow.className='answer-followups';
-  [
-    ['fa-list-check','Make it actionable','Turn this into clear, practical next steps.'],
-    ['fa-wand-magic-sparkles','Simplify this','Explain this in plain language with the key idea first.'],
-    ['fa-shield-halved','Challenge it','What are the weaknesses, assumptions, or risks in this answer?']
-  ].forEach(([icon,label,prompt])=>{
-    const b=document.createElement('button');b.className='answer-followup';
-    b.innerHTML=`<i class="fa-solid ${icon}"></i> ${label}`;b.onclick=()=>askFollowup(prompt);
-    follow.appendChild(b);
-  });
-  row.appendChild(follow);
-}
 
 function renderBubble(text,sender,skipAnim=false,onComplete=null,sources=[],mode='casual'){
   const cv=document.getElementById('chat-view');
@@ -2418,9 +2222,7 @@ function renderBubble(text,sender,skipAnim=false,onComplete=null,sources=[],mode
     const cb=document.createElement('button');cb.className='bact';cb.innerHTML='<i class="fa-solid fa-copy"></i> Copy';
     cb.onclick=()=>copyText(text,cb,"Question copied.");
     acts.appendChild(cb);row.appendChild(acts);cv.appendChild(row);
-    if(followUserMessage)scrollChatToBottom(true);
-    followUserMessage=false;
-    if(onComplete)onComplete(text);
+    scrollChatToBottom(true);if(onComplete)onComplete(text);
   }else{
     bubble.innerHTML=processMarkdown(text,sources)+buildSourcesHtml(sources);
     renderMath(bubble);
@@ -2440,15 +2242,16 @@ function renderBubble(text,sender,skipAnim=false,onComplete=null,sources=[],mode
 
     acts.appendChild(cb);acts.appendChild(sb);acts.appendChild(sm);
     row.appendChild(acts);
-    addAnswerFollowups(row);
     if(mode==='deep research')addExportButtons(row,text);
 
     cv.appendChild(row);
-    lastAnswerRow=row;lastAnswerFullyRead=false;
-    if(followGeneration||isNearBottom())scrollChatToBottom(true);
-    else{latestAnswerWaiting=true;showReadingStatus();}
-    updateReadingState();
-    if(onComplete)onComplete(text);
+    if(skipAnim){scrollChatToBottom(false);if(onComplete)onComplete(text);}
+    else{
+      const kids=Array.from(bubble.children);
+      kids.forEach(k=>{k.style.opacity='0';k.style.transform='translateY(6px)';k.style.transition='opacity 0.22s ease-out,transform 0.22s ease-out';});
+      kids.forEach((k,i)=>setTimeout(()=>{k.style.opacity='1';k.style.transform='translateY(0)';scrollChatToBottom(false);},i*38));
+      setTimeout(()=>{scrollChatToBottom(false);if(onComplete)onComplete(text);},kids.length*38+200);
+    }
   }
 }
 function escForJs(s){return(s||'').replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');}
@@ -2493,13 +2296,7 @@ async function ask(){
   const qBox=document.getElementById('question');
   const q=qBox.value.trim();
   const mode=currentMode;
-  if(!q||askInFlight)return;
-  const wasAtLatest=isNearBottom();
-  const anchoredToReadAnswer=prepareForNextQuestion();
-  followUserMessage=wasAtLatest&&!anchoredToReadAnswer;
-  followGeneration=followUserMessage;
-  askInFlight=true;
-  clearDraft();
+  if(!q)return;
   renderBubble(q,'user',false,null,[],mode);
   saveMessage(q,'user',[],mode);
   qBox.value='';qBox.style.height='auto';
@@ -2537,9 +2334,6 @@ async function ask(){
     else renderBubble(`Connection Error: ${err.message}`,'ai',true,txt=>saveMessage(txt,'ai',[],mode),[],mode);
     toggleInputState(false);
     abortController=null;
-  }finally{
-    askInFlight=false;
-    followGeneration=false;
   }
 }
 </script>
@@ -2566,11 +2360,8 @@ async function ask(){
 
   function initAuditor(canvas){
     const ctx = setupCanvas(canvas);
-    let t = 0, raf, active = true;
-    const visibility = new IntersectionObserver(es=>{active=!!es[0]?.isIntersecting;},{threshold:0.01});
-    visibility.observe(canvas);
+    let t = 0, raf;
     function draw(){
-      if(!active||document.hidden){raf=requestAnimationFrame(draw);return;}
       const w = canvas.clientWidth, h = canvas.clientHeight;
       if(w && h){
         ctx.clearRect(0,0,w,h);
@@ -2621,9 +2412,6 @@ async function ask(){
   function initLiveWeb(canvas){
     const ctx = setupCanvas(canvas);
     let t = 0;
-    let active = true;
-    const visibility = new IntersectionObserver(es=>{active=!!es[0]?.isIntersecting;},{threshold:0.01});
-    visibility.observe(canvas);
     let nodes = [];
     const cols = 9, rows = 6;
     function buildNodes(){
@@ -2643,7 +2431,6 @@ async function ask(){
     buildNodes();
     window.addEventListener('resize', buildNodes);
     function draw(){
-      if(!active||document.hidden){requestAnimationFrame(draw);return;}
       const w = canvas.clientWidth, h = canvas.clientHeight;
       if(w && h){
         ctx.clearRect(0,0,w,h);

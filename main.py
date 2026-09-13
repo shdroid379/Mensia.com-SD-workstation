@@ -300,4 +300,12 @@ def get_sitemap():
 def get_robots():
     return FileResponse("static/robots.txt", media_type="text/plain")
 
+# Catch-all routes for the Single Page Application
+@app.get("/workspace")
+@app.get("/plans")
+@app.get("/guide")
+@app.get("/profile")
+def serve_spa_pages():
+    return FileResponse("static/index.html")
+
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
