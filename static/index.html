@@ -1017,7 +1017,7 @@ select#mode { display:none; }
     <a id="nav-app" href="/workspace" onclick="event.preventDefault(); showView('app')">Workspace</a>
     <a id="nav-plans" href="/plans" onclick="event.preventDefault(); showView('plans')">Plans</a>
     <a id="nav-guide" href="/guide" onclick="event.preventDefault(); showView('guide')">Guide</a>
-    <a id="nav-profile" style="display:none" href="/profile" onclick="event.preventDefault(); showView('profile')">Account</a>
+    <a id="nav-profile" style="display:none" href="/account" onclick="event.preventDefault(); showView('profile')">Account</a>
   </div>
 
   <div class="nav-right">
@@ -1040,7 +1040,7 @@ select#mode { display:none; }
   <a href="/workspace" onclick="event.preventDefault(); showView('app')">Workspace</a>
   <a href="/plans" onclick="event.preventDefault(); showView('plans')">Plans</a>
   <a href="/guide" onclick="event.preventDefault(); showView('guide')">Guide</a>
-  <a id="mobile-profile-link" style="display:none" href="/profile" onclick="event.preventDefault(); showView('profile')">Account</a>
+  <a id="mobile-profile-link" style="display:none" href="/account" onclick="event.preventDefault(); showView('profile')">Account</a>
   <a id="mobile-auth-link" href="#" onclick="event.preventDefault(); handleNavAuthClick()">Sign In / Register</a>
 </div>
 
@@ -1898,7 +1898,7 @@ function showView(id, pushToHistory = true){
 
   // Change the URL without reloading the page
   if (pushToHistory) {
-    const urlMap = { 'home': '/', 'app': '/workspace', 'plans': '/plans', 'guide': '/guide', 'profile': '/profile' };
+    const urlMap = { 'home': '/', 'app': '/workspace', 'plans': '/plans', 'guide': '/guide', 'profile': '/account' };
     window.history.pushState({ view: id }, '', urlMap[id] || '/');
   }
 }
@@ -1919,7 +1919,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (path.includes('/workspace')) startView = 'app';
   else if (path.includes('/plans')) startView = 'plans';
   else if (path.includes('/guide')) startView = 'guide';
-  else if (path.includes('/profile')) startView = 'profile';
+  else if (path.includes('/account')) startView = 'profile';
   
   showView(startView, false);
 });

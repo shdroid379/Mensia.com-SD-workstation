@@ -304,7 +304,7 @@ def get_robots():
 @app.get("/workspace")
 @app.get("/plans")
 @app.get("/guide")
-@app.get("/profile")
+@app.get("/account")
 def serve_spa_pages():
     return FileResponse("static/index.html")
 
