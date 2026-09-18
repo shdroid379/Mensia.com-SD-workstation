@@ -11,8 +11,8 @@ from ai_instructions import (
     casual_input,
     search_input,
     deep_input,
-    mistral_instructions,
-    mistral_prompt
+    deep_research_auditor_instructions,
+    deep_research_auditor_prompt
 )
 from google import genai
 from google.genai import types
@@ -26,14 +26,14 @@ def gemini_audit(prompt, context, outcome, mode):
         
         response = client.models.generate_content(
             model=audit_model,
-            contents=mistral_prompt.format(
+            contents=deep_research_auditor_prompt.format(
                 prompt=prompt,
                 context=context,
                 mode=mode,
                 outcome=outcome
             ),
             config=types.GenerateContentConfig(
-                system_instruction=mistral_instructions,
+                system_instruction=deep_research_auditor_instructions,
                 temperature=0.0,
                 max_output_tokens=3250
             )
@@ -88,7 +88,7 @@ def ai_summary(prompt, context="", mode="casual", history=None):
             return outcome
 
         elif mode.lower() == "deep research":
-            # DEEP RESEARCH - Actively audited by Gemini 3.1 Pro
+            # DEEP RESEARCH - Draft by Lite, audited by Gemini 3.1 Pro
             outcome = client.models.generate_content(
                 model="gemini-3.5-flash-lite",
                 contents=deep_input.format(prompt=prompt, context=context),

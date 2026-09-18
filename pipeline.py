@@ -6,64 +6,9 @@ from dotenv import load_dotenv
 env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=env_path, override=True)
 
-from exa_py import Exa
-from tavily import TavilyClient
-from linkup import LinkupClient
+from mcp_client import call_exa_async, call_tavily_async, call_you_async
 
 
-class Search_pipeline():
-    def __init__(self, prompt):
-        self.prompt = prompt
-
-    def exa_search(self):
-        client1 = Exa(api_key=os.getenv("EXA_API_KEY"))
-        response = client1.search(self.prompt, num_results=5, contents={"text": {"max_characters": 4500}}, type="neural")
-        return [(item.url, item.text or "") for item in response.results]
-
-    def exa_deep_research(self):
-        client1 = Exa(api_key=os.getenv("EXA_API_KEY"))
-        response = client1.search(self.prompt, type="deep", num_results=7, contents={"text": {"max_characters": 5000}})
-        return [(item.url, item.text or "") for item in response.results]
-
-    def tavily_search(self):
-        client2 = TavilyClient(api_key=os.getenv("TAVILY_KEY"))
-        answer = client2.search(
-            query=self.prompt,
-            max_results=5,
-            search_depth="basic",
-            chunks_per_source="auto"          
-        )
-        return [(item['url'], item['content']) for item in answer.get("results", [])]
-
-    def tavily_deep_research(self):
-        client2 = TavilyClient(api_key=os.getenv("TAVILY_KEY"))
-        answer = client2.search(
-            query=self.prompt,
-            max_results=7,
-            search_depth="advanced",
-            chunks_per_source="auto"          
-        )
-        return [(item['url'], item['content']) for item in answer.get("results", [])]
-
-    def linkup_search(self):
-        client3 = LinkupClient(api_key=os.getenv("LINKUP_KEY"))
-        output = client3.search(
-            query=self.prompt,
-            depth="standard",
-            output_type="searchResults",
-            max_results=5
-        )            
-        return [(item.url, item.content) for item in output.results]
-
-    def linkup_deep_research(self):
-        client14 = LinkupClient(api_key=os.getenv("LINKUP_KEY"))
-        output = client14.search(
-            query=self.prompt,
-            depth="deep",
-            output_type="searchResults",
-            max_results=6
-        )
-        return [(item.url, item.content) for item in output.results]
 def _format(items: list[tuple[str, str]]):
     combined = ""
     sources = []
@@ -80,27 +25,38 @@ def _format(items: list[tuple[str, str]]):
     return combined, sources
 
 
-def basic_search(prompt: str):
-    search = Search_pipeline(prompt)
+async def basic_search(prompt: str):
+    """Search mode: sequential fallback Exa -> Tavily -> You.com.
+    Each call goes through its respective MCP server. Fully async.
+    """
+    # 1. Try Exa first
     try:
-        exa_result = search.exa_search()
-        if exa_result:
-            return _format(exa_result)
+        result = await call_exa_async(prompt, count=5, mode="neural")
+        if not result.get("error") and result.get("results"):
+            items = [(r["url"], r.get("text", "")) for r in result["results"]]
+            if items:
+                return _format(items)
     except Exception as e:
-        print(f"Exa failed due to {e}, trying Tavily now...")
+        print(f"Exa MCP failed: {e}, trying Tavily...")
 
+    # 2. Try Tavily
     try:
-        tavily_result = search.tavily_search()
-        if tavily_result:
-            return _format(tavily_result)
+        result = await call_tavily_async(prompt, count=5, search_depth="basic")
+        if not result.get("error") and result.get("results"):
+            items = [(r["url"], r.get("content", "")) for r in result["results"]]
+            if items:
+                return _format(items)
     except Exception as e:
-        print(f"Tavily failed too due to {e}, trying Linkup now...")
+        print(f"Tavily MCP failed too: {e}, trying You.com...")
 
+    # 3. Try You.com
     try:
-        linkup_result = search.linkup_search()
-        if linkup_result:
-            return _format(linkup_result)
+        result = await call_you_async(prompt, count=5)
+        if not result.get("error") and result.get("results"):
+            items = [(r["url"], r.get("content", "")) for r in result["results"]]
+            if items:
+                return _format(items)
     except Exception as e:
-        print(f"Linkup failed too due to {e}.")
+        print(f"You.com MCP failed too: {e}.")
 
     return "All search engines failed. Sorry for inconvenience, please try again later.", []

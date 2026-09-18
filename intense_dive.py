@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import asyncio
 import urllib.parse
 from pathlib import Path
@@ -9,27 +10,26 @@ env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(dotenv_path=env_path, override=False)
 
 import httpx
-from exa_py import AsyncExa
-from tavily import AsyncTavilyClient
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
-from mistralai.client import Mistral
+from google import genai
 
 from ai_instructions import (
-    mistral_synthesis_instructions,
-    mistral_synthesis_prompt,
-    audit_synthesis_instructions,
-    audit_synthesis_prompt
+    intense_dive_synthesis_instructions,
+    intense_dive_synthesis_prompt,
+    intense_dive_auditor_instructions,
+    intense_dive_auditor_prompt
 )
+
+from exa_py import AsyncExa
+from tavily import AsyncTavilyClient
 
 exakey = AsyncExa(api_key=os.getenv("EXA_API_KEY"))
 tavilykey = AsyncTavilyClient(api_key=os.getenv("TAVILY_KEY"))
 
-# Debug: verify remaining primary keys are loaded
-
 # =====================================================================
-# 1. SCRAPERS (No Individual UI Updates)
+# 1. SCRAPERS (Direct async SDK calls - no MCP)
 # =====================================================================
 
 async def fetch_tavily_dossier(query: str):
@@ -40,7 +40,7 @@ async def fetch_tavily_dossier(query: str):
         include_raw_content="markdown",
         include_answer="advanced"
     )
-    summary = f"FIRST PRE-SYNTHESIZED PERSPECTIVE:\n{response.get('answer', 'No answer provided')}\n\n" 
+    summary = f"FIRST PRE-SYNTHESIZED PERSPECTIVE:\n{response.get('answer', 'No answer provided')}\n\n"
     sources = []
     for res in response.get("results", []):
         sources.append({
@@ -55,54 +55,50 @@ async def fetch_exa_dossier(query: str):
         num_results=10,
         contents={"text": {"verbosity": "full"}, "subpages": 2},
         type="deep-reasoning"
-    ) 
+    )
     sources = []
     for res in response.results:
         sources.append({"url": res.url, "content": res.text})
     return ("Second Plug", "", sources)
 
-async def fetch_linkup_dossier(query: str, client: httpx.AsyncClient):
-    headers = {"Authorization": f"Bearer {os.getenv('LINKUP_KEY')}"}
 
-    init_res = await client.post(
-        "https://api.linkup.so/v1/research",
-        headers=headers,
-        json={
-            "q": query,
-            "mode": "investigate",
-            "reasoning_depth": "M",
-            "outputType": "sourcedAnswer"
-        }
-    )
-    task_id = init_res.json().get('id')
-    if not task_id:
-        return ("Third Plug", "No dossier available from this source.", [])
+async def fetch_you_dossier(query: str, client: httpx.AsyncClient, status_cb=None):
+    """You.com research via REST API (direct httpx call)."""
+    api_key = os.getenv("YOU_API_KEY")
+    if not api_key:
+        return ("Third Plug", "THIRD PLUG FAILED: YOU_API_KEY not configured\n\n", [])
 
-    attempts = 0
-    max_attempts = 180
+    try:
+        init_res = await client.post(
+            "https://api.you.com/v1/research",
+            headers={
+                "X-API-Key": api_key,
+                "Content-Type": "application/json",
+            },
+            json={
+                "input": query,
+                "research_effort": "standard",
+            },
+        )
+        init_res.raise_for_status()
+        data = init_res.json()
 
-    while attempts < max_attempts:
-        poll_res = await client.get(f"https://api.linkup.so/v1/research/{task_id}", headers=headers)
-        job = poll_res.json()
-                
-        if job.get("status") == "completed":
-            dossier_text = job.get("answer", job.get("output", "No text generated."))
-            summary = f"THIRD PLUG AUTONOMOUS DOSSIER:\n{dossier_text}\n\n"
-            sources = []
-            for src in job.get("sources", []):
-                sources.append({
-                    "url": src.get('url', ''),
-                    "content": src.get('snippet', src.get('content', ''))
-                })
-            return ("Third Plug", summary, sources)
-            
-        elif job.get("status") == "failed":
-            return ("Third Plug", f"THIRD PLUG FAILED: {job.get('error')}\n\n", [])
-            
-        attempts += 1
-        await asyncio.sleep(5)
-        
-    return ("Third Plug", "THIRD PLUG TIMEOUT: Agent exceeded maximum run window.\n\n", [])
+        output = data.get("output") or {}
+        dossier_text = output.get("content", "No text generated.")
+        summary = f"THIRD PLUG AUTONOMOUS DOSSIER:\n{dossier_text}\n\n"
+
+        sources = []
+        for src in output.get("sources", []):
+            sources.append({
+                "url": src.get("url", ""),
+                "content": src.get("snippets", [""])[0] if src.get("snippets") else src.get("title", ""),
+            })
+
+        return ("Third Plug", summary, sources)
+    except Exception as e:
+        print(f"You.com dossier failed: {e}")
+        return ("Third Plug", f"THIRD PLUG FAILED: {e}\n\n", [])
+
 
 async def semantic_scholar_data(query: str, client: httpx.AsyncClient):
     url = "https://api.semanticscholar.org/graph/v1/paper/search"
@@ -114,7 +110,7 @@ async def semantic_scholar_data(query: str, client: httpx.AsyncClient):
     res = await client.get(url, params=params)
     dossier = "ACADEMIC LITERATURE DATA:\n"
     sources = []
-    
+
     if res.status_code == 200:
         for paper in res.json().get("data", []):
             authors = ", ".join([a["name"] for a in paper.get("authors", [])])
@@ -122,12 +118,12 @@ async def semantic_scholar_data(query: str, client: httpx.AsyncClient):
             p_url = paper.get("url") or ""
             title = paper.get("title") or "Academic Paper"
             abstract = paper.get("abstract") or ""
-            
+
             dossier += f"Title: {title} ({paper.get('year')})\n"
             dossier += f"Authors: {authors} | Citations: {paper.get('citationCount')}\n"
             dossier += f"TLDR: {tldr}\n"
             dossier += f"Abstract: {abstract}\n\n"
-            
+
             if p_url:
                 sources.append({
                     "url": p_url,
@@ -167,12 +163,23 @@ def compile_and_deduplicate(results: list, status_cb=None):
                     seen_urls.add(clean_url)
                     domain = urllib.parse.urlparse(url).netloc.replace("www.", "") or clean_url.split("/")[0]
                     sources.append({"id": idx, "url": url, "domain": domain})
-                    
-                    # Numbered citation header so models map claims to [idx]
+
                     master_dossier += f"[{idx}] Source ({url}):\n{content[:5000]}\n\n"
                     idx += 1
 
     return master_dossier, sources
+
+
+def _replace_failed_plugs(results: list, plug_names: tuple[str, ...]) -> list:
+    normalized_results = []
+    for plug_name, result in zip(plug_names, results):
+        if isinstance(result, Exception):
+            print(f"{plug_name} failed: {result}")
+            normalized_results.append((plug_name, f"{plug_name} unavailable: {result}\n\n", []))
+        else:
+            normalized_results.append(result)
+    return normalized_results
+
 
 async def fetch_combined_dossier_with_academic_papers(query: str, status_cb=None):
     if status_cb:
@@ -181,9 +188,11 @@ async def fetch_combined_dossier_with_academic_papers(query: str, status_cb=None
         results = await asyncio.gather(
             fetch_tavily_dossier(query),
             fetch_exa_dossier(query),
-            fetch_linkup_dossier(query, http_client),
-            semantic_scholar_data(query, http_client)
+            fetch_you_dossier(query, http_client, status_cb),
+            semantic_scholar_data(query, http_client),
+            return_exceptions=True,
         )
+        results = _replace_failed_plugs(results, ("First Plug", "Second Plug", "Third Plug", "Semantic Scholar"))
         return compile_and_deduplicate(results, status_cb)
 
 async def fetch_combined_dossier(query: str, status_cb=None):
@@ -193,8 +202,10 @@ async def fetch_combined_dossier(query: str, status_cb=None):
         results = await asyncio.gather(
             fetch_tavily_dossier(query),
             fetch_exa_dossier(query),
-            fetch_linkup_dossier(query, http_client)
+            fetch_you_dossier(query, http_client, status_cb),
+            return_exceptions=True,
         )
+        results = _replace_failed_plugs(results, ("First Plug", "Second Plug", "Third Plug"))
         return compile_and_deduplicate(results, status_cb)
 
 # =====================================================================
@@ -205,96 +216,99 @@ async def synthesize_with_mistral(query: str, master_dossier: str, status_cb=Non
     if status_cb:
         status_cb("SYNTHESIZING THE SYNTHESIS...")
 
-    try:
-        mistral_client = Mistral(api_key=os.getenv("MISTRAL_API_KEY"))
-        formatted_user_prompt = mistral_synthesis_prompt.format(
-            query=query, 
-            master_dossier=master_dossier
-        )
+    formatted_user_prompt = intense_dive_synthesis_prompt.format(
+        query=query,
+        master_dossier=master_dossier
+    )
 
-        response = await mistral_client.chat.complete_async(
-            model="mistral-small-latest",
-            messages=[
-                {"role": "system", "content": mistral_synthesis_instructions},
-                {"role": "user", "content": formatted_user_prompt}
-            ]
+    try:
+        gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        response = await gemini_client.aio.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=formatted_user_prompt,
+            config=genai.types.GenerateContentConfig(
+                system_instruction=intense_dive_synthesis_instructions,
+                temperature=0.1,
+                max_output_tokens=16384,
+            )
         )
-        return response.choices[0].message.content
+        return response.text
     except Exception as e:
-        print(f"Mistral synthesis error: {e}")
-        return master_dossier
+        print(f"Gemini synthesis error: {e}")
+        try:
+            return await _complete_with_fallback([
+                {"role": "system", "content": intense_dive_synthesis_instructions},
+                {"role": "user", "content": formatted_user_prompt},
+            ])
+        except Exception as fallback_error:
+            print(f"LLM synthesis fallback failed: {fallback_error}")
+            return master_dossier
+
+def _final_completion_text(response) -> str:
+    """Return visible assistant text, rejecting incomplete reasoning-only replies."""
+    if not response.choices:
+        raise ValueError("provider returned no choices")
+
+    raw_output = response.choices[0].message.content
+    if not isinstance(raw_output, str):
+        raise ValueError("provider returned reasoning but no final answer")
+
+    cleaned_output = re.sub(r"<think>.*?</think>", "", raw_output, flags=re.DOTALL).strip()
+    if not cleaned_output:
+        raise ValueError("provider returned an empty final answer")
+    return cleaned_output
+
+
+FALLBACK_LLM_PROVIDERS = (
+    ("OpenRouter (Nemotron Ultra 550B)", "OPENROUTER_API_KEY", "https://openrouter.ai/api/v1", "nvidia/nemotron-3-ultra-550b-a55b:free"),
+    ("CometAPI (GLM-5.3-Flash)", "COMET_API_KEY", "https://api.cometapi.com/v1", "glm-5.3-flash"),
+    ("MorphLLM (GLM-5.3-744B)", "MORPH_API_KEY", "https://api.morphllm.com/v1", "morph-glm53-744b"),
+    ("FinalRouter (DeepSeek V4 Flash)", "FINAL_ROUTER", "https://finalrouter.com/api/v1", "deepseek/deepseek-v4-flash"),
+    ("Requesty (Nemotron 3 Ultra)", "REQUESTY_API_KEY", "https://router.requesty.ai/v1", "nvidia/nemotron-3-ultra-550b-a55b"),
+    ("Z.ai (GLM-5.3-Flash)", "ZAI_API_KEY", "https://api.z.ai/api/paas/v4", "glm-5.3-flash"),
+)
+
+
+async def _complete_with_fallback(messages: list[ChatCompletionMessageParam]) -> str:
+    for provider_name, key_name, base_url, model in FALLBACK_LLM_PROVIDERS:
+        api_key = os.getenv(key_name)
+        if not api_key:
+            print(f"{provider_name} skipped: {key_name} is not configured")
+            continue
+
+        try:
+            client = AsyncOpenAI(api_key=api_key, base_url=base_url)
+            response = await client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.1,
+                max_tokens=8192,
+            )
+            return _final_completion_text(response)
+        except Exception as e:
+            print(f"{provider_name} failed: {e}")
+
+    raise RuntimeError("all fallback LLM providers failed")
+
 
 async def audit_the_synthesis(query: str, draft_dossier: str, status_cb=None) -> str:
     if status_cb:
         status_cb("AUDITING THE DOSSIER...")
 
-    formatted_user_prompt = audit_synthesis_prompt.format(
+    formatted_user_prompt = intense_dive_auditor_prompt.format(
         query=query,
         draft_dossier=draft_dossier
     )
-
     messages: list[ChatCompletionMessageParam] = [
-        {"role": "system", "content": audit_synthesis_instructions},
+        {"role": "system", "content": intense_dive_auditor_instructions},
         {"role": "user", "content": formatted_user_prompt}
-    ] 
+    ]
 
-    # 1. Primary Endpoint: CometAPI (Kimi K2)
     try:
-        client_comet = AsyncOpenAI(
-            api_key=os.getenv("COMET_API_KEY"),
-            base_url="https://api.cometapi.com/v1" 
-        )
-        res = await client_comet.chat.completions.create(
-            model="kimi-k2-250905", 
-            messages=messages,
-            temperature=0.1,
-            max_tokens=8192 
-        )
-        
-        raw_output = res.choices[0].message.content or ""
-        
-        # Strip out Kimi K2's internal <think> blocks
-        cleaned_output = re.sub(r'<think>.*?</think>', '', raw_output, flags=re.DOTALL).strip()
-        return cleaned_output
-
+        return await _complete_with_fallback(messages)
     except Exception as e:
-        print(f"CometAPI (Kimi K2) failed: {e}")
+        print(f"LLM audit fallback failed: {e}")
 
-    # 2. First Fallback: MorphLLM (GLM-5.3-Flash)
-    try:
-        client_morph = AsyncOpenAI(
-            api_key=os.getenv("MORPH_API_KEY"),
-            base_url="https://api.morphllm.com/v1" 
-        )
-        res = await client_morph.chat.completions.create(
-            model="morph-glm53flash", 
-            messages=messages,
-            temperature=0.1,
-            max_tokens=8192
-        )
-        raw_output = res.choices[0].message.content or ""
-        return re.sub(r'<think>.*?</think>', '', raw_output, flags=re.DOTALL).strip()
-    except Exception as e:
-        print(f"MorphLLM (GLM-5.3-Flash) failed: {e}")
-
-    # 3. Last Resort: FinalRouter (DeepSeek V4 Flash)
-    try:
-        client_final = AsyncOpenAI(
-            api_key=os.getenv("FINALROUTER_API_KEY"),
-            base_url="https://finalrouter.com/api/v1" 
-        )
-        res = await client_final.chat.completions.create(
-            model="deepseek-ai/DeepSeek-V4-Flash", 
-            messages=messages,
-            temperature=0.1,
-            max_tokens=8192
-        )
-        raw_output = res.choices[0].message.content or ""
-        return re.sub(r'<think>.*?</think>', '', raw_output, flags=re.DOTALL).strip()
-    except Exception as e:
-        print(f"FinalRouter (DeepSeek V4 Flash) failed: {e}")
-
-    # 4. Absolute Failsafe: Return the Un-Audited Draft silently
     return draft_dossier
 
 # Backward compatibility alias

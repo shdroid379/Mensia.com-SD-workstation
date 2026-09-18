@@ -1,6 +1,5 @@
 import os
 import json
-import uuid
 import asyncio
 from datetime import date
 from fastapi import FastAPI, Request, Header, Depends
@@ -24,7 +23,6 @@ logger = logging.getLogger(__name__)
 import pipeline
 import ai_answer
 import deep_multi_fetch
-import intense_dive
 import doc_builder
 
 # =====================================================================
@@ -100,9 +98,8 @@ def log_interaction(user: dict, session_id: str, mode: str, question: str, answe
     )
 
 # =====================================================================
-# 3. API ENDPOINTS & LIVE BACKGROUND TASKS
+# 3. API ENDPOINTS
 # =====================================================================
-intense_dive_tasks = {}
 
 @app.get("/limits")
 async def get_limits(user: dict = Depends(get_current_user)):
@@ -114,15 +111,12 @@ async def get_limits(user: dict = Depends(get_current_user)):
             "casual": 0,
             "search": 0,
             "deep research": 0,
-            "total_lifetime": 15,            
-            "intense_dive_unlocked": True,    
-            "intense_dive_available": True
+            "total_lifetime": 15
         },
         "exhausted": {
             "casual": False,
             "search": False,
-            "deep research": False,
-            "intense dive": False
+            "deep research": False
         }
     }
 
@@ -136,7 +130,6 @@ class Question(BaseModel):
     question: str
     mode: str = "casual"
     session_id: str
-    include_academic: bool = False
 
 def rephrase_if_followup(question: str, session_id: str) -> str:
     history = histories.get(session_id, [])
@@ -167,7 +160,7 @@ async def ask(q: Question, request: Request, user: dict = Depends(get_current_us
     if await request.is_disconnected(): return {"error": "Aborted"}
 
     if mode == "search":
-        context, sources = await asyncio.to_thread(pipeline.basic_search, rephrased)
+        context, sources = await pipeline.basic_search(rephrased)
     else:
         context, sources = "", []
         mode = "casual"
@@ -205,68 +198,6 @@ async def deep_research(q: Question, request: Request, user: dict = Depends(get_
     log_interaction(user, q.session_id, mode, q.question, answer)
     
     return {"answer": answer, "sources": sources}
-
-# =====================================================================
-# INTENSE DIVE WITH PROGRAMMATIC SOURCES
-# =====================================================================
-@app.post("/intense-dive")
-async def intense_dive_endpoint(q: Question, user: dict = Depends(get_current_user)):
-    task_id = str(uuid.uuid4())
-    intense_dive_tasks[task_id] = {
-        "status": "processing",
-        "message": "PULLING SOURCES ACROSS PLUGS...",
-        "result": None,
-        "sources": [],
-        "error": None
-    }
-
-    def update_task_message(msg: str):
-        if task_id in intense_dive_tasks:
-            intense_dive_tasks[task_id]["message"] = msg
-
-    async def run_pipeline():
-        try:
-            rephrased = await asyncio.to_thread(rephrase_if_followup, q.question, q.session_id)
-            
-            if q.include_academic:
-                context, sources = await intense_dive.fetch_combined_dossier_with_academic_papers(rephrased, update_task_message)
-            else:
-                context, sources = await intense_dive.fetch_combined_dossier(rephrased, update_task_message)
-                
-            draft = await intense_dive.synthesize_with_mistral(rephrased, context, update_task_message)
-            final_report = await intense_dive.audit_the_synthesis(rephrased, draft, update_task_message)
-
-            # Store both result and structured sources for frontend rendering
-            intense_dive_tasks[task_id]["result"] = final_report
-            intense_dive_tasks[task_id]["sources"] = sources
-            intense_dive_tasks[task_id]["status"] = "completed"
-            intense_dive_tasks[task_id]["message"] = "THE DOSSIER IS READY."
-
-            histories.setdefault(q.session_id, []).append([q.question, final_report])
-            
-            # Log the interaction for Intense Dive
-            log_interaction(user, q.session_id, "intense dive", q.question, final_report)
-            
-        except Exception as e:
-            intense_dive_tasks[task_id]["status"] = "failed"
-            intense_dive_tasks[task_id]["error"] = str(e)
-            logger.error(f"Intense Dive failed for session {q.session_id}: {str(e)}")
-
-    asyncio.create_task(run_pipeline())
-    return {"task_id": task_id, "status": "processing"}
-
-@app.get("/intense-dive/status/{task_id}")
-async def get_intense_dive_status(task_id: str):
-    task = intense_dive_tasks.get(task_id)
-    if not task:
-        return {"status": "not_found", "message": "Task not found"}
-    return {
-        "status": task.get("status"),
-        "message": task.get("message"),
-        "result": task.get("result"),
-        "sources": task.get("sources", []),
-        "error": task.get("error")
-    }
 
 # =====================================================================
 # 4. DOCUMENT EXPORT ENDPOINTS
