@@ -12,7 +12,8 @@ import firebase_admin
 from firebase_admin import credentials, auth
 import logging
 from datetime import datetime, timezone
-
+from fastapi import FastAPI, Request, Header, Depends, UploadFile, File
+import httpx
 # Configure logging so Render captures it instantly
 logging.basicConfig(
     level=logging.INFO,
@@ -119,6 +120,41 @@ async def get_limits(user: dict = Depends(get_current_user)):
             "deep research": False
         }
     }
+
+
+@app.post("/api/transcribe")
+async def transcribe_audio(audio: UploadFile = File(...)):
+    DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
+    if not DEEPGRAM_API_KEY:
+        return {"error": "Deepgram API key not configured"}
+        
+    # Deepgram Nova-3 API syntax with multi-language detection
+    url = "https://api.deepgram.com/v1/listen?model=nova-3&detect_language=true"
+    
+    headers = {
+        "Authorization": f"Token {DEEPGRAM_API_KEY}",
+        "Content-Type": audio.content_type or "audio/webm"
+    }
+    
+    async with httpx.AsyncClient() as client:
+        content = await audio.read()
+        try:
+            # Setting a 30s timeout prevents the frontend from hanging
+            response = await client.post(url, headers=headers, content=content, timeout=30.0)
+            response.raise_for_status()
+            data = response.json()
+            
+            try:
+                transcript = data["results"]["channels"][0]["alternatives"][0]["transcript"]
+            except (KeyError, IndexError):
+                transcript = ""
+                
+            return {"transcript": transcript}
+            
+        except Exception as e:
+            logger.error(f"Deepgram Nova-3 transcription failed: {e}")
+            return {"transcript": ""}
+
 
 @app.get("/health")
 def health_check():

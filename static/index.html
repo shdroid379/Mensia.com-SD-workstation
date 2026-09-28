@@ -235,6 +235,24 @@ img { display:block; max-width:100%; }
 .reveal-delay-2 { transition-delay:0.2s; }
 .reveal-delay-3 { transition-delay:0.3s; }
 
+
+/* Dynamic Visualizer Settings */
+#audio-visualizer-container {
+    display: none; 
+    width: 100%; 
+    height: 44px; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 4px; 
+    padding: 0 16px;
+}
+.vis-bar {
+    width: 4px;
+    background-color: var(--ink);
+    border-radius: 2px;
+    height: 4px; /* Base height for silence */
+    transition: height 0.05s ease;
+}
 /* ============================================================
    AUTH MODAL & OVERLAYS
    ============================================================ */
@@ -1607,6 +1625,9 @@ select#mode { display:none; }
           </div>    
         </div>
 
+        
+        <div id="audio-visualizer-container"></div>
+        
         <textarea id="question" rows="1" placeholder="Define the parameters of your research... (press / to focus)" oninput="autoResize(this)" onkeydown="checkEnter(event)"></textarea>
         
         <div class="input-bottom-row">
@@ -1621,7 +1642,21 @@ select#mode { display:none; }
               <span id="loader-text">Synthesizing</span>
               <div class="loader-dots"><span></span><span></span><span></span></div>
             </div>
-            <button class="icon-btn" id="mic-btn" onclick="toggleVoiceInput()" title="Voice input"><i class="fa-solid fa-microphone"></i></button>
+            
+            <!-- Upgraded Mic / Stop Button -->
+            <button class="icon-btn" id="mic-btn" onclick="toggleVoiceInput()" title="Voice input">
+                <!-- Innovative Handheld Stage Mic SVG -->
+                <svg id="mic-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+                    <path d="M17.5 6.5l-4-4a4.24 4.24 0 0 0-6 6l4 4a4.24 4.24 0 0 0 6-6z"></path>
+                    <path d="M11 13L3 21l3 3 8-8"></path>
+                </svg>
+                <!-- Stop Square SVG (Hidden initially) -->
+                <svg id="mic-stop-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="14" height="14" style="display: none;">
+                    <rect x="5" y="5" width="14" height="14" rx="2" ry="2"></rect>
+                </svg>
+            </button>
+            
+            <!-- Send button remains permanent -->
             <button class="stop-btn" id="stop-btn" onclick="stopGeneration()" title="Stop"><i class="fa-solid fa-stop"></i></button>
             <button class="send-btn" id="send-btn" onclick="ask()" title="Send"><i class="fa-solid fa-arrow-up"></i></button>
           </div>
@@ -2123,18 +2158,127 @@ function escHtml(s){const d=document.createElement('div');d.innerText=s||'';retu
 function autoResize(ta){ta.style.height='auto';ta.style.height=ta.scrollHeight+'px';}
 function checkEnter(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask();}}
 
-let recognition=null,isRecording=false;
-function toggleVoiceInput(){
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){showToast("Voice input not supported in this browser.","error");return;}
-  if(!recognition){
-    recognition=new SR();
-    recognition.onresult=e=>{const q=document.getElementById('question');q.value=e.results[0][0].transcript;autoResize(q);};
-    recognition.onend=()=>{isRecording=false;document.getElementById('mic-btn')?.classList.remove('recording');};
+/* ============================================================
+   DEEPGRAM NOVA-3 VOICE RECORDING & VISUALIZER
+   ============================================================ */
+let mediaRecorder = null;
+let audioChunks = [];
+let audioContext = null;
+let analyser = null;
+let dataArray = null;
+let animationId = null;
+let isRecording = false;
+
+async function toggleVoiceInput() {
+  const micBtn = document.getElementById('mic-btn');
+  const micSvg = document.getElementById('mic-svg');
+  const micStopSvg = document.getElementById('mic-stop-svg');
+  const visualizer = document.getElementById('audio-visualizer-container');
+  const chatInput = document.getElementById('question');
+
+  if (isRecording) {
+    // STOP RECORDING
+    isRecording = false;
+    mediaRecorder.stop();
+    cancelAnimationFrame(animationId);
+    if (audioContext && audioContext.state !== 'closed') audioContext.close();
+    
+    // UI Reset
+    micBtn.classList.remove('recording');
+    micSvg.style.display = 'block';
+    micStopSvg.style.display = 'none';
+    visualizer.style.display = 'none';
+    chatInput.style.display = 'block';
+    
+    chatInput.value = "";
+    chatInput.placeholder = "Transcribing...";
+    return;
   }
-  if(isRecording){recognition.stop();}else{recognition.start();isRecording=true;document.getElementById('mic-btn')?.classList.add('recording');}
+
+  // START RECORDING
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = processAudio;
+    
+    // Setup Audio Visualizer
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 64;
+    source.connect(analyser);
+    dataArray = new Uint8Array(analyser.frequencyBinCount);
+    
+    // Generate bars if not already present
+    if (visualizer.children.length === 0) {
+        for (let i = 0; i < 16; i++) {
+            const bar = document.createElement('div');
+            bar.className = 'vis-bar';
+            visualizer.appendChild(bar);
+        }
+    }
+    
+    mediaRecorder.start();
+    isRecording = true;
+    
+    // Swap UI to visualizer
+    micBtn.classList.add('recording');
+    micSvg.style.display = 'none';
+    micStopSvg.style.display = 'block';
+    chatInput.style.display = 'none';
+    visualizer.style.display = 'flex';
+    
+    visualize();
+  } catch (err) {
+    console.error("Microphone access denied:", err);
+    showToast("Please grant microphone permissions.", "error");
+  }
 }
 
+function visualize() {
+  if (!isRecording) return;
+  animationId = requestAnimationFrame(visualize);
+  analyser.getByteFrequencyData(dataArray);
+  
+  const bars = document.querySelectorAll('.vis-bar');
+  bars.forEach((bar, index) => {
+      const val = dataArray[index] || 0;
+      // Scales dynamically up to 36px based on volume
+      const height = Math.max(4, (val / 255) * 36);
+      bar.style.height = `${height}px`;
+  });
+}
+
+async function processAudio() {
+  const chatInput = document.getElementById('question');
+  const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+  const formData = new FormData();
+  formData.append('audio', audioBlob, 'recording.webm');
+  
+  try {
+      const response = await fetch('/api/transcribe', { method: 'POST', body: formData });
+      const data = await response.json();
+      
+      if (data.transcript && data.transcript.trim() !== '') {
+          chatInput.value = data.transcript;
+          chatInput.placeholder = "Define the parameters of your research... (press / to focus)";
+          autoResize(chatInput);
+      } else {
+          // Error Catch: No words detected
+          chatInput.value = '';
+          chatInput.placeholder = "Sorry, try again. Speak loud and clear!";
+          setTimeout(() => { chatInput.placeholder = "Define the parameters of your research... (press / to focus)"; }, 3000);
+      }
+  } catch (err) {
+      console.error("Transcription error:", err);
+      chatInput.value = '';
+      chatInput.placeholder = "Error connecting to Deepgram server.";
+      setTimeout(() => { chatInput.placeholder = "Define the parameters of your research... (press / to focus)"; }, 3000);
+  }
+}
 /* ============================================================
    MARKDOWN, MATH & SOCIAL SHARE
    ============================================================ */
