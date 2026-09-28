@@ -5,3 +5,4 @@ venv/
 firebase_service_account.json
 firebase_service_accounts.json
 *.json
+artifacts/

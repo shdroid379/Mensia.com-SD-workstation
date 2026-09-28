@@ -138,7 +138,7 @@ async def semantic_scholar_data(query: str, client: httpx.AsyncClient):
 # 2. DEDUPLICATOR & INDEX COMPILER
 # =====================================================================
 
-def compile_and_deduplicate(results: list, status_cb=None):
+def compile_and_deduplicate(results: list, status_cb=None, max_sources: int = 32):
     if status_cb:
         status_cb("DOSSIERING...")
     master_dossier = ""
@@ -153,6 +153,9 @@ def compile_and_deduplicate(results: list, status_cb=None):
         if raw_sources:
             master_dossier += f"--- {source_name.upper()} RAW SOURCE DATA ---\n"
             for src in raw_sources:
+                if idx > max_sources:
+                    break
+
                 url = src.get("url", "")
                 content = src.get("content") or ""
                 if not url or not content:
@@ -164,7 +167,7 @@ def compile_and_deduplicate(results: list, status_cb=None):
                     domain = urllib.parse.urlparse(url).netloc.replace("www.", "") or clean_url.split("/")[0]
                     sources.append({"id": idx, "url": url, "domain": domain})
 
-                    master_dossier += f"[{idx}] Source ({url}):\n{content[:5000]}\n\n"
+                    master_dossier += f"[{idx}] Source ({url}):\n{content[:3000]}\n\n"
                     idx += 1
 
     return master_dossier, sources
@@ -221,28 +224,60 @@ async def synthesize_with_mistral(query: str, master_dossier: str, status_cb=Non
         master_dossier=master_dossier
     )
 
-    try:
-        gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        response = await gemini_client.aio.models.generate_content(
-            model="gemini-3.6-flash",
-            contents=formatted_user_prompt,
-            config=genai.types.GenerateContentConfig(
-                system_instruction=intense_dive_synthesis_instructions,
-                temperature=0.1,
-                max_output_tokens=16384,
-            )
-        )
-        return response.text
-    except Exception as e:
-        print(f"Gemini synthesis error: {e}")
+    messages = [
+        {"role": "system", "content": intense_dive_synthesis_instructions},
+        {"role": "user", "content": formatted_user_prompt},
+    ]
+
+    # Synthesis fallback chain — lightweight models only (NOT the heavy auditor chain)
+    synthesis_providers = (
+        ("Gemini 3.6 Flash", "GEMINI_API_KEY", "gemini-3.6-flash", "gemini"),
+        ("Gemini 3.5 Flash Lite", "GEMINI_API_KEY", "gemini-3.5-flash-lite", "gemini"),
+        ("Mistral Ministral 8B", "MISTRAL_API_KEY", "ministral-8b-latest", "mistral"),
+    )
+
+    for provider_name, key_name, model, provider_type in synthesis_providers:
+        api_key = os.getenv(key_name)
+        if not api_key:
+            print(f"Synthesis: {provider_name} skipped ({key_name} not set)")
+            continue
         try:
-            return await _complete_with_fallback([
-                {"role": "system", "content": intense_dive_synthesis_instructions},
-                {"role": "user", "content": formatted_user_prompt},
-            ])
-        except Exception as fallback_error:
-            print(f"LLM synthesis fallback failed: {fallback_error}")
-            return master_dossier
+            if provider_type == "gemini":
+                gemini_client = genai.Client(api_key=api_key)
+                response = await asyncio.wait_for(
+                    gemini_client.aio.models.generate_content(
+                        model=model,
+                        contents=formatted_user_prompt,
+                        config=genai.types.GenerateContentConfig(
+                            system_instruction=intense_dive_synthesis_instructions,
+                            temperature=0.1,
+                            max_output_tokens=8192,
+                        )
+                    ),
+                    timeout=120.0,
+                )
+                return response.text
+            else:
+                client = AsyncOpenAI(api_key=api_key, base_url="https://api.mistral.ai/v1")
+                response = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        temperature=0.1,
+                        max_tokens=8192,
+                    ),
+                    timeout=120.0,
+                )
+                return _final_completion_text(response)
+        except asyncio.TimeoutError:
+            print(f"Synthesis {provider_name} failed: timed out after 90s")
+            continue
+        except Exception as e:
+            print(f"Synthesis {provider_name} failed: {e}")
+            continue
+
+    print("All synthesis providers failed. Returning raw dossier.")
+    return master_dossier
 
 def _final_completion_text(response) -> str:
     """Return visible assistant text, rejecting incomplete reasoning-only replies."""
@@ -250,27 +285,41 @@ def _final_completion_text(response) -> str:
         raise ValueError("provider returned no choices")
 
     raw_output = response.choices[0].message.content
-    if not isinstance(raw_output, str):
+    reasoning = getattr(response.choices[0].message, "reasoning_content", None) or ""
+
+    # If content is empty but reasoning exists, the model put everything in reasoning
+    if (not raw_output or not raw_output.strip()) and reasoning.strip():
+        raw_output = reasoning
+
+    if not isinstance(raw_output, str) or not raw_output.strip():
         raise ValueError("provider returned reasoning but no final answer")
 
+    # Strip <think>...</think> blocks
     cleaned_output = re.sub(r"<think>.*?</think>", "", raw_output, flags=re.DOTALL).strip()
+    # Strip <think>...</think> blocks
+    cleaned_output = re.sub(r"<think>.*?</think>", "", cleaned_output, flags=re.DOTALL).strip()
+    # Strip <think>...</think> blocks (Gemini-style)
+    cleaned_output = re.sub(r"<think>.*?</think>", "", cleaned_output, flags=re.DOTALL).strip()
+
     if not cleaned_output:
         raise ValueError("provider returned an empty final answer")
     return cleaned_output
 
 
 FALLBACK_LLM_PROVIDERS = (
-    ("OpenRouter (Nemotron Ultra 550B)", "OPENROUTER_API_KEY", "https://openrouter.ai/api/v1", "nvidia/nemotron-3-ultra-550b-a55b:free"),
-    ("CometAPI (GLM-5.3-Flash)", "COMET_API_KEY", "https://api.cometapi.com/v1", "glm-5.3-flash"),
-    ("MorphLLM (GLM-5.3-744B)", "MORPH_API_KEY", "https://api.morphllm.com/v1", "morph-glm53-744b"),
-    ("FinalRouter (DeepSeek V4 Flash)", "FINAL_ROUTER", "https://finalrouter.com/api/v1", "deepseek/deepseek-v4-flash"),
-    ("Requesty (Nemotron 3 Ultra)", "REQUESTY_API_KEY", "https://router.requesty.ai/v1", "nvidia/nemotron-3-ultra-550b-a55b"),
-    ("Z.ai (GLM-5.3-Flash)", "ZAI_API_KEY", "https://api.z.ai/api/paas/v4", "glm-5.3-flash"),
+    # (name, api_key_env, base_url, model, max_tokens)
+    ("LLM7 (MiniMax-M2.7)", "LLM7_API_KEY", "https://api.llm7.io/v1", "minimax-m2.7", 8192),
+    ("LLM7 (GLM-5.3-Flash)", "LLM7_API_KEY", "https://api.llm7.io/v1", "GLM-5.3-Flash", 8192),
+    ("OpenRouter (Nemotron Ultra 550B)", "OPENROUTER_API_KEY", "https://openrouter.ai/api/v1", "nvidia/nemotron-3-ultra-550b-a55b:free", 8192),
+    ("CometAPI (GLM-5.3-Flash)", "COMET_API_KEY", "https://api.cometapi.com/v1", "glm-5.3-flash", 8192),
+    ("MorphLLM (GLM-5.3-744B)", "MORPH_API_KEY", "https://api.morphllm.com/v1", "morph-glm53-744b", 8192),
+    ("FinalRouter (DeepSeek V4 Flash)", "FINAL_ROUTER", "https://finalrouter.com/api/v1", "deepseek/deepseek-v4-flash", 8192),
+    ("Requesty (Nemotron 3 Ultra)", "REQUESTY_API_KEY", "https://router.requesty.ai/v1", "nvidia/nemotron-3-ultra-550b-a55b", 8192),
 )
 
 
-async def _complete_with_fallback(messages: list[ChatCompletionMessageParam]) -> str:
-    for provider_name, key_name, base_url, model in FALLBACK_LLM_PROVIDERS:
+async def _complete_with_fallback(messages: list[ChatCompletionMessageParam], per_provider_timeout: float = 300.0) -> str:
+    for provider_name, key_name, base_url, model, max_tokens in FALLBACK_LLM_PROVIDERS:
         api_key = os.getenv(key_name)
         if not api_key:
             print(f"{provider_name} skipped: {key_name} is not configured")
@@ -278,13 +327,57 @@ async def _complete_with_fallback(messages: list[ChatCompletionMessageParam]) ->
 
         try:
             client = AsyncOpenAI(api_key=api_key, base_url=base_url)
-            response = await client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=0.1,
-                max_tokens=8192,
+
+            # Try streaming first (prevents Cloudflare proxy timeouts)
+            try:
+                stream = await asyncio.wait_for(
+                    client.chat.completions.create(
+                        model=model, messages=messages, temperature=0.1,
+                        max_tokens=max_tokens, stream=True,
+                    ),
+                    timeout=per_provider_timeout,
+                )
+                collected = []
+                reasoning_parts = []
+                reasoning_parts = []
+                async for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta:
+                        delta = chunk.choices[0].delta
+                        if delta.content:
+                            collected.append(delta.content)
+                        rc = getattr(delta, "reasoning_content", None)
+                        if rc:
+                            reasoning_parts.append(rc)
+                full_text = "".join(collected)
+                # If content is empty but reasoning exists, use reasoning as output
+                if not full_text.strip() and reasoning_parts:
+                    full_text = "".join(reasoning_parts)
+                if not full_text.strip():
+                    raise ValueError("empty streamed response")
+                full_text = re.sub(r"<think>.*?</think>", "", full_text, flags=re.DOTALL).strip()
+                full_text = re.sub(r"<think>.*?</think>", "", full_text, flags=re.DOTALL).strip()
+                if not full_text:
+                    raise ValueError("only reasoning blocks")
+                return full_text
+            except (ValueError, Exception) as stream_err:
+                # Streaming failed (e.g. 502 for models that don't support it) — retry non-streaming
+                if "empty" in str(stream_err) or "reasoning" in str(stream_err):
+                    raise stream_err  # Real problem, don't retry
+                print(f"{provider_name} streaming failed ({stream_err}), trying non-streaming...")
+
+            # Non-streaming fallback
+            response = await asyncio.wait_for(
+                client.chat.completions.create(
+                    model=model, messages=messages, temperature=0.1,
+                    max_tokens=max_tokens, stream=False,
+                ),
+                timeout=per_provider_timeout,
             )
             return _final_completion_text(response)
+
+        except asyncio.TimeoutError:
+            print(f"{provider_name} failed: timed out after {per_provider_timeout}s")
+            continue
         except Exception as e:
             print(f"{provider_name} failed: {e}")
 
@@ -295,12 +388,25 @@ async def audit_the_synthesis(query: str, draft_dossier: str, status_cb=None) ->
     if status_cb:
         status_cb("AUDITING THE DOSSIER...")
 
-    formatted_user_prompt = intense_dive_auditor_prompt.format(
-        query=query,
-        draft_dossier=draft_dossier
+    audit_system = (
+        "You are Mensia's Cognitive Auditor. Audit the draft dossier for factual accuracy, "
+        "logical integrity, and citation correctness. Output ONLY the corrected Markdown dossier.\n\n"
+        "OUTPUT LIMIT (CRITICAL): Your token budget is 8,192 tokens (~6,100 words, ~27,000 characters). "
+        "The draft you receive is ~25,000-27,000 characters. You MUST produce output of EQUAL length — "
+        "at least 7,000 tokens (~5,250 words, ~23,000 characters). "
+        "Do NOT truncate, summarize, or compress. If you fix errors, replace with corrected text of EQUAL OR GREATER length.\n\n"
+        "RULES:\n"
+        "1. FACTUAL CHECK: Verify claims against [n] citations. Remove unverifiable claims.\n"
+        "2. LOGICAL CHECK: Flag unsupported causal claims, timeline errors.\n"
+        "3. WORDING: Replace vague language with source-backed statements.\n"
+        "4. CITATIONS: Preserve all [1], [2] brackets exactly. NEVER expand to URLs. NEVER add References.\n"
+        "5. FORMAT: GitHub-Flavored Markdown. Preserve all ## and ### headers, bullets, tables.\n"
+        "6. Output ONLY the corrected dossier. No preamble, no meta-commentary."
     )
+
+    formatted_user_prompt = f"Audit this draft. Fix errors, preserve [n] citations, keep full length.\n\nQuery: {query}\n\nDraft:\n{draft_dossier}"
     messages: list[ChatCompletionMessageParam] = [
-        {"role": "system", "content": intense_dive_auditor_instructions},
+        {"role": "system", "content": audit_system},
         {"role": "user", "content": formatted_user_prompt}
     ]
 

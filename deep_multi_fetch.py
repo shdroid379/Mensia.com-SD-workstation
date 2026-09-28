@@ -1,41 +1,65 @@
 import asyncio
+import os
 import urllib.parse
-from mcp_client import call_exa_async, call_tavily_async, call_you_async
+from pathlib import Path
+from dotenv import load_dotenv
+
+env_path = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=env_path, override=True)
+
+from exa_py import AsyncExa
+from tavily import AsyncTavilyClient
+import httpx
+
+exa_client = AsyncExa(api_key=os.getenv("EXA_API_KEY"))
+tavily_client = AsyncTavilyClient(api_key=os.getenv("TAVILY_KEY"))
 
 
 async def combined_research(prompt):
-    """Deep research: run all three MCP servers in parallel.
-    Exa deep mode, Tavily advanced, You.com standard.
-    """
+    """Deep research: Exa deep + Tavily advanced + You.com standard in parallel."""
 
     async def _exa_deep():
         try:
-            result = await call_exa_async(prompt, count=7, mode="deep")
-            if result.get("error"):
-                raise RuntimeError(result["error"])
-            return [("exa", r["url"], r.get("text", "")) for r in result.get("results", [])]
+            response = await exa_client.search(
+                prompt, type="deep", num_results=7,
+                contents={"text": {"max_characters": 5000}}
+            )
+            return [(item.url, item.text or "") for item in response.results]
         except Exception as e:
-            print(f"Exa deep MCP failed: {e}")
+            print(f"Exa deep failed: {e}")
             return []
 
     async def _tavily_deep():
         try:
-            result = await call_tavily_async(prompt, count=7, search_depth="advanced")
-            if result.get("error"):
-                raise RuntimeError(result["error"])
-            return [("tavily", r["url"], r.get("content", "")) for r in result.get("results", [])]
+            answer = await tavily_client.search(
+                query=prompt, max_results=7,
+                search_depth="advanced", chunks_per_source="auto"
+            )
+            return [(r['url'], r['content']) for r in answer.get("results", [])]
         except Exception as e:
-            print(f"Tavily deep MCP failed: {e}")
+            print(f"Tavily deep failed: {e}")
             return []
 
     async def _you_deep():
+        api_key = os.getenv("YOU_API_KEY")
+        if not api_key:
+            return []
         try:
-            result = await call_you_async(prompt, count=6)
-            if result.get("error"):
-                raise RuntimeError(result["error"])
-            return [("you", r["url"], r.get("content", "")) for r in result.get("results", [])]
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                res = await client.post(
+                    "https://ydc-index.io/v1/search",
+                    headers={"X-API-Key": api_key, "Content-Type": "application/json"},
+                    json={"query": prompt, "count": 6, "livecrawl": "web", "livecrawl_formats": ["markdown"]}
+                )
+                res.raise_for_status()
+                data = res.json()
+                items = []
+                for r in data.get("results", {}).get("web", []):
+                    content = "\n".join(r.get("snippets", [])) or r.get("description", "")
+                    items.append((r.get("url", ""), content))
+                return items
         except Exception as e:
-            print(f"You.com deep MCP failed: {e}")
+            print(f"You.com deep failed: {e}")
             return []
 
     results = await asyncio.gather(
@@ -50,10 +74,10 @@ async def combined_research(prompt):
     sources = []
     idx = 1
 
-    for provider_results in results:
-        if isinstance(provider_results, BaseException) or not provider_results:
+    for item in results:
+        if isinstance(item, BaseException) or not item:
             continue
-        for _provider, url, text in provider_results:
+        for url, text in item:
             if not url or url in seen_urls:
                 continue
             seen_urls.add(url)

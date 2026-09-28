@@ -30,7 +30,7 @@ importlib_metadata==8.7.1
 Jinja2==3.1.6
 jiter==0.16.0
 jsonpath-python==1.1.6
-mcp[cli]>=1.27,<2
+
 markdown-it-py==4.2.0
 MarkupSafe==3.0.3
 mdurl==0.1.2
