@@ -697,6 +697,18 @@ img { display:block; max-width:100%; }
 .act-btn:hover { background:var(--ink); color:var(--bg-color); border-color:var(--ink); }
 .act-btn.danger { color:var(--danger); border-color:var(--danger-soft); }
 .act-btn.danger:hover { background:var(--danger); color:#fff; }
+.extra-access-note { font-size:0.82rem; color:var(--muted); line-height:1.6; margin-bottom:16px; }
+.extra-access-row { display:flex; gap:10px; flex-wrap:wrap; }
+.extra-access-input {
+  flex:1; min-width:220px; text-transform:uppercase; letter-spacing:1.2px;
+  padding:11px 14px; border-radius:var(--radius-sm); border:1px solid var(--glass-border);
+  background:var(--accent-soft); color:var(--ink); font-size:0.84rem; font-family:inherit;
+  transition:border-color 0.2s;
+}
+.extra-access-input:focus { outline:none; border-color:var(--muted); }
+.extra-access-msg { font-size:0.78rem; margin-top:12px; min-height:1.1em; color:var(--muted); line-height:1.5; }
+.extra-access-msg.ok { color:var(--ink); }
+.extra-access-msg.bad { color:var(--danger); }
 
 /* ============================================================
    APP WORKSPACE & SIDEBAR
@@ -773,6 +785,16 @@ img { display:block; max-width:100%; }
 .bubble.ai code { background:var(--accent-soft); padding:2px 6px; border-radius:4px; font-size:0.85em; }
 .bubble.ai pre { background:var(--accent-soft); border:1px solid var(--divider); padding:16px; border-radius:8px; overflow-x:auto; margin-bottom:14px; }
 .bubble.ai pre code { background:none; padding:0; }
+.vin-track { display:flex; flex-direction:column; gap:14px; }
+.vin-track-head { display:flex; align-items:baseline; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+.vin-track-title { font-family:'Playfair Display',serif; font-size:1.02rem; font-weight:600; }
+.vin-track-eta { font-size:0.74rem; color:var(--muted); letter-spacing:0.4px; }
+.vin-track-phase { font-size:0.86rem; color:var(--muted); line-height:1.6; }
+.vin-track-bar-wrap { height:4px; background:var(--accent-soft); border-radius:2px; overflow:hidden; }
+.vin-track-bar { height:100%; background:var(--ink); border-radius:2px; width:0%; transition:width 0.9s ease; }
+.vin-track-meta { display:flex; gap:16px; flex-wrap:wrap; font-size:0.7rem; color:var(--muted-2); letter-spacing:0.6px; text-transform:uppercase; }
+.vin-track.fail .vin-track-bar { background:var(--danger); }
+.vin-track.fail .vin-track-phase { color:var(--danger); }
 
 .bubble-actions { display:flex; gap:4px; margin-top:6px; align-items:center; position:relative; }
 .bact {
@@ -863,7 +885,8 @@ img { display:block; max-width:100%; }
 .mode-trigger .mode-dot, .mode-opt-dot { width:7px; height:7px; border-radius:50%; background:#7a756d; flex-shrink:0; }
 .mode-trigger[data-mode="search"] .mode-dot, .mode-opt[data-mode="search"] .mode-opt-dot { background:#4e9f91; }
 .mode-trigger[data-mode="deep research"] .mode-dot, .mode-opt[data-mode="deep research"] .mode-opt-dot { background:#b27d49; }
-.mode-trigger[data-mode="intense dive"] .mode-dot, .mode-opt[data-mode="intense dive"] .mode-opt-dot { background:#aa5551; }
+.mode-trigger[data-mode="vin base"] .mode-dot, .mode-opt[data-mode="vin base"] .mode-opt-dot { background:#5f7d92; }
+.mode-trigger[data-mode="vin investigator"] .mode-dot, .mode-opt[data-mode="vin investigator"] .mode-opt-dot { background:#aa5551; }
 .mode-trigger i { font-size:.58rem; color:var(--muted-2); transition:transform .2s; }
 .mode-selector:focus-within .mode-trigger i { transform:rotate(180deg); }
 .mode-dropdown {
@@ -1035,6 +1058,8 @@ select#mode { display:none; }
     <a id="nav-app" href="/workspace" onclick="event.preventDefault(); showView('app')">Workspace</a>
     <a id="nav-plans" href="/plans" onclick="event.preventDefault(); showView('plans')">Plans</a>
     <a id="nav-guide" href="/guide" onclick="event.preventDefault(); showView('guide')">Guide</a>
+    <a id="nav-access" href="/increased-access" onclick="event.preventDefault(); showView('access')">Increased Access</a>
+    <a id="nav-aboutvin" href="/about-vin" onclick="event.preventDefault(); showView('aboutvin')">About Vin</a>
     <a id="nav-profile" style="display:none" href="/account" onclick="event.preventDefault(); showView('profile')">Account</a>
   </div>
 
@@ -1058,6 +1083,7 @@ select#mode { display:none; }
   <a href="/workspace" onclick="event.preventDefault(); showView('app')">Workspace</a>
   <a href="/plans" onclick="event.preventDefault(); showView('plans')">Plans</a>
   <a href="/guide" onclick="event.preventDefault(); showView('guide')">Guide</a>
+  <a href="/increased-access" onclick="event.preventDefault(); showView('access')">Increased Access</a>
   <a id="mobile-profile-link" style="display:none" href="/account" onclick="event.preventDefault(); showView('profile')">Account</a>
   <a id="mobile-auth-link" href="#" onclick="event.preventDefault(); handleNavAuthClick()">Sign In / Register</a>
 </div>
@@ -1080,7 +1106,7 @@ select#mode { display:none; }
     <button class="auth-back" onclick="closeAuthModal()"><i class="fa-solid fa-arrow-left"></i> Back</button>
     <div class="auth-form-wrap">
       <h2 class="auth-form-title" id="auth-modal-title">Welcome back</h2>
-      <p class="auth-form-sub" id="auth-modal-subtitle">Sign in to access 350 Casual, 25 Search, and 3 Deep Research queries daily.</p>
+      <p class="auth-form-sub" id="auth-modal-subtitle">Sign in for 5 Search, 1 Deep Research and 1 Vin run — a lifetime allowance, not a daily one.</p>
 
       <div class="auth-tabs">
         <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
@@ -1129,11 +1155,11 @@ select#mode { display:none; }
     <canvas class="hero-canvas" id="hero-canvas" aria-hidden="true"></canvas>
     <div class="hero-eyebrow reveal">Engineered for Truth</div>
     <h1 class="hero-h reveal reveal-delay-1">Uncompromising<br><em>Intelligence.</em></h1>
-    <p class="hero-sub reveal reveal-delay-2">A real-time AI research assistant that reads the live web, cites every claim, and audits its own answer before you ever see it.</p>
+    <p class="hero-sub reveal reveal-delay-2">An AI investigative research engine with multiple stages that produces auditable reports with citations.</p>
     <button class="hero-cta reveal reveal-delay-3" onclick="showView('app')">
       Open Workspace <i class="fa-solid fa-arrow-right"></i>
     </button>
-    <p class="hero-trust reveal reveal-delay-3">No credit card required &nbsp;·&nbsp; Free guest access &nbsp;·&nbsp; Verified citations</p>
+    <p class="hero-trust reveal reveal-delay-3">No credit card required &nbsp;·&nbsp; Free account &nbsp;·&nbsp; Verified citations</p>
   </section>
 
   <!-- FEATURE STREAM -->
@@ -1240,7 +1266,7 @@ select#mode { display:none; }
           <div class="why-item-num">01</div>
           <div>
             <div class="why-item-h">Live web grounding</div>
-            <p class="why-item-p">Every Search and Deep Research query reads current web pages before synthesising an answer — no stale training cutoff.</p>
+            <p class="why-item-p">Every Search, Deep Research and Vin query reads current web pages before synthesising an answer — no stale training cutoff.</p>
           </div>
         </div>
         <div class="why-item reveal reveal-delay-1">
@@ -1314,6 +1340,7 @@ select#mode { display:none; }
     <div>
       <a href="/guide" onclick="event.preventDefault(); showView('guide')">Guide</a>
       <a href="/plans" onclick="event.preventDefault(); showView('plans')">Plans</a>
+      <a href="/increased-access" onclick="event.preventDefault(); showView('access')">Increased Access</a>
       <a href="/workspace" onclick="event.preventDefault(); showView('app')">Research</a>
     </div>
   </footer>
@@ -1324,31 +1351,31 @@ select#mode { display:none; }
   <div class="plans-inner">
     <p class="plans-eyebrow">Compute tiers</p>
     <h1 class="plans-h serif">Choose your intelligence</h1>
-    <p class="plans-sub">Scale your daily research limits as your work grows. Paid tiers launching late 2026.</p>
+    <p class="plans-sub">Mensia is free today, with no billing behind it. Paid tiers arrive later — this page will carry their real numbers then, not before.</p>
 
     <table class="plans-table">
       <thead>
         <tr>
           <th>Tier</th>
-          <th>Daily Limits</th>
+          <th>Lifetime Allowance</th>
           <th>Price</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td>
-            <div class="plans-tier-name">Guest</div>
+            <div class="plans-tier-name">Free Account</div>
             <div class="plans-tier-desc">No login required. Start immediately.</div>
           </td>
-          <td><div class="plans-tier-features">25 Casual &nbsp;·&nbsp; 5 Search &nbsp;·&nbsp; 1 Deep Research</div></td>
+          <td><div class="plans-tier-features">5 Search &nbsp;·&nbsp; 1 Deep Research</div></td>
           <td><div class="plans-tier-price">Free</div></td>
         </tr>
         <tr>
           <td>
             <div class="plans-tier-name">Registered</div>
-            <div class="plans-tier-desc">Free account. 14× more daily capacity.</div>
+            <div class="plans-tier-desc">Free account. Adds Vin and keeps your archive.</div>
           </td>
-          <td><div class="plans-tier-features">350 Casual &nbsp;·&nbsp; 25 Search &nbsp;·&nbsp; 3 Deep Research</div></td>
+          <td><div class="plans-tier-features">5 Search &nbsp;·&nbsp; 1 Deep Research &nbsp;·&nbsp; 1 Vin</div></td>
           <td><div class="plans-tier-price">Free</div></td>
         </tr>
         <tr>
@@ -1356,10 +1383,10 @@ select#mode { display:none; }
             <div class="plans-tier-name">Pro</div>
             <div class="plans-tier-desc">For professionals who research daily.</div>
           </td>
-          <td><div class="plans-tier-features">400 Casual &nbsp;·&nbsp; 35 Search &nbsp;·&nbsp; 8 Deep Research</div></td>
+          <td><div class="plans-tier-features">Higher limits and priority routing — announced at launch.</div></td>
           <td>
-            <div class="plans-tier-price">$15</div>
-            <div class="plans-tier-cadence">/ month</div>
+            <div class="plans-tier-price">Soon</div>
+            <div class="plans-tier-cadence">not priced</div>
           </td>
         </tr>
         <tr>
@@ -1367,10 +1394,10 @@ select#mode { display:none; }
             <div class="plans-tier-name">Ultra</div>
             <div class="plans-tier-desc">For teams and heavy research workflows.</div>
           </td>
-          <td><div class="plans-tier-features">450 Casual &nbsp;·&nbsp; 40 Search &nbsp;·&nbsp; 15 Deep Research</div></td>
+          <td><div class="plans-tier-features">Deeper capacity and longer research runs — announced at launch.</div></td>
           <td>
-            <div class="plans-tier-price">$30</div>
-            <div class="plans-tier-cadence">/ month</div>
+            <div class="plans-tier-price">Soon</div>
+            <div class="plans-tier-cadence">not priced</div>
           </td>
         </tr>
         <tr>
@@ -1378,15 +1405,15 @@ select#mode { display:none; }
             <div class="plans-tier-name">Deluxe</div>
             <div class="plans-tier-desc">Maximum capacity, priority routing.</div>
           </td>
-          <td><div class="plans-tier-features">500 Casual &nbsp;·&nbsp; 50 Search &nbsp;·&nbsp; 25 Deep Research</div></td>
+          <td><div class="plans-tier-features">Everything unlocked — announced at launch.</div></td>
           <td>
-            <div class="plans-tier-price">$50</div>
-            <div class="plans-tier-cadence">/ month</div>
+            <div class="plans-tier-price">Soon</div>
+            <div class="plans-tier-cadence">not priced</div>
           </td>
         </tr>
       </tbody>
     </table>
-    <p class="plans-disclaimer">Create a free account to immediately upgrade from Guest limits. Paid tiers unlock with a single click once billing goes live.</p>
+    <p class="plans-disclaimer">Free allowances do not renew. Need more before billing goes live? The Increased Access page tells you how to ask.</p>
   </div>
 </div>
 
@@ -1398,17 +1425,7 @@ select#mode { display:none; }
 
     <!-- Modes -->
     <div class="guide-section">
-      <div class="guide-section-label"><i class="fa-solid fa-layer-group"></i> The three research modes</div>
-      <div class="mode-row">
-        <div class="mode-row-icon"><i class="fa-solid fa-bolt"></i></div>
-        <div class="mode-row-body">
-          <div class="mode-row-head">
-            <span class="mode-row-name">Casual</span>
-            <span class="mode-row-pill">Latency optimised</span>
-          </div>
-          <p class="mode-row-p">Pure conversational reasoning with no external web calls — best for brainstorming, quick explanations, and drafting where speed matters more than fresh data.</p>
-        </div>
-      </div>
+      <div class="guide-section-label"><i class="fa-solid fa-layer-group"></i> The four research modes</div>
       <div class="mode-row">
         <div class="mode-row-icon"><i class="fa-solid fa-globe"></i></div>
         <div class="mode-row-body">
@@ -1416,7 +1433,7 @@ select#mode { display:none; }
             <span class="mode-row-name">Search</span>
             <span class="mode-row-pill">Verified grounding</span>
           </div>
-          <p class="mode-row-p">Queries live web indexes and runs a secondary audit pass to eliminate hallucinations — the strong default for current-events and fact-based inquiries.</p>
+          <p class="mode-row-p">Queries live web indexes and cites every claim it makes — the strong default for current-events and fact-based inquiries. Click any numbered badge to open the source and verify it yourself.</p>
         </div>
       </div>
       <div class="mode-row">
@@ -1426,7 +1443,27 @@ select#mode { display:none; }
             <span class="mode-row-name">Deep Research</span>
             <span class="mode-row-pill">Multi-source synthesis</span>
           </div>
-          <p class="mode-row-p">Fires several concurrent queries across independent sources and synthesises them into one audited report — ideal for market analysis and technical research.</p>
+          <p class="mode-row-p">Fires several concurrent queries across independent sources, drafts the answer, then puts that draft through a second, harsher model that re-checks it line by line before you see it.</p>
+        </div>
+      </div>
+      <div class="mode-row">
+        <div class="mode-row-icon"><i class="fa-solid fa-compass"></i></div>
+        <div class="mode-row-body">
+          <div class="mode-row-head">
+            <span class="mode-row-name">Vin — Base</span>
+            <span class="mode-row-pill">10–20 minutes</span>
+          </div>
+          <p class="mode-row-p">Our newest research engine, built for accuracy over speed. Base reads the live web, reconciles every number against its source, writes the report, then audits each claim individually and shows you which claims survived and which were corrected. Expect 10–20 minutes; unusual questions can run longer.</p>
+        </div>
+      </div>
+      <div class="mode-row">
+        <div class="mode-row-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="mode-row-body">
+          <div class="mode-row-head">
+            <span class="mode-row-name">Vin — Investigator</span>
+            <span class="mode-row-pill">15–35 minutes</span>
+          </div>
+          <p class="mode-row-p">Everything Base does, plus an adversarial pass.</p>
         </div>
       </div>
     </div>
@@ -1439,7 +1476,7 @@ select#mode { display:none; }
           <div class="tip-num">01</div>
           <div>
             <div class="tip-body-h">Name a timeframe</div>
-            <p class="tip-body-p">Add "as of 2026" or "this quarter" so Search and Deep Research prioritise the freshest sources over older indexed pages.</p>
+            <p class="tip-body-p">Add "as of 2026" or "this quarter" so Search, Deep Research and Vin prioritise the freshest sources over older indexed pages.</p>
           </div>
         </div>
         <div class="tip-item">
@@ -1453,7 +1490,7 @@ select#mode { display:none; }
           <div class="tip-num">03</div>
           <div>
             <div class="tip-body-h">Verify the citations</div>
-            <p class="tip-body-p">Every Search and Deep Research answer cites its sources inline — click any numbered badge to open the source page and verify directly.</p>
+            <p class="tip-body-p">Every Search, Deep Research and Vin answer cites its sources inline — click any numbered badge to open the source page and verify directly.</p>
           </div>
         </div>
       </div>
@@ -1479,6 +1516,90 @@ select#mode { display:none; }
   </div>
 </div>
 
+<!-- INCREASED ACCESS VIEW -->
+<div class="view guide-view" id="access-view">
+  <div class="guide-inner">
+    <h1 class="guide-h serif">Increased Access</h1>
+    <p class="guide-sub">Mensia has no billing behind it yet. Every account runs on a lifetime allowance, and when it runs out the honest options are to wait for paid tiers — or to ask us directly.</p>
+
+    <div class="guide-section">
+      <div class="guide-section-label"><i class="fa-solid fa-envelope-open-text"></i> Ask for more free access</div>
+      <div class="mode-row">
+        <div class="mode-row-icon"><i class="fa-solid fa-paper-plane"></i></div>
+        <div class="mode-row-body">
+          <div class="mode-row-head">
+            <span class="mode-row-name">Write to the team</span>
+            <span class="mode-row-pill">Manual, no cost</span>
+          </div>
+          <p class="mode-row-p">Mail <strong id="access-email">mensia.ai.official@gmail.com</strong> from the address your Mensia account is registered to. Tell us what you're researching and which mode you're short on — Search, Deep Research, or Vin. If it's a genuine use case we raise your limits by hand and send you an access code to paste into Extra Access on your account page.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-section-label"><i class="fa-solid fa-list-ol"></i> What to include</div>
+      <div class="tip-list">
+        <div class="tip-item">
+          <div class="tip-num">01</div>
+          <div>
+            <div class="tip-body-h">Your registered email</div>
+            <p class="tip-body-p">Limits live on your account, not on this page. We can only change them for an address we can match to one.</p>
+          </div>
+        </div>
+        <div class="tip-item">
+          <div class="tip-num">02</div>
+          <div>
+            <div class="tip-body-h">What you're working on</div>
+            <p class="tip-body-p">A sentence about the actual research beats a request for "more queries". It's how we decide what to unlock.</p>
+          </div>
+        </div>
+        <div class="tip-item">
+          <div class="tip-num">03</div>
+          <div>
+            <div class="tip-body-h">Which mode you need</div>
+            <p class="tip-body-p">Extra access is granted per mode. Search and Deep Research are quick; Vin runs cost real compute, so ask for the runs you'll actually finish.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-section-label"><i class="fa-solid fa-clock"></i> Honest expectations</div>
+      <div class="mode-row">
+        <div class="mode-row-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div class="mode-row-body">
+          <div class="mode-row-head">
+            <span class="mode-row-name">One person reads this</span>
+            <span class="mode-row-pill">Replies in days, not minutes</span>
+          </div>
+          <p class="mode-row-p">Mensia is built and run solo. Requests are read and answered by hand, so give it a few days and don't send the same request twice — it doesn't move it up the list. Paid tiers, when they arrive, will make this page unnecessary.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ABOUT VIN VIEW -->
+<div class="view guide-view" id="aboutvin-view">
+  <div class="guide-inner">
+    <h1 class="guide-h serif">Vin</h1>
+    <p class="guide-sub">Our magnum opus — an investigative research system with extreme self-checks and an indigenous information ledger builder.</p>
+    <div class="guide-section">
+      <div class="guide-section-label"><i class="fa-solid fa-brain"></i> What Vin is</div>
+      <p class="mode-row-p">Vin is the engine powering Intense Dive. It is a Mixture of Models (MoM): third-party models run through our own indigenous pipeline, orchestration, research methods, and a Case Ledger builder. It performs claim-level audit and extreme self-checks before delivery.</p>
+    </div>
+    <div class="guide-section">
+      <div class="guide-section-label"><i class="fa-solid fa-clock"></i> Runtime</div>
+      <div class="mode-row"><div class="mode-row-body"><div class="mode-row-head"><span class="mode-row-name">Vin Base</span><span class="mode-row-pill">10–25 min</span></div><p class="mode-row-p">Audit included; no red-team, claim audit, or polish.</p></div></div>
+      <div class="mode-row"><div class="mode-row-body"><div class="mode-row-head"><span class="mode-row-name">Vin Investigate</span><span class="mode-row-pill">15–35 min</span></div><p class="mode-row-p">Full red-team, claim audit, and polish.</p></div></div>
+    </div>
+    <div class="guide-section">
+      <div class="guide-section-label"><i class="fa-solid fa-triangle-exclamation"></i> Note</div>
+      <p class="mode-row-p">Edge cases exist; results are not guaranteed.</p>
+    </div>
+  </div>
+</div>
+
 <!-- PROFILE VIEW -->
 <div class="view profile-view" id="profile-view">
   <div class="profile-inner">
@@ -1494,27 +1615,43 @@ select#mode { display:none; }
 
     <!-- Quotas -->
     <div class="quota-section">
-      <div class="quota-section-label">Intelligence Quotas — Daily</div>
+      <div class="quota-section-label" id="quota-window-label">Intelligence Quotas — Lifetime</div>
       <div class="quota-row">
-        <span class="quota-row-label">Casual Mode</span>
-        <div class="quota-bar-wrap"><div class="quota-bar" id="quota-casual-bar" style="width:0%"></div></div>
-        <span class="quota-row-count" id="quota-casual-text">0 / 350</span>
-      </div>
-      <div class="quota-row">
-        <span class="quota-row-label">Search Standard</span>
+        <span class="quota-row-label">Search</span>
         <div class="quota-bar-wrap"><div class="quota-bar" id="quota-search-bar" style="width:0%"></div></div>
-        <span class="quota-row-count" id="quota-search-text">0 / 25</span>
+        <span class="quota-row-count" id="quota-search-text">0 / 5</span>
       </div>
       <div class="quota-row">
         <span class="quota-row-label">Deep Research</span>
         <div class="quota-bar-wrap"><div class="quota-bar" id="quota-deep-bar" style="width:0%"></div></div>
-        <span class="quota-row-count" id="quota-deep-text">0 / 3</span>
+        <span class="quota-row-count" id="quota-deep-text">0 / 1</span>
+      </div>
+      <div class="quota-row">
+        <span class="quota-row-label">Vin — Base</span>
+        <div class="quota-bar-wrap"><div class="quota-bar" id="quota-vin_base-bar" style="width:0%"></div></div>
+        <span class="quota-row-count" id="quota-vin_base-text">0 / 1</span>
+      </div>
+      <div class="quota-row">
+        <span class="quota-row-label">Vin — Investigator</span>
+        <div class="quota-bar-wrap"><div class="quota-bar" id="quota-vin_investigator-bar" style="width:0%"></div></div>
+        <span class="quota-row-count" id="quota-vin_investigator-text">0 / 1</span>
       </div>
       <div class="quota-row" style="border-top:1px solid var(--divider); border-bottom:none; padding-top:20px; margin-top:6px;">
-        <span class="quota-row-label" style="font-weight:700">Total Lifetime Queries</span>
+        <span class="quota-row-label" style="font-weight:700">Queries Used</span>
         <div class="quota-bar-wrap"><div class="quota-bar" id="quota-total-bar" style="width:0%"></div></div>
-        <span class="quota-row-count" id="quota-total-text">0 / 15</span>
+        <span class="quota-row-count" id="quota-total-text">0</span>
       </div>
+    </div>
+
+    <!-- Extra Access -->
+    <div class="quota-section">
+      <div class="quota-section-label">Extra Access</div>
+      <p class="extra-access-note">If you've been given an access code, apply it here to raise your limits. One code works on one account only.</p>
+      <div class="extra-access-row">
+        <input type="text" id="extra-access-input" class="extra-access-input" placeholder="MES-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter')redeemAccessCode()">
+        <button class="act-btn" id="extra-access-btn" onclick="redeemAccessCode()">Apply Code <i class="fa-solid fa-key"></i></button>
+      </div>
+      <p class="extra-access-msg" id="extra-access-msg"></p>
     </div>
 
     <!-- Actions -->
@@ -1523,9 +1660,16 @@ select#mode { display:none; }
       <div class="profile-act-row">
         <div class="profile-act-desc">
           <h4>Upgrade your compute tier</h4>
-          <p>Pro, Ultra, and Deluxe tiers launching late 2026 with higher daily limits and priority routing.</p>
+          <p>Pro, Ultra, and Deluxe tiers are coming, with higher limits and priority routing. Nothing is priced or specified until billing actually goes live.</p>
         </div>
         <button class="act-btn" onclick="showView('plans')">View Plans <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+      <div class="profile-act-row">
+        <div class="profile-act-desc">
+          <h4>Need more access now</h4>
+          <p>No paid tiers are live yet. Write to us and we can raise a free account's limits by hand.</p>
+        </div>
+        <button class="act-btn" onclick="showView('access')">Increased Access <i class="fa-solid fa-arrow-right"></i></button>
       </div>
       <div class="profile-act-row">
         <div class="profile-act-desc">
@@ -1603,23 +1747,27 @@ select#mode { display:none; }
         <!-- Workspace mode selector -->
         <div class="specialized-modes">
           <div class="mode-selector">
-            <button class="mode-trigger" id="mode-trigger" data-mode="casual" onclick="toggleModeDropdown()" aria-haspopup="listbox" aria-expanded="false">
+            <button class="mode-trigger" id="mode-trigger" data-mode="search" onclick="toggleModeDropdown()" aria-haspopup="listbox" aria-expanded="false">
               <span class="mode-dot"></span>
-              <span id="mode-trigger-label">Casual</span>
+              <span id="mode-trigger-label">Search</span>
               <i class="fa-solid fa-chevron-up"></i>
             </button>
             <div class="mode-dropdown" id="mode-dropdown" role="listbox">
-              <button class="mode-opt selected" data-mode="casual" onclick="selectMode('casual')">
-                <span class="mode-opt-dot"></span>
-                <div class="mode-opt-text"><div class="mode-opt-name">Casual</div><div class="mode-opt-desc">Fast conversational reasoning. No web search.</div></div>
-              </button>
-              <button class="mode-opt" data-mode="search" onclick="selectMode('search')">
+              <button class="mode-opt selected" data-mode="search" onclick="selectMode('search')">
                 <span class="mode-opt-dot"></span>
                 <div class="mode-opt-text"><div class="mode-opt-name">Search</div><div class="mode-opt-desc">Live web grounding with inline citations.</div></div>
               </button>
               <button class="mode-opt" data-mode="deep research" onclick="selectMode('deep research')">
                 <span class="mode-opt-dot"></span>
                 <div class="mode-opt-text"><div class="mode-opt-name">Deep Research</div><div class="mode-opt-desc">Multi-source synthesis. Full audited report.</div></div>
+              </button>
+              <button class="mode-opt" data-mode="vin base" onclick="selectMode('vin base')">
+                <span class="mode-opt-dot"></span>
+                <div class="mode-opt-text"><div class="mode-opt-name">Vin — Base</div><div class="mode-opt-desc">Deep accuracy run. Every claim audited against its source. 10–20 minutes.</div></div>
+              </button>
+              <button class="mode-opt" data-mode="vin investigator" onclick="selectMode('vin investigator')">
+                <span class="mode-opt-dot"></span>
+                <div class="mode-opt-text"><div class="mode-opt-name">Vin — Investigator</div><div class="mode-opt-desc">Base plus an adversarial pass. 15–35 minutes.</div></div>
               </button>
             </div>
           </div>    
@@ -1666,9 +1814,10 @@ select#mode { display:none; }
     
     <!-- Hidden Select strictly preserved for backend contract -->
     <select id="mode">
-      <option value="casual" selected>casual</option>
-      <option value="search">search</option>
+      <option value="search" selected>search</option>
       <option value="deep research">deep research</option>
+      <option value="vin base">vin base</option>
+      <option value="vin investigator">vin investigator</option>
     </select>
   </div>
 </div>
@@ -1731,6 +1880,7 @@ function firstNameOf(user){const f=formatUserName(user);if(!f||f==="Guest")retur
 if(firebaseAvailable){
   firebase.auth().onAuthStateChanged(async(user)=>{
     updateAuthUI(user);syncLimits();updateWelcomePrompt();
+    if(user)setTimeout(resumeVinRuns,1200);
   });
 }
 
@@ -1787,8 +1937,8 @@ function switchAuthTab(tab){
   const ti=document.getElementById('auth-modal-title');
   const su=document.getElementById('auth-modal-subtitle');
   const fl=document.getElementById('forgot-password-link');
-  if(tab==='login'){sb.innerText='Sign In';ti.innerText='Welcome back';su.innerText='Sign in to access 350 Casual, 25 Search, and 3 Deep Research queries daily.';fl.style.display='inline-flex';}
-  else{sb.innerText='Create Account';ti.innerText='Join Mensia AI';su.innerText='Register free to unlock 350 Casual, 25 Search, and 3 Deep Research queries daily.';fl.style.display='none';}
+  if(tab==='login'){sb.innerText='Sign In';ti.innerText='Welcome back';su.innerText='Sign in for 5 Search, 1 Deep Research and 1 Vin run — a lifetime allowance, not a daily one.';fl.style.display='inline-flex';}
+  else{sb.innerText='Create Account';ti.innerText='Join Mensia AI';su.innerText='Register free for 5 Search, 1 Deep Research and 1 Vin run. It does not renew.';fl.style.display='none';}
   document.getElementById('auth-error-msg').innerText='';
 }
 function togglePasswordVisibility(id,btn){
@@ -1859,40 +2009,96 @@ async function syncLimits(){
     const headers={};if(token)headers['Authorization']=`Bearer ${token}`;
     const res=await fetch('/limits',{headers});if(!res.ok)return;
     const data=await res.json();
-    
-    // Sync pills locked state
-    document.querySelectorAll('.mode-pill').forEach(opt=>{
-      const mv=opt.dataset.mode;
-      const exhausted=!!(data.exhausted&&data.exhausted[mv]);
-      if(exhausted) opt.classList.add('locked');
-      else if(mv !== 'intense dive') opt.classList.remove('locked');
-    });
-
-    if(data.usage){
-      const cu=data.usage.casual||0,cm=data.limits?.casual||350;
-      const su=data.usage.search||0,sm=data.limits?.search||25;
-      const du=data.usage["deep research"]||0,dm=data.limits?.["deep research"]||3;
-      const tu=data.usage.total_lifetime||0;
-      const iUnlocked=data.usage.intense_dive_unlocked;
-      const iAvailable=data.usage.intense_dive_available;
-      if(document.getElementById('quota-casual-text')){
-        document.getElementById('quota-casual-text').innerText=`${cu} / ${cm}`;
-        document.getElementById('quota-casual-bar').style.width=Math.min((cu/cm)*100,100)+'%';
-        document.getElementById('quota-search-text').innerText=`${su} / ${sm}`;
-        document.getElementById('quota-search-bar').style.width=Math.min((su/sm)*100,100)+'%';
-        document.getElementById('quota-deep-text').innerText=`${du} / ${dm}`;
-        document.getElementById('quota-deep-bar').style.width=Math.min((du/dm)*100,100)+'%';
-        document.getElementById('quota-total-text').innerText=`${tu} / 15`;
-        document.getElementById('quota-total-bar').style.width=Math.min((tu/15)*100,100)+'%';
-      }
-    }
+    applyLimits(data);
   }catch(e){console.error("Limit sync:",e);}
+}
+
+const QUOTA_ROWS=['search','deep research','vin_base','vin_investigator'];
+const QUOTA_EL={'search':'search','deep research':'deep','vin_base':'vin_base','vin_investigator':'vin_investigator'};
+
+function applyLimits(data){
+  if(!data||!data.rows)return;
+  lastLimits=data;
+
+  const windows={lifetime:'Lifetime',weekly:'This Week',unlimited:'Unlimited'};
+  const label=document.getElementById('quota-window-label');
+  if(label)label.innerText=`Intelligence Quotas — ${windows[data.window]||'Lifetime'}`;
+
+  let used=0,capped=0,allCapped=true;
+  QUOTA_ROWS.forEach(key=>{
+    const row=data.rows[key];if(!row)return;
+    used+=row.used||0;
+    const cap=row.cap;
+    const el=QUOTA_EL[key];
+    const text=document.getElementById(`quota-${el}-text`);
+    const bar=document.getElementById(`quota-${el}-bar`);
+    if(text)text.innerText=cap===null?`${row.used} / ∞`:`${row.used} / ${cap}`;
+    if(bar){
+      const pct=cap===null?0:Math.min((row.used/cap)*100,100);
+      bar.style.width=pct+'%';
+      bar.classList.toggle('warn',cap!==null&&row.remaining===0);
+    }
+    if(cap!==null){allCapped=false;capped+=cap;}
+  });
+  const totalText=document.getElementById('quota-total-text');
+  const totalBar=document.getElementById('quota-total-bar');
+  if(totalText)totalText.innerText=allCapped?`${used} / ∞`:`${used} / ${capped}`;
+  if(totalBar&&capped)totalBar.style.width=Math.min((used/capped)*100,100)+'%';
+
+  document.querySelectorAll('.mode-opt').forEach(opt=>{
+    const keys=quotaKeysForMode(opt.dataset.mode);
+    const exhausted=keys.length&&keys.every(k=>data.rows[k]&&data.rows[k].exhausted);
+    opt.classList.toggle('locked',!!exhausted);
+  });
+}
+
+function quotaKeysForMode(mode){
+  if(mode==='vin base')return['vin_base'];
+  if(mode==='vin investigator')return['vin_investigator'];
+  if(QUOTA_ROWS.includes(mode))return[mode];
+  return[];
+}
+
+async function redeemAccessCode(){
+  const input=document.getElementById('extra-access-input');
+  const msg=document.getElementById('extra-access-msg');
+  const btn=document.getElementById('extra-access-btn');
+  const code=(input?.value||'').trim();
+  if(!code){msg.innerText='Type your access code first.';msg.className='extra-access-msg bad';return;}
+  if(!firebaseAvailable||!firebase.auth().currentUser){
+    msg.innerText='Sign in before applying a code.';msg.className='extra-access-msg bad';return;
+  }
+  btn.disabled=true;msg.innerText='Checking…';msg.className='extra-access-msg';
+  try{
+    const token=await getFreshToken();
+    const res=await fetch('/access/redeem',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+      body:JSON.stringify({code})
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok){
+      msg.innerText=data?.detail?.error||'That code was not accepted.';
+      msg.className='extra-access-msg bad';
+    }else{
+      msg.innerText=data.message||'Access unlocked.';
+      msg.className='extra-access-msg ok';
+      input.value='';
+      if(data.limits)applyLimits(data.limits);
+      showToast('Access code applied.','success');
+    }
+  }catch(e){
+    msg.innerText='Could not reach Mensia just now. Try again shortly.';
+    msg.className='extra-access-msg bad';
+  }
+  btn.disabled=false;
 }
 
 /* ============================================================
    MODE SELECTION (Specialized Dock)
    ============================================================ */
-let currentMode='casual';
+let currentMode='search';
+let lastLimits=null;
 function toggleModeDropdown(){
   const dd=document.getElementById('mode-dropdown');
   const trigger=document.getElementById('mode-trigger');
@@ -1909,7 +2115,7 @@ function selectMode(mode){
   if(trigger){
     trigger.dataset.mode=mode;
     trigger.setAttribute('aria-expanded','false');
-    const labels={casual:'Casual',search:'Search','deep research':'Deep Research'};
+    const labels={search:'Search','deep research':'Deep Research','vin base':'Vin — Base','vin investigator':'Vin — Investigator'};
     document.getElementById('mode-trigger-label').innerText=labels[mode]||mode;
   }
   document.getElementById('mode-dropdown')?.classList.remove('open');
@@ -1933,7 +2139,7 @@ function showView(id, pushToHistory = true){
 
   // Change the URL without reloading the page
   if (pushToHistory) {
-    const urlMap = { 'home': '/', 'app': '/workspace', 'plans': '/plans', 'guide': '/guide', 'profile': '/account' };
+    const urlMap = { 'home': '/', 'app': '/workspace', 'plans': '/plans', 'guide': '/guide', 'profile': '/account', 'access': '/increased-access', 'aboutvin': '/about-vin' };
     window.history.pushState({ view: id }, '', urlMap[id] || '/');
   }
 }
@@ -1955,6 +2161,8 @@ document.addEventListener('DOMContentLoaded', () => {
   else if (path.includes('/plans')) startView = 'plans';
   else if (path.includes('/guide')) startView = 'guide';
   else if (path.includes('/account')) startView = 'profile';
+  else if (path.includes('/increased-access')) startView = 'access';
+  else if (path.includes('/about-vin')) startView = 'aboutvin';
   
   showView(startView, false);
 });
@@ -2037,10 +2245,12 @@ document.addEventListener('click',e=>{
 
 const FAQ_ITEMS=[
   {q:"What makes an AI search engine different from a regular chatbot?",a:"An AI search engine like Mensia reads live web pages before answering instead of relying only on pre-trained memory, so responses reflect current information and can be traced back to a real source."},
-  {q:"Does Mensia AI show its sources?",a:"Yes. Every Search and Deep Research answer includes numbered inline citations plus an expandable sources panel linking straight to the pages used."},
+  {q:"Does Mensia AI show its sources?",a:"Yes. Every Search, Deep Research and Vin answer includes numbered inline citations plus an expandable sources panel linking straight to the pages used."},
   {q:"What is Deep Research mode used for?",a:"Deep Research fires multiple concurrent queries across independent sources and synthesises them into one audited report — useful for comparisons, market research, and technical or academic-style summaries."},
-  {q:"Is Mensia AI free to use?",a:"Yes — there's a free guest tier with no login, plus a larger free daily quota across Casual, Search, and Deep Research modes once you create an account."},
-  {q:"Can I export an answer as a document?",a:"Deep Research answers include export buttons for PDF, Word, and Markdown so you can save or share the full report."}
+  {q:"What is Vin?",a:"Vin is Mensia's newest research engine, built for accuracy rather than speed. It reads the live web, reconciles every figure against its source, writes the report, then audits each claim individually and shows you which claims held and which were corrected. Base takes 10–20 minutes; Investigator adds an adversarial pass that tries to break the draft before it ships and takes 15–35 minutes. Edge cases run longer."},
+  {q:"Why does Vin take so long?",a:"Because it doesn't stop at one pass. Sources are fetched and cross-checked, the draft is challenged for weak claims, counter-evidence is hunted down, and every claim is then re-audited against its source. A run that finishes in four minutes hasn't done that work."},
+  {q:"Is Mensia AI free to use?",a:"Yes, and there's nothing to pay yet. A free account gets 5 Search, 1 Deep Research and 1 Vin run for life. Limits don't renew — the Increased Access page explains how to ask for more by hand."},
+  {q:"Can I export an answer as a document?",a:"Deep Research and Vin answers include export buttons for PDF, Word, and Markdown so you can save or share the full dossier."}
 ];
 function renderFaqList(){
   const el=document.getElementById('faq-list');
@@ -2092,7 +2302,7 @@ function smartTitle(text){
   const c=text.replace(/[#*`_>]/g,'').replace(/\s+/g,' ').trim();
   return c.length>44?c.substring(0,44).trim()+'…':c;
 }
-function saveMessage(text,sender,sources=[],mode='casual'){
+function saveMessage(text,sender,sources=[],mode='search'){
   if(!savedChats[sessionId])savedChats[sessionId]={title:'New Research',messages:[],updatedAt:Date.now()};
   savedChats[sessionId].messages.push({text,sender,sources,mode});
   savedChats[sessionId].updatedAt=Date.now();
@@ -2135,7 +2345,7 @@ function loadChat(id){
   sessionId=id;localStorage.setItem('mensia_active_session',sessionId);
   const cv=document.getElementById('chat-view');
   cv.innerHTML=`<div class="welcome-wrap" id="welcome-prompt-wrap" style="display:none"><div class="welcome-h" id="welcome-prompt"></div></div>`;
-  (savedChats[id]?.messages||[]).forEach(m=>renderBubble(m.text,m.sender,true,null,m.sources||[],m.mode||'casual'));
+  (savedChats[id]?.messages||[]).forEach(m=>renderBubble(m.text,m.sender,true,null,m.sources||[],m.mode||'search'));
   updateWelcomePrompt();renderSidebar();setTimeout(()=>scrollChatToBottom(false),30);
 }
 function newConversation(){
@@ -2346,7 +2556,7 @@ function copyShareText(text){navigator.clipboard.writeText(text);showToast("Copi
 
 let lastQuestion='';
 
-function renderBubble(text,sender,skipAnim=false,onComplete=null,sources=[],mode='casual'){
+function renderBubble(text,sender,skipAnim=false,onComplete=null,sources=[],mode='search'){
   const cv=document.getElementById('chat-view');
   const ww=document.getElementById('welcome-prompt-wrap');
   if(ww)ww.style.display='none';
@@ -2386,7 +2596,9 @@ function renderBubble(text,sender,skipAnim=false,onComplete=null,sources=[],mode
 
     acts.appendChild(cb);acts.appendChild(sb);acts.appendChild(sm);
     row.appendChild(acts);
-    if(mode==='deep research')addExportButtons(row,text);
+    const isReport=mode==='deep research'||mode==='vin base'||mode==='vin investigator';
+    const isSystem=text.startsWith('**System:**')||text.startsWith('Generation aborted')||text.startsWith('Error:')||text.startsWith('Connection Error:');
+    if(isReport&&!isSystem)addExportButtons(row,text);
 
     cv.appendChild(row);
     if(skipAnim){scrollChatToBottom(false);if(onComplete)onComplete(text);}
@@ -2413,7 +2625,7 @@ function showToast(msg,type='info'){
 }
 
 let abortController=null,pollInterval=null;
-function toggleInputState(generating,mode='casual'){
+function toggleInputState(generating,mode='search'){
   const send=document.getElementById('send-btn');
   const stop=document.getElementById('stop-btn');
   const mic=document.getElementById('mic-btn');
@@ -2422,7 +2634,7 @@ function toggleInputState(generating,mode='casual'){
   if(generating){
     send.style.display='none';if(mic)mic.style.display='none';
     stop.classList.add('show');loader.classList.add('show');
-    const labels={'intense dive':'Pulling sources','deep research':'Deep searching','search':'Searching','casual':'Synthesizing'};
+    const labels={'deep research':'Deep searching','search':'Searching','vin base':'Vin queued','vin investigator':'Vin queued'};
     loaderText.innerText=labels[mode]||'Synthesizing';
   }else{
     send.style.display='flex';if(mic)mic.style.display='flex';
@@ -2434,6 +2646,151 @@ function updateLoaderText(t){const el=document.getElementById('loader-text');if(
 function stopGeneration(){if(abortController)abortController.abort();toggleInputState(false);}
 
 /* ============================================================
+   VIN — LONG-RUNNING RESEARCH IN THE BACKGROUND
+   ============================================================ */
+const VIN_POLL_MS=10000;
+const vinTimers={};
+
+function vinVariantOf(mode){
+  if(mode==='vin investigator')return 'investigator';
+  if(mode==='vin base')return 'base';
+  return null;
+}
+function vinLabel(variant){return variant==='investigator'?'Vin — Investigator':'Vin — Base';}
+
+function vinClock(job){
+  let s=job.elapsed_seconds;
+  if(!s&&job.started_at){
+    s=Math.max(0,Math.round((Date.now()-new Date(job.started_at).getTime())/1000));
+  }
+  if(!s&&job.submitted_at){
+    s=Math.max(0,Math.round((Date.now()-new Date(job.submitted_at).getTime())/1000));
+  }
+  if(!s)return '0m';
+  const m=Math.floor(s/60);
+  return m<60?`${m}m`:`${m}h ${m%60}m`;
+}
+
+function vinTrackHtml(job){
+  const pct=Math.max(0,Math.min(100,job.percent||0));
+  const fail=job.status==='failed';
+  const phase=fail?'That run hit a wall on the research side.'
+    :(job.phase==='Queued'?'Queued — it starts as soon as the previous run clears.':(job.phase||'Working'));
+  return `<div class="vin-track${fail?' fail':''}">
+    <div class="vin-track-head">
+      <span class="vin-track-title">${vinLabel(job.variant)}</span>
+      <span class="vin-track-eta">${job.eta_low_minutes}–${job.eta_high_minutes} min typical</span>
+    </div>
+    <div class="vin-track-phase">${escHtml(phase)}</div>
+    <div class="vin-track-bar-wrap"><div class="vin-track-bar" style="width:${pct}%"></div></div>
+    <div class="vin-track-meta">
+      <span>${pct}%</span><span>${vinClock(job)} elapsed</span>
+      <span>${fail?'Query returned':'Runs in the background — safe to close this tab'}</span>
+    </div>
+  </div>`;
+}
+
+function vinTrackerRow(job){
+  const row=document.createElement('div');
+  row.className='msg-row ai';
+  row.id='vin-row-'+job.job_id;
+  const bubble=document.createElement('div');
+  bubble.className='bubble ai';
+  bubble.innerHTML=vinTrackHtml(job);
+  row.appendChild(bubble);
+  return row;
+}
+
+function paintVinTracker(job){
+  const ww=document.getElementById('welcome-prompt-wrap');
+  if(job.status==='failed'){
+    const old=document.getElementById('vin-row-'+job.job_id);
+    if(old){old.querySelector('.vin-track').outerHTML=vinTrackHtml(job);stopVinPoll(job.job_id);}
+    else{
+      const row=vinTrackerRow(job);
+      document.getElementById('chat-view').appendChild(row);
+      stopVinPoll(job.job_id);
+    }
+    saveMessage(`**Vin:** ${job.error||'That run did not finish. Your query was given back.'}`,'ai',[],'vin '+(job.variant||'base'));
+    syncLimits();
+    return;
+  }
+  if(job.status==='complete'){
+    stopVinPoll(job.job_id);
+    document.getElementById('vin-row-'+job.job_id)?.remove();
+    const srcs=job.sources||[];
+    const mode='vin '+(job.variant||'base');
+    renderBubble(job.dossier||'','ai',false,txt=>{
+      saveMessage(txt,'ai',srcs,mode);syncLimits();
+    },srcs,mode);
+    return;
+  }
+  const existing=document.getElementById('vin-row-'+job.job_id);
+  if(existing){
+    existing.querySelector('.vin-track').outerHTML=vinTrackHtml(job);
+    if(isNearBottom())scrollChatToBottom(false);
+  }else{
+    const cv=document.getElementById('chat-view');
+    if(ww)ww.style.display='none';
+    cv.appendChild(vinTrackerRow(job));
+    scrollChatToBottom(true);
+  }
+}
+
+function stopVinPoll(id){
+  if(vinTimers[id]){clearInterval(vinTimers[id]);delete vinTimers[id];}
+}
+
+async function pollVinJob(id){
+  try{
+    const token=await getFreshToken();
+    const res=await fetch(`/vin/${id}`,{headers:token?{'Authorization':`Bearer ${token}`}:{}});
+    if(!res.ok){stopVinPoll(id);return;}
+    const data=await res.json();
+    if(data.job)paintVinTracker(data.job);
+  }catch(e){/* keep polling; a blip shouldn't kill the tracker */}
+}
+
+function watchVinJob(job){
+  paintVinTracker(job);
+  stopVinPoll(job.job_id);
+  vinTimers[job.job_id]=setInterval(()=>pollVinJob(job.job_id),VIN_POLL_MS);
+}
+
+async function startVinRun(q,variant){
+  let token=null;
+  try{token=await getFreshToken();}catch(e){}
+  const res=await fetch('/vin',{
+    method:'POST',
+    headers:{'Content-Type':'application/json',...(token?{'Authorization':`Bearer ${token}`}:{})},
+    body:JSON.stringify({question:q,variant,session_id:sessionId})
+  });
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok){
+    const detail=data&&data.detail?data.detail:{};
+    if(detail.limits)applyLimits(detail.limits);
+    const msg=detail.error||'Vin could not start right now. Try again in a moment.';
+    renderBubble(`**System:** ${msg}`,'ai',true,txt=>saveMessage(txt,'ai',[],'vin '+variant),[],'vin '+variant);
+    return;
+  }
+  if(data.limits)applyLimits(data.limits);
+  watchVinJob(data.job);
+  showToast(`${vinLabel(variant)} is running in the background.`,'success');
+}
+
+async function resumeVinRuns(){
+  if(!firebaseAvailable||!firebase.auth().currentUser)return;
+  try{
+    const token=await getFreshToken();
+    const res=await fetch('/vin/jobs',{headers:token?{'Authorization':`Bearer ${token}`}:{}});
+    if(!res.ok)return;
+    const data=await res.json();
+    (data.jobs||[]).filter(j=>j.status==='running'||j.status==='queued')
+      .slice(0,3).forEach(watchVinJob);
+  }catch(e){}
+}
+
+/* ============================================================
    ASK PIPELINE (PRESERVED BACKEND CONTRACT)
    ============================================================ */
 async function ask(){
@@ -2441,6 +2798,23 @@ async function ask(){
   const q=qBox.value.trim();
   const mode=currentMode;
   if(!q)return;
+
+  const variant=vinVariantOf(mode);
+  if(variant){
+    if(!firebaseAvailable||!firebase.auth().currentUser){
+      renderBubble(q,'user');saveMessage(q,'user',[],mode);
+      qBox.value='';qBox.style.height='auto';
+      renderBubble('**System:** Vin runs against your account, so it needs a sign-in.','ai',true,txt=>saveMessage(txt,'ai',[],mode),[],mode);
+      return;
+    }
+    renderBubble(q,'user',false,async ()=>{
+      saveMessage(q,'user',[],mode);
+      await startVinRun(q,variant);
+    },[],mode);
+    qBox.value='';qBox.style.height='auto';
+    return;
+  }
+
   renderBubble(q,'user',false,null,[],mode);
   saveMessage(q,'user',[],mode);
   qBox.value='';qBox.style.height='auto';
@@ -2459,9 +2833,20 @@ async function ask(){
       signal:abortController.signal
     });
 
-    if(!res.ok)throw new Error(`Server status ${res.status}`);
-    const data=await res.json();
+    const data=await res.json().catch(()=>({}));
     toggleInputState(false);
+
+    if(res.status===429){
+      const detail=data&&data.detail?data.detail:{};
+      if(detail.limits)applyLimits(detail.limits);
+      renderBubble(`**System:** ${detail.error||'You’ve used up this allowance.'}`,'ai',true,txt=>saveMessage(txt,'ai',[],mode),[],mode);
+      return;
+    }
+    if(!res.ok){
+      renderBubble(`Connection Error: The server returned status ${res.status}.`,'ai',true,txt=>saveMessage(txt,'ai',[],mode),[],mode);
+      return;
+    }
+    if(data.limits)applyLimits(data.limits);
 
     if(data.error){
       renderBubble(`**System:** ${data.error}`,'ai',true,txt=>{saveMessage(txt,'ai',[],mode);syncLimits();},[],mode);

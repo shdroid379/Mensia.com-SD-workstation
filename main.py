@@ -1,9 +1,11 @@
 import os
 import json
+import hmac
 import asyncio
 from datetime import date
-from fastapi import FastAPI, Request, Header, Depends
+from fastapi import FastAPI, Request, Header, Depends, HTTPException
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 from groq import Groq
@@ -25,6 +27,8 @@ import pipeline
 import ai_answer
 import deep_multi_fetch
 import doc_builder
+import quotas
+import vin_jobs
 
 # =====================================================================
 # 1. FIREBASE ADMIN INITIALIZATION
@@ -44,8 +48,18 @@ if not firebase_admin._apps:
 
 app = FastAPI()
 
+# The local access-code generator opens as a file:// page and calls these APIs.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["null", "file://", "http://127.0.0.1:8000", "http://localhost:8000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+BUCKETS = quotas.BUCKETS
+
 # =====================================================================
-# 2. LIMITS & USAGE TRACKING (UNLOCKED FOR TESTING)
+# 2. AUTH + REAL, ENFORCED LIMITS
 # =====================================================================
 def get_client_ip(request: Request):
     forwarded = request.headers.get("X-Forwarded-For")
@@ -75,9 +89,73 @@ async def get_current_user(request: Request, authorization: str = Header(None)):
         "is_authenticated": False
     }
 
-def check_and_increment_limit(user: dict, mode: str):
-    # UNRESTRICTED FOR ACTIVE TESTING: Always returns allowed
-    return True, 1, 9999, ""
+def _db_or_none():
+    try:
+        return quotas.db_client()
+    except Exception as exc:
+        logger.warning("Firestore unavailable: %s", exc)
+        return None
+
+
+def _shape(snap: dict | None, extra: dict) -> dict:
+    """Uniform /limits body, whether or not Firestore answered."""
+    if snap is None:
+        snap = quotas.snapshot(None)
+    rows = snap["rows"]
+    exhausted = {b: rows[b]["exhausted"] for b in BUCKETS}
+    return {
+        **extra,
+        "plan": snap["plan"],
+        "window": snap["window"],
+        "week": snap["week"],
+        "rows": rows,
+        "limits": {b: rows[b]["cap"] for b in BUCKETS},
+        "usage": {b: rows[b]["used"] for b in BUCKETS},
+        "exhausted": exhausted,
+        "any_exhausted": any(exhausted.values()),
+    }
+
+
+def _unavailable_payload(user: dict) -> dict:
+    return _shape(None, {
+        "is_authenticated": user["is_authenticated"],
+        "email": user["email"],
+        "offline": True,
+    })
+
+
+def _limits_payload(user: dict) -> dict:
+    db = _db_or_none()
+    if db is None:
+        return _unavailable_payload(user)
+    try:
+        doc = quotas.get_or_create(db, user["id"], user["email"])
+    except Exception as exc:
+        logger.warning("limits read failed for %s: %s", user["id"], exc)
+        return _unavailable_payload(user)
+    return _shape(quotas.snapshot(doc), {
+        "is_authenticated": user["is_authenticated"],
+        "email": user["email"],
+        "offline": False,
+    })
+
+
+def _consume(user: dict, mode: str, variant: str | None = None):
+    """Returns (allowed, message, payload). Fails open with no charge if the DB is down."""
+    db = _db_or_none()
+    if db is None:
+        return True, "", _unavailable_payload(user)
+    try:
+        ok, msg, snap = quotas.check_and_consume(
+            db, user["id"], user["email"], mode, variant)
+    except Exception as exc:
+        logger.warning("quota check failed for %s: %s", user["id"], exc)
+        return True, "", _unavailable_payload(user)
+    return ok, msg, _shape(snap, {
+        "is_authenticated": user["is_authenticated"],
+        "email": user["email"],
+        "offline": False,
+    })
 
 # =====================================================================
 # 2.5 CENTRALIZED LOGGING HELPER
@@ -104,22 +182,7 @@ def log_interaction(user: dict, session_id: str, mode: str, question: str, answe
 
 @app.get("/limits")
 async def get_limits(user: dict = Depends(get_current_user)):
-    return {
-        "is_authenticated": user["is_authenticated"],
-        "email": user["email"],
-        "limits": {"casual": 350, "search": 25, "deep research": 3},
-        "usage": {
-            "casual": 0,
-            "search": 0,
-            "deep research": 0,
-            "total_lifetime": 15
-        },
-        "exhausted": {
-            "casual": False,
-            "search": False,
-            "deep research": False
-        }
-    }
+    return _limits_payload(user)
 
 
 @app.post("/api/transcribe")
@@ -164,7 +227,7 @@ histories: dict[str, list[list[str]]] = {}
 
 class Question(BaseModel):
     question: str
-    mode: str = "casual"
+    mode: str = "search"
     session_id: str
 
 def rephrase_if_followup(question: str, session_id: str) -> str:
@@ -188,36 +251,39 @@ def rephrase_if_followup(question: str, session_id: str) -> str:
 
 @app.post("/ask")
 async def ask(q: Question, request: Request, user: dict = Depends(get_current_user)):
+    if not user["is_authenticated"]:
+        raise HTTPException(status_code=401, detail={"error": "Sign in required."})
     mode = q.mode.lower()
-    allowed, count, max_lim, err = check_and_increment_limit(user, mode)
-    if not allowed: return {"error": err}
+    if mode != "search":
+        raise HTTPException(status_code=400, detail={"error": "Unsupported mode."})
+
+    allowed, msg, payload = _consume(user, mode)
+    if not allowed:
+        raise HTTPException(status_code=429, detail={"error": msg, "limits": payload})
 
     rephrased = await asyncio.to_thread(rephrase_if_followup, q.question, q.session_id)
     if await request.is_disconnected(): return {"error": "Aborted"}
 
-    if mode == "search":
-        context, sources = await pipeline.basic_search(rephrased)
-    else:
-        context, sources = "", []
-        mode = "casual"
+    context, sources = await pipeline.basic_search(rephrased)
 
     if await request.is_disconnected(): return {"error": "Aborted"}
 
-    current_history = histories.get(q.session_id, [])
-    answer = await asyncio.to_thread(ai_answer.ai_summary, rephrased, context, mode, current_history) or ""
-    
+    answer = await asyncio.to_thread(ai_answer.ai_summary, rephrased, context, mode) or ""
+
     histories.setdefault(q.session_id, []).append([q.question, answer])
-    
-    # Log the interaction
+
     log_interaction(user, q.session_id, mode, q.question, answer)
-    
-    return {"answer": answer, "sources": sources}
+
+    return {"answer": answer, "sources": sources, "limits": payload}
 
 @app.post("/deep-research")
 async def deep_research(q: Question, request: Request, user: dict = Depends(get_current_user)):
+    if not user["is_authenticated"]:
+        raise HTTPException(status_code=401, detail={"error": "Sign in required."})
     mode = "deep research"
-    allowed, count, max_lim, err = check_and_increment_limit(user, mode)
-    if not allowed: return {"error": err}
+    allowed, msg, payload = _consume(user, mode)
+    if not allowed:
+        raise HTTPException(status_code=429, detail={"error": msg, "limits": payload})
 
     rephrased = await asyncio.to_thread(rephrase_if_followup, q.question, q.session_id)
     if await request.is_disconnected(): return {"error": "Aborted"}
@@ -225,15 +291,135 @@ async def deep_research(q: Question, request: Request, user: dict = Depends(get_
     context, sources = await deep_multi_fetch.combined_research(rephrased)
     if await request.is_disconnected(): return {"error": "Aborted"}
 
-    current_history = histories.get(q.session_id, [])
-    answer = await asyncio.to_thread(ai_answer.ai_summary, rephrased, context, mode, current_history) or ""
+    answer = await asyncio.to_thread(ai_answer.ai_summary, rephrased, context, mode) or ""
 
     histories.setdefault(q.session_id, []).append([q.question, answer])
-    
-    # Log the interaction
+
     log_interaction(user, q.session_id, mode, q.question, answer)
-    
-    return {"answer": answer, "sources": sources}
+
+    return {"answer": answer, "sources": sources, "limits": payload}
+
+# =====================================================================
+# 3.5 VIN - BACKGROUND RESEARCH ENGINE
+# =====================================================================
+class VinRequest(BaseModel):
+    question: str
+    variant: str = "base"
+    session_id: str
+
+@app.post("/vin")
+async def start_vin(req: VinRequest, user: dict = Depends(get_current_user)):
+    if not user["is_authenticated"]:
+        raise HTTPException(status_code=401, detail={
+            "error": "Vin runs against your account, so it needs a sign-in."})
+
+    db = _db_or_none()
+    if db is None:
+        raise HTTPException(status_code=503, detail={
+            "error": "Vin is briefly unavailable. Try again in a moment."})
+
+    variant = "investigator" if req.variant.lower().startswith("inv") else "base"
+    allowed, msg, payload = _consume(user, "vin", variant)
+    if not allowed:
+        raise HTTPException(status_code=429, detail={"error": msg, "limits": payload})
+
+    job = vin_jobs.create_job(db, user, req.question, variant)
+    vin_jobs.submit(db, job["job_id"], req.question, job["variant"])
+    log_interaction(user, req.session_id, f"vin {variant}", req.question, f"job {job['job_id']}")
+    return {"job": vin_jobs.public_view(job), "limits": payload}
+
+
+@app.get("/vin/jobs")
+async def my_vin_jobs(user: dict = Depends(get_current_user)):
+    db = _db_or_none()
+    if db is None:
+        return {"jobs": []}
+    try:
+        return {"jobs": vin_jobs.list_mine(db, user["id"])}
+    except Exception as exc:
+        logger.warning("job list failed for %s: %s", user["id"], exc)
+        return {"jobs": []}
+
+
+@app.get("/vin/{job_id}")
+async def poll_vin(job_id: str, user: dict = Depends(get_current_user)):
+    db = _db_or_none()
+    if db is None:
+        raise HTTPException(status_code=503, detail={"error": "Vin is briefly unavailable."})
+    job = vin_jobs.load_mine(db, job_id, user["id"])
+    if job is None:
+        raise HTTPException(status_code=404, detail={"error": "No such run."})
+    return {"job": job}
+
+# =====================================================================
+# 3.6 ACCESS CODES
+# =====================================================================
+class RedeemRequest(BaseModel):
+    code: str
+
+@app.post("/access/redeem")
+async def redeem_access(req: RedeemRequest, user: dict = Depends(get_current_user)):
+    if not user["is_authenticated"]:
+        raise HTTPException(status_code=401, detail={
+            "error": "Sign in before redeeming an access code."})
+    db = _db_or_none()
+    if db is None:
+        raise HTTPException(status_code=503, detail={
+            "error": "Codes can't be checked right now. Try again shortly."})
+    ok, msg, snap = quotas.redeem_code(db, user["id"], user["email"], req.code)
+    if not ok:
+        raise HTTPException(status_code=400, detail={"error": msg})
+    return {"message": msg, "limits": _shape(snap, {
+        "is_authenticated": user["is_authenticated"],
+        "email": user["email"],
+        "offline": False,
+    })}
+
+
+class AdminCodeRequest(BaseModel):
+    secret: str
+    kind: str = "extra"
+    count: int = 1
+
+def _admin_ok(secret: str) -> bool:
+    expected = os.getenv("MENSIA_ADMIN_SECRET", "")
+    return bool(expected) and hmac.compare_digest(secret or "", expected)
+
+@app.post("/admin/access/codes")
+async def admin_generate_codes(req: AdminCodeRequest):
+    if not _admin_ok(req.secret):
+        raise HTTPException(status_code=403, detail={"error": "Invalid admin secret."})
+    db = _db_or_none()
+    if db is None:
+        raise HTTPException(status_code=503, detail={"error": "Firestore unavailable."})
+    kind = "special" if req.kind.lower().startswith("spec") else "extra"
+    codes = []
+    for _ in range(max(1, min(req.count, 50))):
+        code, hashed = quotas.generate_code(kind)
+        quotas.store_code(db, kind, code, hashed)
+        codes.append(code)
+    return {"kind": kind, "codes": codes}
+
+
+@app.post("/admin/access/list")
+async def admin_list_codes(req: AdminCodeRequest):
+    if not _admin_ok(req.secret):
+        raise HTTPException(status_code=403, detail={"error": "Invalid admin secret."})
+    db = _db_or_none()
+    if db is None:
+        raise HTTPException(status_code=503, detail={"error": "Firestore unavailable."})
+    return {"codes": quotas.list_codes(db)}
+
+
+@app.on_event("startup")
+async def _resume_interrupted_vin_runs():
+    db = _db_or_none()
+    if db is None:
+        return
+    try:
+        await vin_jobs.recover_orphans(db)
+    except Exception as exc:
+        logger.warning("Vin orphan recovery failed: %s", exc)
 
 # =====================================================================
 # 4. DOCUMENT EXPORT ENDPOINTS
@@ -272,6 +458,9 @@ def get_robots():
 @app.get("/plans")
 @app.get("/guide")
 @app.get("/account")
+@app.get("/increased-access")
+@app.get("/about-vin")
+@app.get("/extra-access")
 def serve_spa_pages():
     return FileResponse("static/index.html")
 

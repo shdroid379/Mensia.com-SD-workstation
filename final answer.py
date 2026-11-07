@@ -30,7 +30,7 @@ elif mode.lower() == "deep research":
 else:
     print(f"Asking AI: {question}")
     searched_content = ""
-    mode = "casual"
+    mode = "search"
 
 final_answer = ai_answer.ai_summary(question, searched_content, mode)
 print(final_answer)
@@ -62,7 +62,7 @@ while True:
             searched_content = pipeline.basic_search(rephrased_prompt)
         else:
             searched_content = ""
-            mode = "casual"
+            mode = "search"
         final_answer = ai_answer.ai_summary(rephrased_prompt, searched_content, mode)
         print(final_answer)
         history.append([question, final_answer])
