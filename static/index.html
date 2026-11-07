@@ -2836,7 +2836,10 @@ async function ask(){
     const data=await res.json().catch(()=>({}));
     toggleInputState(false);
 
-    if(res.status===429){
+    if(res.status===401){
+      renderBubble('**System:** Please sign in to use this mode. [Sign In](#) (use the Sign In button above).','ai',true,txt=>saveMessage(txt,'ai',[],mode),[],mode);
+      return;
+    }
       const detail=data&&data.detail?data.detail:{};
       if(detail.limits)applyLimits(detail.limits);
       renderBubble(`**System:** ${detail.error||'You’ve used up this allowance.'}`,'ai',true,txt=>saveMessage(txt,'ai',[],mode),[],mode);
