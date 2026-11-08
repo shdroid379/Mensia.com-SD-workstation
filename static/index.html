@@ -2513,8 +2513,24 @@ function processMarkdown(rawText,sources=[]){
   let h=marked.parse(t);
   maths.forEach(({tk,m})=>{h=h.replace(tk,m);});
   if(sources&&sources.length){
-    const sm={};sources.forEach(s=>sm[s.id]=s.url);
-    h=h.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g,(match,nums)=>nums.split(',').map(id=>{id=id.trim();const u=sm[id];return u?`<a href="${u}" target="_blank" rel="noopener noreferrer" class="cit" title="${u}">${id}</a>`:`[${id}]`;}).join(''));
+    const sm={};
+    sources.forEach(s=>{
+      const id=String(s.id||'').trim().toUpperCase();
+      if(!id||!s.url)return;
+      sm[id]=s.url;
+      if(/^S\d+$/.test(id))sm[id.slice(1)]=s.url;
+      else if(/^\d+$/.test(id))sm['S'+id]=s.url;
+    });
+    // Vin cites sources as [S1], while Search may use [1]. Resolve both forms,
+    // including grouped citations such as [S1, S2], without touching Markdown links.
+    h=h.replace(/\[((?:S?\d{1,4})(?:\s*[,;/]\s*S?\d{1,4})*)\]/gi,(match,refs)=>{
+      const parts=refs.split(/\s*[,;/]\s*/);
+      const linked=parts.map(ref=>{
+        const id=ref.trim();const u=sm[id.toUpperCase()];
+        return u?`<a href="${u}" target="_blank" rel="noopener noreferrer" class="cit" title="Open source ${id}">${id}</a>`:`[${id}]`;
+      });
+      return linked.join(' ');
+    });
   }
   return h;
 }
