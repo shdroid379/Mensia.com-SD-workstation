@@ -2663,6 +2663,7 @@ function stopGeneration(){if(abortController)abortController.abort();toggleInput
    ============================================================ */
 const VIN_POLL_MS=10000;
 const vinTimers={};
+const vinLiveTimers={};
 const vinReports={};
 
 function openVinReport(jobId){
@@ -2701,9 +2702,35 @@ function vinClock(job){
   if(!s&&job.submitted_at){
     s=Math.max(0,Math.round((Date.now()-new Date(job.submitted_at).getTime())/1000));
   }
-  if(!s)return '0m';
+  if(!s)return '0s';
   const m=Math.floor(s/60);
-  return m<60?`${m}m`:`${m}h ${m%60}m`;
+  if(m<1)return `${s}s`;
+  return m<60?`${m}m ${s%60}s`:`${Math.floor(m/60)}h ${m%60}m`;
+}
+
+function vinLiveMessage(job){
+  const phase=(job.phase||'').toLowerCase();
+  let messages=['Vin is working through the research brief.','Checking progress and preparing the next step.'];
+  if(job.phase==='Queued')messages=['Your research brief is queued.','Vin will begin as soon as capacity is available.'];
+  else if(phase.includes('web')||phase.includes('source'))messages=['Reading and comparing live sources.','Gathering evidence for the report.'];
+  else if(phase.includes('writing')||phase.includes('report'))messages=['Drafting your report.','Organising the findings into a clear report.'];
+  else if(phase.includes('audit')||phase.includes('cross-check'))messages=['Reviewing the report for accuracy.','Checking claims against the available evidence.'];
+  const seconds=Math.floor((Date.now()-new Date(job.started_at||job.submitted_at||Date.now()).getTime())/1000);
+  return messages[Math.floor(seconds/8)%messages.length];
+}
+
+function refreshVinTracker(job){
+  const row=document.getElementById('vin-row-'+job.job_id);
+  if(!row)return;
+  const elapsed=row.querySelector('.vin-track-elapsed');
+  const live=row.querySelector('.vin-track-live');
+  if(elapsed)elapsed.innerText=`${vinClock(job)} elapsed`;
+  if(live)live.innerText=vinLiveMessage(job);
+}
+function startVinLiveUpdates(job){
+  if(vinLiveTimers[job.job_id])clearInterval(vinLiveTimers[job.job_id]);
+  refreshVinTracker(job);
+  vinLiveTimers[job.job_id]=setInterval(()=>refreshVinTracker(job),1000);
 }
 
 function vinTrackHtml(job){
@@ -2719,8 +2746,8 @@ function vinTrackHtml(job){
     <div class="vin-track-phase">${escHtml(phase)}</div>
     <div class="vin-track-bar-wrap"><div class="vin-track-bar" style="width:${pct}%"></div></div>
     <div class="vin-track-meta">
-      <span>${pct}%</span><span>${vinClock(job)} elapsed</span>
-      <span>${fail?'Query returned':'Runs in the background — safe to close this tab'}</span>
+      <span>${pct}%</span><span class="vin-track-elapsed">${vinClock(job)} elapsed</span>
+      <span class="vin-track-live">${fail?'Query returned':escHtml(vinLiveMessage(job))}</span>
     </div>
   </div>`;
 }
@@ -2768,10 +2795,12 @@ function paintVinTracker(job){
     cv.appendChild(vinTrackerRow(job));
     scrollChatToBottom(true);
   }
+  startVinLiveUpdates(job);
 }
 
 function stopVinPoll(id){
   if(vinTimers[id]){clearInterval(vinTimers[id]);delete vinTimers[id];}
+  if(vinLiveTimers[id]){clearInterval(vinLiveTimers[id]);delete vinLiveTimers[id];}
 }
 
 async function pollVinJob(id){
