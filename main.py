@@ -44,7 +44,7 @@ if not firebase_admin._apps:
             cred = credentials.Certificate(json.loads(sa_json))
             firebase_admin.initialize_app(cred)
         else:
-            print("Running in guest-ready Firebase fallback mode.")
+            logger.warning("Firebase credentials are not configured; authenticated requests will be unavailable.")
 
 app = FastAPI()
 
@@ -81,13 +81,9 @@ async def get_current_user(request: Request, authorization: str = Header(None)):
             }
         except Exception as e:
             print(f"Auth token verification failed: {e}")
-    
-    client_ip = get_client_ip(request)
-    return {
-        "id": f"ip_{client_ip}",
-        "email": None,
-        "is_authenticated": False
-    }
+    raise HTTPException(status_code=401, detail={
+        "error": "Please sign in or create an account to use Mensia."
+    })
 
 def _db_or_none():
     try:
@@ -251,8 +247,6 @@ def rephrase_if_followup(question: str, session_id: str) -> str:
 
 @app.post("/ask")
 async def ask(q: Question, request: Request, user: dict = Depends(get_current_user)):
-    if not user["is_authenticated"]:
-        raise HTTPException(status_code=401, detail={"error": "Sign in required."})
     mode = q.mode.lower()
     if mode != "search":
         raise HTTPException(status_code=400, detail={"error": "Unsupported mode."})
@@ -278,8 +272,6 @@ async def ask(q: Question, request: Request, user: dict = Depends(get_current_us
 
 @app.post("/deep-research")
 async def deep_research(q: Question, request: Request, user: dict = Depends(get_current_user)):
-    if not user["is_authenticated"]:
-        raise HTTPException(status_code=401, detail={"error": "Sign in required."})
     mode = "deep research"
     allowed, msg, payload = _consume(user, mode)
     if not allowed:
@@ -428,17 +420,17 @@ class ExportRequest(BaseModel):
     markdown: str
 
 @app.post("/export/pdf")
-def export_pdf(req: ExportRequest):
+def export_pdf(req: ExportRequest, user: dict = Depends(get_current_user)):
     buf = doc_builder.build_pdf_buffer(req.markdown)
     return StreamingResponse(buf, media_type="application/pdf", headers={"Content-Disposition": "attachment; filename=Mensia_Dossier.pdf"})
 
 @app.post("/export/docx")
-def export_docx(req: ExportRequest):
+def export_docx(req: ExportRequest, user: dict = Depends(get_current_user)):
     buf = doc_builder.build_docx_buffer(req.markdown)
     return StreamingResponse(buf, media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", headers={"Content-Disposition": "attachment; filename=Mensia_Dossier.docx"})
 
 @app.post("/export/md")
-def export_md(req: ExportRequest):
+def export_md(req: ExportRequest, user: dict = Depends(get_current_user)):
     buf = doc_builder.build_markdown_buffer(req.markdown)
     return StreamingResponse(buf, media_type="text/markdown", headers={"Content-Disposition": "attachment; filename=Mensia_Dossier.md"})
 

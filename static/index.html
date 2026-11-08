@@ -757,6 +757,16 @@ img { display:block; max-width:100%; }
 
 /* CHAT MAIN */
 .chat-main { flex:1; display:flex; flex-direction:column; min-width:0; position:relative; background:var(--surface); }
+.vin-report-panel { width:min(48vw,680px); display:none; flex-direction:column; background:var(--bg-elevated); border-left:1px solid var(--divider); min-width:360px; }
+.app-view.report-open .vin-report-panel { display:flex; }
+.vin-report-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px; border-bottom:1px solid var(--divider); }
+.vin-report-head h2 { font-size:1.05rem; font-weight:600; }
+.vin-report-close { border:1px solid var(--glass-border); background:transparent; color:var(--muted); border-radius:6px; padding:6px 9px; }
+.vin-report-content { flex:1; overflow-y:auto; padding:28px; font-size:.93rem; line-height:1.75; }
+.vin-report-content h1,.vin-report-content h2,.vin-report-content h3 { margin:22px 0 10px; font-family:'Playfair Display',serif; }
+.vin-report-content p,.vin-report-content ul,.vin-report-content ol,.vin-report-content pre { margin-bottom:14px; }
+.vin-report-content ul,.vin-report-content ol { margin-left:24px; }
+.vin-report-content pre { overflow:auto; padding:14px; background:var(--accent-soft); border:1px solid var(--divider); border-radius:8px; }
 .mobile-subnav { display:none; }
 .hist-overlay { display:none; }
 
@@ -976,6 +986,7 @@ select#mode { display:none; }
 
 @media (max-width:768px) {
   .app-view { flex-direction:column !important; }
+  .vin-report-panel { position:absolute; inset:0; z-index:50; width:100%; min-width:0; }
   .sidebar { display:none !important; }
   .mobile-subnav {
     display:flex !important; justify-content:space-between; align-items:center;
@@ -1364,16 +1375,8 @@ select#mode { display:none; }
       <tbody>
         <tr>
           <td>
-            <div class="plans-tier-name">Free Account</div>
-            <div class="plans-tier-desc">No login required. Start immediately.</div>
-          </td>
-          <td><div class="plans-tier-features">5 Search &nbsp;·&nbsp; 1 Deep Research</div></td>
-          <td><div class="plans-tier-price">Free</div></td>
-        </tr>
-        <tr>
-          <td>
-            <div class="plans-tier-name">Registered</div>
-            <div class="plans-tier-desc">Free account. Adds Vin and keeps your archive.</div>
+            <div class="plans-tier-name">Registered (Free)</div>
+            <div class="plans-tier-desc">Your account includes Vin and keeps your archive.</div>
           </td>
           <td><div class="plans-tier-features">5 Search &nbsp;·&nbsp; 1 Deep Research &nbsp;·&nbsp; 1 Vin</div></td>
           <td><div class="plans-tier-price">Free</div></td>
@@ -1463,7 +1466,7 @@ select#mode { display:none; }
             <span class="mode-row-name">Vin — Investigator</span>
             <span class="mode-row-pill">15–35 minutes</span>
           </div>
-          <p class="mode-row-p">Everything Base does, plus an adversarial pass.</p>
+          <p class="mode-row-p">A more comprehensive Vin research run for complex investigations.</p>
         </div>
       </div>
     </div>
@@ -1590,8 +1593,8 @@ select#mode { display:none; }
     </div>
     <div class="guide-section">
       <div class="guide-section-label"><i class="fa-solid fa-clock"></i> Runtime</div>
-      <div class="mode-row"><div class="mode-row-body"><div class="mode-row-head"><span class="mode-row-name">Vin Base</span><span class="mode-row-pill">10–25 min</span></div><p class="mode-row-p">Audit included; no red-team, claim audit, or polish.</p></div></div>
-      <div class="mode-row"><div class="mode-row-body"><div class="mode-row-head"><span class="mode-row-name">Vin Investigate</span><span class="mode-row-pill">15–35 min</span></div><p class="mode-row-p">Full red-team, claim audit, and polish.</p></div></div>
+      <div class="mode-row"><div class="mode-row-body"><div class="mode-row-head"><span class="mode-row-name">Vin Base</span><span class="mode-row-pill">10–25 min</span></div><p class="mode-row-p">A focused research report with an audit.</p></div></div>
+      <div class="mode-row"><div class="mode-row-body"><div class="mode-row-head"><span class="mode-row-name">Vin Investigator</span><span class="mode-row-pill">15–35 min</span></div><p class="mode-row-p">A comprehensive research report with claim audit and audit.</p></div></div>
     </div>
     <div class="guide-section">
       <div class="guide-section-label"><i class="fa-solid fa-triangle-exclamation"></i> Note</div>
@@ -1605,7 +1608,7 @@ select#mode { display:none; }
   <div class="profile-inner">
     <div class="profile-ident">
       <div class="profile-monogram" id="profile-avatar-initial">U</div>
-      <h1 class="profile-name" id="profile-name-display">Guest</h1>
+      <h1 class="profile-name" id="profile-name-display">Your account</h1>
       <p class="profile-email" id="profile-email-display">user@example.com</p>
       <div class="profile-tags">
         <span class="profile-tag">Free Tier</span>
@@ -1755,19 +1758,19 @@ select#mode { display:none; }
             <div class="mode-dropdown" id="mode-dropdown" role="listbox">
               <button class="mode-opt selected" data-mode="search" onclick="selectMode('search')">
                 <span class="mode-opt-dot"></span>
-                <div class="mode-opt-text"><div class="mode-opt-name">Search</div><div class="mode-opt-desc">Live web grounding with inline citations.</div></div>
+                <div class="mode-opt-text"><div class="mode-opt-name">Search</div></div>
               </button>
               <button class="mode-opt" data-mode="deep research" onclick="selectMode('deep research')">
                 <span class="mode-opt-dot"></span>
-                <div class="mode-opt-text"><div class="mode-opt-name">Deep Research</div><div class="mode-opt-desc">Multi-source synthesis. Full audited report.</div></div>
+                <div class="mode-opt-text"><div class="mode-opt-name">Deep Research</div></div>
               </button>
               <button class="mode-opt" data-mode="vin base" onclick="selectMode('vin base')">
                 <span class="mode-opt-dot"></span>
-                <div class="mode-opt-text"><div class="mode-opt-name">Vin — Base</div><div class="mode-opt-desc">Deep accuracy run. Every claim audited against its source. 10–20 minutes.</div></div>
+                <div class="mode-opt-text"><div class="mode-opt-name">Vin — Base</div></div>
               </button>
               <button class="mode-opt" data-mode="vin investigator" onclick="selectMode('vin investigator')">
                 <span class="mode-opt-dot"></span>
-                <div class="mode-opt-text"><div class="mode-opt-name">Vin — Investigator</div><div class="mode-opt-desc">Base plus an adversarial pass. 15–35 minutes.</div></div>
+                <div class="mode-opt-text"><div class="mode-opt-name">Vin — Investigator</div></div>
               </button>
             </div>
           </div>    
@@ -1820,6 +1823,10 @@ select#mode { display:none; }
       <option value="vin investigator">vin investigator</option>
     </select>
   </div>
+  <aside class="vin-report-panel" id="vin-report-panel" aria-label="Vin report preview">
+    <div class="vin-report-head"><h2 id="vin-report-title">Vin report preview</h2><button class="vin-report-close" onclick="closeVinReport()" aria-label="Close report preview"><i class="fa-solid fa-xmark"></i></button></div>
+    <article class="vin-report-content" id="vin-report-content"></article>
+  </aside>
 </div>
 
 <div class="toast-stack" id="toast-stack"></div>
@@ -1867,7 +1874,7 @@ async function getFreshToken(){
 let activeAuthTab='login';
 
 function formatUserName(user){
-  if(!user)return"Guest";
+  if(!user)return"";
   if(user.displayName&&user.displayName.trim())return user.displayName;
   if(user.email){
     const h=user.email.split('@')[0];
@@ -1875,7 +1882,7 @@ function formatUserName(user){
   }
   return"Mensia User";
 }
-function firstNameOf(user){const f=formatUserName(user);if(!f||f==="Guest")return null;return f.split(' ')[0];}
+function firstNameOf(user){const f=formatUserName(user);if(!f)return null;return f.split(' ')[0];}
 
 if(firebaseAvailable){
   firebase.auth().onAuthStateChanged(async(user)=>{
@@ -1916,13 +1923,17 @@ function updateAuthUI(user){
 function handleNavAuthClick(){
   if(firebaseAvailable&&firebase.auth().currentUser)showView('profile');else openAuthModal();
 }
-function openAuthModal(){
+function openAuthModal(tab='login'){
   document.getElementById('auth-modal-overlay').classList.add('open');
   document.getElementById('auth-name').value='';
   document.getElementById('auth-email').value='';
   document.getElementById('auth-password').value='';
   document.getElementById('auth-error-msg').innerText='';
-  switchAuthTab(activeAuthTab);
+  switchAuthTab(tab);
+}
+function requireSignIn(){
+  openAuthModal('login');
+  showToast('Sign in or create an account to send a message.','info');
 }
 function closeAuthModal(){
   document.getElementById('auth-modal-overlay').classList.remove('open');
@@ -2247,8 +2258,8 @@ const FAQ_ITEMS=[
   {q:"What makes an AI search engine different from a regular chatbot?",a:"An AI search engine like Mensia reads live web pages before answering instead of relying only on pre-trained memory, so responses reflect current information and can be traced back to a real source."},
   {q:"Does Mensia AI show its sources?",a:"Yes. Every Search, Deep Research and Vin answer includes numbered inline citations plus an expandable sources panel linking straight to the pages used."},
   {q:"What is Deep Research mode used for?",a:"Deep Research fires multiple concurrent queries across independent sources and synthesises them into one audited report — useful for comparisons, market research, and technical or academic-style summaries."},
-  {q:"What is Vin?",a:"Vin is Mensia's newest research engine, built for accuracy rather than speed. It reads the live web, reconciles every figure against its source, writes the report, then audits each claim individually and shows you which claims held and which were corrected. Base takes 10–20 minutes; Investigator adds an adversarial pass that tries to break the draft before it ships and takes 15–35 minutes. Edge cases run longer."},
-  {q:"Why does Vin take so long?",a:"Because it doesn't stop at one pass. Sources are fetched and cross-checked, the draft is challenged for weak claims, counter-evidence is hunted down, and every claim is then re-audited against its source. A run that finishes in four minutes hasn't done that work."},
+  {q:"What is Vin?",a:"Vin is Mensia's long-form research engine. It produces an auditable report from live sources. Base typically takes 10–20 minutes; Investigator typically takes 15–35 minutes."},
+  {q:"Why does Vin take so long?",a:"Vin is designed for thorough research and report preparation, so it runs in the background while you continue using Mensia."},
   {q:"Is Mensia AI free to use?",a:"Yes, and there's nothing to pay yet. A free account gets 5 Search, 1 Deep Research and 1 Vin run for life. Limits don't renew — the Increased Access page explains how to ask for more by hand."},
   {q:"Can I export an answer as a document?",a:"Deep Research and Vin answers include export buttons for PDF, Word, and Markdown so you can save or share the full dossier."}
 ];
@@ -2525,7 +2536,9 @@ function addExportButtons(row,text){
 async function exportDoc(fmt,text,btn){
   const orig=btn.innerHTML;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';
   try{
-    const res=await fetch(`/export/${fmt}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({markdown:text})});
+    const token=await getFreshToken();
+    if(!token){requireSignIn();throw new Error('Authentication required');}
+    const res=await fetch(`/export/${fmt}`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},body:JSON.stringify({markdown:text})});
     if(!res.ok)throw new Error();
     const blob=await res.blob();const url=URL.createObjectURL(blob);
     const a=document.createElement('a');a.href=url;a.download=`Mensia_Report.${fmt}`;a.click();URL.revokeObjectURL(url);
@@ -2650,6 +2663,28 @@ function stopGeneration(){if(abortController)abortController.abort();toggleInput
    ============================================================ */
 const VIN_POLL_MS=10000;
 const vinTimers={};
+const vinReports={};
+
+function openVinReport(jobId){
+  const report=vinReports[jobId];
+  if(!report)return;
+  document.getElementById('app-view')?.classList.add('report-open');
+  document.getElementById('vin-report-title').innerText=`${vinLabel(report.variant)} report`;
+  const content=document.getElementById('vin-report-content');
+  content.innerHTML=processMarkdown(report.dossier,report.sources||[])+buildSourcesHtml(report.sources||[]);
+  renderMath(content);
+  content.scrollTop=0;
+}
+function closeVinReport(){document.getElementById('app-view')?.classList.remove('report-open');}
+function renderVinReady(job){
+  const row=document.createElement('div');row.className='msg-row ai';
+  const bubble=document.createElement('div');bubble.className='bubble ai';
+  bubble.innerHTML='<p><strong>Your report is fully ready to view and download!</strong></p>';
+  const preview=document.createElement('button');preview.className='bact';preview.innerHTML='<i class="fa-solid fa-eye"></i> Preview';preview.onclick=()=>openVinReport(job.job_id);
+  const actions=document.createElement('div');actions.className='bubble-actions';actions.appendChild(preview);
+  row.appendChild(bubble);row.appendChild(actions);addExportButtons(row,job.dossier||'');
+  document.getElementById('chat-view').appendChild(row);scrollChatToBottom(false);
+}
 
 function vinVariantOf(mode){
   if(mode==='vin investigator')return 'investigator';
@@ -2718,11 +2753,9 @@ function paintVinTracker(job){
   if(job.status==='complete'){
     stopVinPoll(job.job_id);
     document.getElementById('vin-row-'+job.job_id)?.remove();
-    const srcs=job.sources||[];
-    const mode='vin '+(job.variant||'base');
-    renderBubble(job.dossier||'','ai',false,txt=>{
-      saveMessage(txt,'ai',srcs,mode);syncLimits();
-    },srcs,mode);
+    vinReports[job.job_id]={dossier:job.dossier||'',sources:job.sources||[],variant:job.variant||'base'};
+    renderVinReady(job);
+    syncLimits();
     return;
   }
   const existing=document.getElementById('vin-row-'+job.job_id);
@@ -2754,6 +2787,7 @@ async function pollVinJob(id){
 function watchVinJob(job){
   paintVinTracker(job);
   stopVinPoll(job.job_id);
+  if(job.status==='complete'||job.status==='failed')return;
   vinTimers[job.job_id]=setInterval(()=>pollVinJob(job.job_id),VIN_POLL_MS);
 }
 
@@ -2785,7 +2819,7 @@ async function resumeVinRuns(){
     const res=await fetch('/vin/jobs',{headers:token?{'Authorization':`Bearer ${token}`}:{}});
     if(!res.ok)return;
     const data=await res.json();
-    (data.jobs||[]).filter(j=>j.status==='running'||j.status==='queued')
+    (data.jobs||[]).filter(j=>j.status==='running'||j.status==='queued'||j.status==='complete')
       .slice(0,3).forEach(watchVinJob);
   }catch(e){}
 }
@@ -2798,15 +2832,10 @@ async function ask(){
   const q=qBox.value.trim();
   const mode=currentMode;
   if(!q)return;
+  if(!firebaseAvailable||!firebase.auth().currentUser){requireSignIn();return;}
 
   const variant=vinVariantOf(mode);
   if(variant){
-    if(!firebaseAvailable||!firebase.auth().currentUser){
-      renderBubble(q,'user');saveMessage(q,'user',[],mode);
-      qBox.value='';qBox.style.height='auto';
-      renderBubble('**System:** Vin runs against your account, so it needs a sign-in.','ai',true,txt=>saveMessage(txt,'ai',[],mode),[],mode);
-      return;
-    }
     renderBubble(q,'user',false,async ()=>{
       saveMessage(q,'user',[],mode);
       await startVinRun(q,variant);
@@ -2835,18 +2864,11 @@ async function ask(){
 
     const data=await res.json().catch(()=>({}));
     toggleInputState(false);
-
-    if(res.status===401){
-      renderBubble('**System:** Please sign in to use this mode. [Sign In](#) (use the Sign In button above).','ai',true,txt=>saveMessage(txt,'ai',[],mode),[],mode);
-      return;
-    }
+    if(!res.ok){
+      if(res.status===401){requireSignIn();return;}
       const detail=data&&data.detail?data.detail:{};
       if(detail.limits)applyLimits(detail.limits);
       renderBubble(`**System:** ${detail.error||'You’ve used up this allowance.'}`,'ai',true,txt=>saveMessage(txt,'ai',[],mode),[],mode);
-      return;
-    }
-    if(!res.ok){
-      renderBubble(`Connection Error: The server returned status ${res.status}.`,'ai',true,txt=>saveMessage(txt,'ai',[],mode),[],mode);
       return;
     }
     if(data.limits)applyLimits(data.limits);
