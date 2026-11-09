@@ -18,6 +18,8 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from urllib.parse import urlparse
+
 import quotas
 import vin
 
@@ -181,6 +183,12 @@ async def _run(db, job_id: str, query: str, variant: str) -> None:
 
 
 def _read_sources(run_dir: Path) -> list[dict]:
+    """Flatten sources.json into the list the report viewer turns into links.
+
+    vin.py writes {"cited": [...], "unknown": [...], "registry": {"S1": {...}}},
+    while other writers may leave a plain list. Both shapes are accepted so that
+    every [S#] citation in the dossier resolves to a real URL.
+    """
     src_file = run_dir / "sources.json"
     if not src_file.exists():
         return []
@@ -188,15 +196,57 @@ def _read_sources(run_dir: Path) -> list[dict]:
         raw = json.loads(src_file.read_text(encoding="utf-8"))
     except Exception:
         return []
-    out = []
-    for item in raw if isinstance(raw, list) else []:
+
+    registry: dict[str, dict] = {}
+    order: list[str] = []
+
+    if isinstance(raw, dict):
+        reg = raw.get("registry")
+        if isinstance(reg, dict):
+            for sid, item in reg.items():
+                if isinstance(item, dict):
+                    registry[str(sid).strip().upper()] = item
+        for key in ("cited", "unknown"):
+            ids = raw.get(key)
+            if not isinstance(ids, list):
+                continue
+            for sid in ids:
+                sid = str(sid).strip().upper()
+                if sid in registry and sid not in order:
+                    order.append(sid)
+        for sid in registry:
+            if sid not in order:
+                order.append(sid)
+    elif isinstance(raw, list):
+        for idx, item in enumerate(raw, 1):
+            if not isinstance(item, dict):
+                continue
+            sid = str(item.get("source_id") or item.get("id") or idx).strip().upper()
+            if not sid.startswith("S"):
+                sid = f"S{sid}"
+            registry[sid] = item
+            if sid not in order:
+                order.append(sid)
+
+    out: list[dict] = []
+    seen: set[str] = set()
+    for sid in order:
+        item = registry.get(sid) or {}
+        url = str(item.get("url") or "").strip()
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        domain = str(item.get("domain") or "").strip() or urlparse(url).netloc.removeprefix("www.")
         out.append({
-            "id": item.get("source_id") or item.get("id") or "",
-            "title": (item.get("title") or "")[:300],
-            "url": item.get("url") or "",
-            "date": (item.get("date") or "")[:40],
+            "id": sid,
+            "title": (str(item.get("title") or domain or url))[:300],
+            "url": url,
+            "domain": domain,
+            "date": (str(item.get("date") or ""))[:40],
         })
-    return out[:80]
+        if len(out) >= 80:
+            break
+    return out
 
 
 async def _keep_alive(db, job_id: str) -> None:

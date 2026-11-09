@@ -2383,87 +2383,135 @@ function checkEnter(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask()
    DEEPGRAM NOVA-3 VOICE RECORDING & VISUALIZER
    ============================================================ */
 let mediaRecorder = null;
+let mediaStream = null;
 let audioChunks = [];
 let audioContext = null;
 let analyser = null;
 let dataArray = null;
 let animationId = null;
 let isRecording = false;
+let isTranscribing = false;
+let recordingBaseText = '';
 
-async function toggleVoiceInput() {
+const INPUT_PLACEHOLDER = 'Define the parameters of your research... (press / to focus)';
+
+function pickRecorderMime(){
+  if(typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
+  return ['audio/webm;codecs=opus','audio/webm','audio/ogg;codecs=opus','audio/mp4']
+    .find(type => MediaRecorder.isTypeSupported(type)) || '';
+}
+function extensionForMime(mime){
+  if(mime.includes('ogg')) return 'ogg';
+  if(mime.includes('mp4')) return 'm4a';
+  return 'webm';
+}
+function releaseMicrophone(){
+  if(mediaStream){ mediaStream.getTracks().forEach(track => track.stop()); mediaStream = null; }
+  if(audioContext && audioContext.state !== 'closed'){ audioContext.close().catch(()=>{}); }
+  audioContext = null; analyser = null; dataArray = null;
+}
+function setVoiceUiRecording(on){
   const micBtn = document.getElementById('mic-btn');
   const micSvg = document.getElementById('mic-svg');
   const micStopSvg = document.getElementById('mic-stop-svg');
   const visualizer = document.getElementById('audio-visualizer-container');
   const chatInput = document.getElementById('question');
+  if(micBtn) micBtn.classList.toggle('recording', on);
+  if(micSvg) micSvg.style.display = on ? 'none' : 'block';
+  if(micStopSvg) micStopSvg.style.display = on ? 'block' : 'none';
+  if(visualizer) visualizer.style.display = on ? 'flex' : 'none';
+  if(chatInput) chatInput.style.display = on ? 'none' : 'block';
+}
+function resetVoicePlaceholderSoon(){
+  setTimeout(() => {
+    const el = document.getElementById('question');
+    if(el && !isRecording && !isTranscribing) el.placeholder = INPUT_PLACEHOLDER;
+  }, 3000);
+}
+
+async function toggleVoiceInput() {
+  if (isTranscribing) return;
+  const chatInput = document.getElementById('question');
 
   if (isRecording) {
-    // STOP RECORDING
+    // STOP RECORDING — mediaRecorder.onstop hands the audio to processAudio.
     isRecording = false;
-    mediaRecorder.stop();
-    cancelAnimationFrame(animationId);
-    if (audioContext && audioContext.state !== 'closed') audioContext.close();
-    
-    // UI Reset
-    micBtn.classList.remove('recording');
-    micSvg.style.display = 'block';
-    micStopSvg.style.display = 'none';
-    visualizer.style.display = 'none';
-    chatInput.style.display = 'block';
-    
-    chatInput.value = "";
+    if (animationId) cancelAnimationFrame(animationId);
+    animationId = null;
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    } else {
+      releaseMicrophone();
+      setVoiceUiRecording(false);
+    }
+    chatInput.value = recordingBaseText;
     chatInput.placeholder = "Transcribing...";
     return;
   }
 
   // START RECORDING
   try {
+    recordingBaseText = chatInput.value || '';
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream);
+    mediaStream = stream;
+
+    const mimeType = pickRecorderMime();
+    mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
     audioChunks = [];
-    
-    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-    mediaRecorder.onstop = processAudio;
-    
-    // Setup Audio Visualizer
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioContext.createMediaStreamSource(stream);
-    analyser = audioContext.createAnalyser();
-    analyser.fftSize = 64;
-    source.connect(analyser);
-    dataArray = new Uint8Array(analyser.frequencyBinCount);
-    
-    // Generate bars if not already present
-    if (visualizer.children.length === 0) {
-        for (let i = 0; i < 16; i++) {
-            const bar = document.createElement('div');
-            bar.className = 'vis-bar';
-            visualizer.appendChild(bar);
-        }
+
+    mediaRecorder.ondataavailable = e => { if (e.data && e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => processAudio();
+    mediaRecorder.onerror = e => {
+      console.error("Recorder error:", e);
+      showToast("Recording failed. Please try again.", "error");
+      isRecording = false;
+      if (animationId) cancelAnimationFrame(animationId);
+      animationId = null;
+      releaseMicrophone();
+      setVoiceUiRecording(false);
+      chatInput.value = recordingBaseText;
+      chatInput.placeholder = INPUT_PLACEHOLDER;
+    };
+
+    // Setup Audio Visualizer (a failure here must not prevent recording)
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioContext.createMediaStreamSource(stream);
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 64;
+      source.connect(analyser);
+      dataArray = new Uint8Array(analyser.frequencyBinCount);
+    } catch (visErr) {
+      console.warn("Visualizer unavailable:", visErr);
+      analyser = null;
     }
-    
+
+    const visualizer = document.getElementById('audio-visualizer-container');
+    if (visualizer && visualizer.children.length === 0) {
+      for (let i = 0; i < 16; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'vis-bar';
+        visualizer.appendChild(bar);
+      }
+    }
+
     mediaRecorder.start();
     isRecording = true;
-    
-    // Swap UI to visualizer
-    micBtn.classList.add('recording');
-    micSvg.style.display = 'none';
-    micStopSvg.style.display = 'block';
-    chatInput.style.display = 'none';
-    visualizer.style.display = 'flex';
-    
+    setVoiceUiRecording(true);
     visualize();
   } catch (err) {
     console.error("Microphone access denied:", err);
+    releaseMicrophone();
+    setVoiceUiRecording(false);
     showToast("Please grant microphone permissions.", "error");
   }
 }
 
 function visualize() {
-  if (!isRecording) return;
+  if (!isRecording || !analyser || !dataArray) return;
   animationId = requestAnimationFrame(visualize);
   analyser.getByteFrequencyData(dataArray);
-  
+
   const bars = document.querySelectorAll('.vis-bar');
   bars.forEach((bar, index) => {
       const val = dataArray[index] || 0;
@@ -2475,29 +2523,55 @@ function visualize() {
 
 async function processAudio() {
   const chatInput = document.getElementById('question');
-  const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+  if (animationId) cancelAnimationFrame(animationId);
+  animationId = null;
+  releaseMicrophone();
+  setVoiceUiRecording(false);
+
+  const mimeType = (audioChunks[0] && audioChunks[0].type) || (mediaRecorder && mediaRecorder.mimeType) || 'audio/webm';
+  const audioBlob = new Blob(audioChunks, { type: mimeType.split(';')[0] || 'audio/webm' });
+  audioChunks = [];
+
+  if (audioBlob.size < 1000) {
+    chatInput.value = recordingBaseText;
+    chatInput.placeholder = "That was too short — hold the mic and speak.";
+    resetVoicePlaceholderSoon();
+    return;
+  }
+
+  isTranscribing = true;
+  chatInput.placeholder = "Transcribing...";
   const formData = new FormData();
-  formData.append('audio', audioBlob, 'recording.webm');
-  
+  formData.append('audio', audioBlob, `recording.${extensionForMime(mimeType)}`);
+
   try {
-      const response = await fetch('/api/transcribe', { method: 'POST', body: formData });
-      const data = await response.json();
-      
-      if (data.transcript && data.transcript.trim() !== '') {
-          chatInput.value = data.transcript;
-          chatInput.placeholder = "Define the parameters of your research... (press / to focus)";
-          autoResize(chatInput);
-      } else {
-          // Error Catch: No words detected
-          chatInput.value = '';
-          chatInput.placeholder = "Sorry, try again. Speak loud and clear!";
-          setTimeout(() => { chatInput.placeholder = "Define the parameters of your research... (press / to focus)"; }, 3000);
-      }
+    const response = await fetch('/api/transcribe', { method: 'POST', body: formData });
+    let data = null;
+    try { data = await response.json(); } catch (jsonErr) {}
+    if (!response.ok) {
+      const detail = data && (data.detail && data.detail.error ? data.detail.error : data.error);
+      throw new Error(detail || `Transcription failed (${response.status}).`);
+    }
+    const transcript = data && typeof data.transcript === 'string' ? data.transcript.trim() : '';
+    if (transcript) {
+      const base = (recordingBaseText || '').trim();
+      chatInput.value = base ? `${base} ${transcript}` : transcript;
+      chatInput.placeholder = INPUT_PLACEHOLDER;
+      autoResize(chatInput);
+      chatInput.focus();
+    } else {
+      chatInput.value = recordingBaseText;
+      chatInput.placeholder = "Sorry, try again. Speak loud and clear!";
+      resetVoicePlaceholderSoon();
+    }
   } catch (err) {
-      console.error("Transcription error:", err);
-      chatInput.value = '';
-      chatInput.placeholder = "Error connecting to Deepgram server.";
-      setTimeout(() => { chatInput.placeholder = "Define the parameters of your research... (press / to focus)"; }, 3000);
+    console.error("Transcription error:", err);
+    chatInput.value = recordingBaseText;
+    chatInput.placeholder = (err && err.message) ? err.message : "Error connecting to Deepgram server.";
+    resetVoicePlaceholderSoon();
+  } finally {
+    isTranscribing = false;
+    chatInput.style.display = 'block';
   }
 }
 /* ============================================================

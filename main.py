@@ -16,12 +16,18 @@ import logging
 from datetime import datetime, timezone
 from fastapi import FastAPI, Request, Header, Depends, UploadFile, File
 import httpx
+from pathlib import Path
+from dotenv import load_dotenv
 # Configure logging so Render captures it instantly
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Load .env before any module reads a key, so a plain `uvicorn main:app` run has
+# the same configuration as the deployed service.
+load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
 
 import pipeline
 import ai_answer
@@ -181,38 +187,72 @@ async def get_limits(user: dict = Depends(get_current_user)):
     return _limits_payload(user)
 
 
+MAX_AUDIO_BYTES = 15 * 1024 * 1024
+
+
 @app.post("/api/transcribe")
 async def transcribe_audio(audio: UploadFile = File(...)):
-    DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
-    if not DEEPGRAM_API_KEY:
-        return {"error": "Deepgram API key not configured"}
-        
-    # Deepgram Nova-3 API syntax with multi-language detection
-    url = "https://api.deepgram.com/v1/listen?model=nova-3&detect_language=true"
-    
+    """Transcribe a short browser recording with Deepgram Nova-3."""
+    api_key = os.getenv("DEEPGRAM_API_KEY")
+    if not api_key:
+        logger.error("DEEPGRAM_API_KEY is not set; voice input is unavailable.")
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "Voice input is not configured on this server."},
+        )
+
+    content = await audio.read()
+    if not content:
+        raise HTTPException(status_code=400, detail={"error": "No audio was received."})
+    if len(content) > MAX_AUDIO_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail={"error": "That recording is too long. Keep it under a minute."},
+        )
+
+    # Nova-3 with language auto-detection: the app is used in several languages.
+    url = (
+        "https://api.deepgram.com/v1/listen"
+        "?model=nova-3&detect_language=true&punctuate=true&smart_format=true"
+    )
     headers = {
-        "Authorization": f"Token {DEEPGRAM_API_KEY}",
-        "Content-Type": audio.content_type or "audio/webm"
+        "Authorization": f"Token {api_key}",
+        "Content-Type": (audio.content_type or "audio/webm").split(";")[0],
     }
-    
-    async with httpx.AsyncClient() as client:
-        content = await audio.read()
+
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=10.0)) as client:
+            response = await client.post(url, headers=headers, content=content)
+        if response.status_code >= 400:
+            logger.error(
+                "Deepgram rejected transcription (%s): %s",
+                response.status_code,
+                response.text[:500],
+            )
+            raise HTTPException(
+                status_code=502,
+                detail={"error": "Transcription failed. Please try again."},
+            )
+        data = response.json()
         try:
-            # Setting a 30s timeout prevents the frontend from hanging
-            response = await client.post(url, headers=headers, content=content, timeout=30.0)
-            response.raise_for_status()
-            data = response.json()
-            
-            try:
-                transcript = data["results"]["channels"][0]["alternatives"][0]["transcript"]
-            except (KeyError, IndexError):
-                transcript = ""
-                
-            return {"transcript": transcript}
-            
-        except Exception as e:
-            logger.error(f"Deepgram Nova-3 transcription failed: {e}")
-            return {"transcript": ""}
+            transcript = data["results"]["channels"][0]["alternatives"][0]["transcript"]
+        except (KeyError, IndexError, TypeError):
+            transcript = ""
+        return {"transcript": (transcript or "").strip()}
+    except HTTPException:
+        raise
+    except httpx.TimeoutException:
+        logger.error("Deepgram transcription timed out after 120s")
+        raise HTTPException(
+            status_code=504,
+            detail={"error": "Transcription took too long. Try a shorter recording."},
+        )
+    except Exception as e:
+        logger.error(f"Deepgram Nova-3 transcription failed: {e}")
+        raise HTTPException(
+            status_code=502,
+            detail={"error": "Transcription failed. Please try again."},
+        )
 
 
 @app.get("/health")
